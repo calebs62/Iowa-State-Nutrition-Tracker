@@ -1,5 +1,6 @@
 package coms309.course;
 
+import coms309.people.Person;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,6 +38,16 @@ public class CourseController {
         return "New course " + course.getCourseName() + " added.";
     }
 
+    // Adds students to course object.
+    // Returns a message.
+    @PutMapping("/course/{courseName}/addStudent")
+    public String addStudent(@PathVariable String courseName, @RequestBody Person stu) {
+        Course tmp = courseList.get(courseName);
+        tmp.addStudent(stu);
+        courseList.replace(courseName, tmp);
+        return "New student " + stu.getFirstName() + " added to " + courseName;
+    }
+
     // Update
     // Pull the course from the HashMap and modify it.
     // Returns the updated course object
@@ -54,5 +65,4 @@ public class CourseController {
         courseList.remove(courseName);
         return courseList;
     }
-
 }
