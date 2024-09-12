@@ -17,7 +17,6 @@ import java.util.HashMap;
  *
  * @author Connor Shepherd
  */
-
 @RestController
 public class CourseController {
     HashMap<String, Course> courseList = new HashMap<>();
@@ -25,7 +24,7 @@ public class CourseController {
     // List
     // Gets all courses in a list and returns in JSON format
     @GetMapping("/course")
-    public HashMap<String, Course> getAllCourses(){
+    public HashMap<String, Course> getAllCourses() {
         return courseList;
     }
 
@@ -33,8 +32,27 @@ public class CourseController {
     // Converts JSON input into a course object.
     // Returns a message.
     @PostMapping("/course")
-    public String createCourse(@RequestBody Course course){
+    public String createCourse(@RequestBody Course course) {
         courseList.put(course.getCourseName(), course);
         return "New course " + course.getCourseName() + " added.";
     }
+
+    // Update
+    // Pull the course from the HashMap and modify it.
+    // Returns the updated course object
+    @PutMapping("/course/{courseName}")
+    public Course updateCourse(@PathVariable String courseName, @RequestBody Course c) {
+        courseList.replace(courseName, c);
+        return courseList.get(courseName);
+    }
+
+    // Delete
+    // Deletes the named course from HashMap
+    // Returns HashMap list
+    @DeleteMapping("/course/{courseName}")
+    public HashMap<String, Course> deleteCourse(@PathVariable String courseName) {
+        courseList.remove(courseName);
+        return courseList;
+    }
+
 }
