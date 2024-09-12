@@ -20,5 +20,21 @@ import java.util.HashMap;
 
 @RestController
 public class CourseController {
+    HashMap<String, Course> courseList = new HashMap<>();
 
+    // List
+    // Gets all courses in a list and returns in JSON format
+    @GetMapping("/course")
+    public HashMap<String, Course> getAllCourses(){
+        return courseList;
+    }
+
+    // Create
+    // Converts JSON input into a course object.
+    // Returns a message.
+    @PostMapping("/course")
+    public String createCourse(@RequestBody Course course){
+        courseList.put(course.getCourseName(), course);
+        return "New course " + course.getCourseName() + " added.";
+    }
 }
