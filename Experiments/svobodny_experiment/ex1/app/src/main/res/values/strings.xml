@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">1_jubair_6_Frontend</string>
+    <string name="isu_dining_image">ISU Dining Image</string>
+    <string name="find_your_next_favorite_dish_with_iowa_state">Find Your Next Favorite Dish with Iowa State</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="explore_the_app">Explore the app</string>
+    <string name="don_t_have_account_register">Don\'t have account? Register</string>
+</resources>
