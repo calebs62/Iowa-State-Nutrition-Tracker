@@ -86,7 +86,8 @@ You can also document commands to lint the code or run tests. These steps help t
 ## Authors and acknowledgment
 Alexander Svobodny \
 Connor Shepherd \
-Caleb Sanchez
+Caleb Sanchez \
+Molly Heston
 
 ## License
 For open source projects, say how it is licensed.
