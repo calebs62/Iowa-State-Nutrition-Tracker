@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.PathVariable;
 
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -75,6 +76,19 @@ public class PeopleController {
     public Person updatePerson(@PathVariable String firstName, @RequestBody Person p) {
         peopleList.replace(firstName, p);
         return peopleList.get(firstName);
+    }
+
+    // Update
+    // Takes a name and adds it to the list of known connections to a person object.
+    // Returns object of updated person.
+    @PutMapping("/{person}/meets/{name}")
+    public Person addConnection(@PathVariable String person, @PathVariable String name){
+        Person tmp = peopleList.get(person);
+        ArrayList<String> conn = tmp.getConnections();
+        conn.add(name);
+        tmp.setConnections(conn);
+        peopleList.replace(person, tmp);
+        return peopleList.get(person);
     }
 
     // THIS IS THE DELETE OPERATION
