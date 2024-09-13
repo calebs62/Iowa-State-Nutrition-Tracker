@@ -2,6 +2,7 @@ package coms309.Places;
 
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -43,6 +44,18 @@ public class PlaceController {
     public Place updatePlace(@PathVariable String placeName, @RequestBody Place p){
         placeList.replace(placeName, p);
         return placeList.get(placeName);
+    }
+
+    // Update
+    // Returns updated place
+    @PutMapping("/{person}/visits/{place}")
+    public Place addVisitor(@PathVariable String person, @PathVariable String place){
+        Place tmp = placeList.get(place);
+        ArrayList<String> vis = tmp.getVistors();
+        vis.add(person);
+        tmp.setVistors(vis);
+        placeList.replace(place, tmp);
+        return placeList.get(place);
     }
 
     // Delete
