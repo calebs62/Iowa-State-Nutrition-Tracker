@@ -19,6 +19,6 @@ class WelcomeController {
 
     @GetMapping("/info")
     public String info(){
-        return "This is a website for connecting characters and places in stories.";
+        return "This is a website for connecting characters and places in stories. Try /people or /places";
     }
 }
