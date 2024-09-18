@@ -1,5 +1,6 @@
 package com.example.a1_jubair_6_frontend;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
@@ -20,5 +21,10 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+
+        //TODO maybe make a remember sign-in feature so it doesn't always start on login view
+        Intent intent = new Intent(MainActivity.this, LoginSignupActivity.class);
+        startActivity(intent);
     }
 }
