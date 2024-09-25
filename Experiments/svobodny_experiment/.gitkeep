@@ -1,0 +1,7 @@
+Login & Signup Page with Profile Settings page Roundtrip:
+
+Login: GET Request to server to see if credentials exist, if not login will fail.
+
+Signup: POST or PUT request to server, sends user credentials to server and creates account.
+
+Profile Settings Page (Extra Feature for DEMO2): POST for updating profile and DELETE if the user wishes to delete the profile. Ex. Update email, password, etc.
