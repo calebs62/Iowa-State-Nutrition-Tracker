@@ -27,7 +27,7 @@ public class HomePageActivity extends AppCompatActivity {
             return insets;
         });
 
-        profileSettings = (ImageButton)findViewById(R.id.profileSettings);
+        profileSettings = findViewById(R.id.profileSettings);
 
         profileSettings.setOnClickListener(view -> {
             Intent profileSettingsIntent = new Intent(HomePageActivity.this, ProfileSettingsActivity.class);

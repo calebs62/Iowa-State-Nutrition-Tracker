@@ -93,6 +93,8 @@ public class LoginSignupActivity extends AppCompatActivity {
         });
     }
 
+
+    //TODO Change to our server url [coms-3090-009.class.las.iastate.edu] and get the endpoints
     public boolean postCredentialsToServer(String email, String password){
         // Convert input to JSONObject
         JSONObject postBody = null;
