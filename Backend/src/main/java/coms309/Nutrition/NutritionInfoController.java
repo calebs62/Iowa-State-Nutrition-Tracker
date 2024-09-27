@@ -1,4 +1,4 @@
-package coms309;
+package coms309.Nutrition;
 
 import org.springframework.web.bind.annotation.RestController;
 

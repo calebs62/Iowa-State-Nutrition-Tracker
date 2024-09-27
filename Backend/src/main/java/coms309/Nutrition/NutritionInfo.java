@@ -1,4 +1,4 @@
-package coms309;
+package coms309.Nutrition;
 
 public class NutritionInfo {
     String name;
