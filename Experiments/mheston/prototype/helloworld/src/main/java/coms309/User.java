@@ -9,6 +9,6 @@ public class User {
         this.username = newUsername;
         this.password = newPassword;
     }
-    
+
 
 }
