@@ -16,21 +16,6 @@
             android:name=".BaseActivity"
             android:exported="false" />
         <activity
-            android:name=".NotificationsActivity"
-            android:exported="false" />
-        <activity
-            android:name=".TrackerActivity"
-            android:exported="false" />
-        <activity
-            android:name=".MenuActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ProfileSettingsActivity"
-            android:exported="false" />
-        <activity
-            android:name=".HomePageActivity"
-            android:exported="false" />
-        <activity
             android:name=".LoginSignupActivity"
             android:exported="true" />
         <activity
