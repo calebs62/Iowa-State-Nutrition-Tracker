@@ -13,10 +13,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme._1_jubair_6_Frontend">
         <activity
-            android:name=".ProfileSettingsActivity"
-            android:exported="false" />
-        <activity
-            android:name=".HomePageActivity"
+            android:name=".BaseActivity"
             android:exported="false" />
         <activity
             android:name=".LoginSignupActivity"
