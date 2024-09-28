@@ -1,52 +1,21 @@
 package com.example.a1_jubair_6_frontend;
 
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
-
 public class LoginSignupActivity extends AppCompatActivity {
     //TODO when we have the actual server change this url
-    private String url = "coms-3090-009.class.las.iastate.edu";
-
-    private Spinner spMethod;
-    private EditText etUrl;
-    private EditText etRequest;
-    private TextView tvResponse;
-    private Button btnSend;
-
-    private String method;
-    private String requestBody;
-    private String responseBody;
-
+    private final String url = "coms-3090-009.class.las.iastate.edu";
 
     private EditText emailText;
     private EditText passwordText;

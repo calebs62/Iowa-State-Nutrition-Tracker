@@ -26,7 +26,7 @@ import java.util.Objects;
 
 public class RegisterActivity extends AppCompatActivity {
 
-    private String url = "coms-3090-009.class.las.iastate.edu";
+    private final String url = "coms-3090-009.class.las.iastate.edu";
     private final boolean[] isSuccess = {false};
 
     @Override
