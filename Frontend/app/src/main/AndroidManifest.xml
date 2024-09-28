@@ -13,6 +13,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme._1_jubair_6_Frontend">
         <activity
+            android:name=".PasswordAndSecurityActivity"
+            android:exported="false" />
+        <activity
+            android:name=".PersonalInfoActivity"
+            android:exported="false" />
+        <activity
             android:name=".BaseActivity"
             android:exported="false" />
         <activity

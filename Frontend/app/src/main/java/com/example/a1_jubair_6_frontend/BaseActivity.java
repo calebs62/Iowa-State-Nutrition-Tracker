@@ -78,6 +78,14 @@ public class BaseActivity extends AppCompatActivity {
     private void loadFragment(Fragment fragment) {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+
+        fragmentTransaction.setCustomAnimations(
+                R.anim.slide_in_right,
+                R.anim.slide_out_right,
+                R.anim.slide_in_left,
+                R.anim.slide_out_left
+        );
+
         fragmentTransaction.replace(R.id.container, fragment);
         fragmentTransaction.commit();
     }
