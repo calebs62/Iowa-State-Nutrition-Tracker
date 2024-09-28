@@ -64,7 +64,7 @@ public class RegisterActivity extends AppCompatActivity {
 
                 if(isSuccess[0]){
                     Toast.makeText(this, "Registered Successfully", Toast.LENGTH_SHORT).show();
-                    Intent homeIntent = new Intent(RegisterActivity.this, HomePageActivity.class);
+                    Intent homeIntent = new Intent(RegisterActivity.this, LoginSignupActivity.class);
                     startActivity(homeIntent);
                 }
                 //If signup is not successful, create an error message

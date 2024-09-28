@@ -82,10 +82,14 @@ public class LoginSignupActivity extends AppCompatActivity {
 
             //TODO send a GET request out to backend to see if email and password exists otherwise throw error or refuse signin
 
+            ///For now until endpoint is setup, go to home page
+            isSuccess[0] = true;
+
             //Go to home page if successful
             if(isSuccess[0]){
-                Intent exploreIntent = new Intent(LoginSignupActivity.this, HomePageActivity.class);
+                Intent exploreIntent = new Intent(LoginSignupActivity.this, BaseActivity.class);
                 startActivity(exploreIntent);
+                finish();
             }
             Log.e("Login Error","Account did not exist!");
         });

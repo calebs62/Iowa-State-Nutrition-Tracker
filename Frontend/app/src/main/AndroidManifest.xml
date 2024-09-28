@@ -13,6 +13,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme._1_jubair_6_Frontend">
         <activity
+            android:name=".BaseActivity"
+            android:exported="false" />
+        <activity
+            android:name=".NotificationsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".TrackerActivity"
+            android:exported="false" />
+        <activity
+            android:name=".MenuActivity"
+            android:exported="false" />
+        <activity
             android:name=".ProfileSettingsActivity"
             android:exported="false" />
         <activity
