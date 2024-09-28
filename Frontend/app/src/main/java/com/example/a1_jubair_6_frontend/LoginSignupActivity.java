@@ -57,6 +57,7 @@ public class LoginSignupActivity extends AppCompatActivity {
             //Go to home page if successful
             if(isSuccess[0]){
                 Intent exploreIntent = new Intent(LoginSignupActivity.this, BaseActivity.class);
+                exploreIntent.putExtra(BaseActivity.EXTRA_INITIAL_FRAGMENT, HomePageFragment.class.getName());
                 startActivity(exploreIntent);
                 finish();
             }

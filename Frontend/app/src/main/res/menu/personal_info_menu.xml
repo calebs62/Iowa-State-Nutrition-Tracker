@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_personal_info"
+        android:icon="@drawable/profile_icon"
+        android:title="Personal Information" />
+    <item
+        android:id="@+id/menu_password_security"
+        android:icon="@drawable/security_icon"
+        android:title="Password &amp; Security" />
+    <item
+        android:id="@+id/menu_notifications"
+        android:icon="@drawable/notifications_icon"
+        android:title="@string/notifications" />
+</menu>

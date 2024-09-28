@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/nav_home"
-        android:icon="@drawable/profile_icon"
+        android:icon="@drawable/home_icon"
         android:title="@string/home" />
 
     <item
@@ -16,9 +16,9 @@
         android:title="@string/tracker" />
 
     <item
-        android:id="@+id/nav_notifications"
-        android:icon="@drawable/notifications_icon"
-        android:title="@string/notifications" />
+        android:id="@+id/nav_goals"
+        android:icon="@drawable/goals_icon"
+        android:title="@string/goals" />
 
     <item
         android:id="@+id/nav_profile"
