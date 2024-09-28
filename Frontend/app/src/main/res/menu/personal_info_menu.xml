@@ -8,4 +8,8 @@
         android:id="@+id/menu_password_security"
         android:icon="@drawable/security_icon"
         android:title="Password &amp; Security" />
+    <item
+        android:id="@+id/menu_notifications"
+        android:icon="@drawable/notifications_icon"
+        android:title="@string/notifications" />
 </menu>

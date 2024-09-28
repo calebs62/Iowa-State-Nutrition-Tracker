@@ -37,6 +37,8 @@ public class ProfileFragment extends Fragment {
 
         updateUserInfo();
         setupMenuItems();
+
+
     }
 
     private void updateUserInfo() {
@@ -46,6 +48,7 @@ public class ProfileFragment extends Fragment {
     private void setupMenuItems(){
         setupMenuItem(R.id.personalInfo, R.drawable.profile_icon, "Personal Information");
         setupMenuItem(R.id.passwordSecurity, R.drawable.security_icon, "Password & Security");
+        setupMenuItem(R.id.notifications, R.drawable.notifications_icon, "Notifications");
     }
 
     private void setupMenuItem(int itemId, int iconResId, String title) {
@@ -65,16 +68,23 @@ public class ProfileFragment extends Fragment {
             rightArrow.setColorFilter(getResources().getColor(R.color.Iowa_State_Red));
 
             if(itemId == R.id.personalInfo){
-                Intent pInfoIntent = new Intent(getActivity(), PersonalInfoActivity.class);
-                startActivity(pInfoIntent);
+                navigateToSubFragment(new PersonalInfoFragment());
             }
             else if(itemId == R.id.passwordSecurity){
-                Intent passSecIntent = new Intent(getActivity(), PasswordAndSecurityActivity.class);
-                startActivity(passSecIntent);
+                navigateToSubFragment(new PasswordAndSecurityFragment());
+            }
+            else if(itemId == R.id.notifications){
+                navigateToSubFragment(new NotificationsFragment());
             }
             else{
                 Log.e("Navigation Error", "Could not navigate from profile page!");
             }
         });
+    }
+
+    private void navigateToSubFragment(Fragment fragment){
+        if(getActivity() instanceof  BaseActivity){
+            ((BaseActivity) getActivity()).loadFragment(fragment, true);  // True to add to back stack
+        }
     }
 }

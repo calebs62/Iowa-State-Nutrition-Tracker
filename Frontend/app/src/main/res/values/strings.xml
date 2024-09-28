@@ -24,4 +24,5 @@
     <string name="tracker">Tracker</string>
     <string name="notifications">Notifications</string>
     <string name="profile">Profile</string>
+    <string name="goals">Goals</string>
 </resources>

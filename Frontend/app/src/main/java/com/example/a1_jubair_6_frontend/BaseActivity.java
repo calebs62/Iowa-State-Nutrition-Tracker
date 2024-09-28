@@ -6,12 +6,12 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class BaseActivity extends AppCompatActivity {
+    public static final String EXTRA_INITIAL_FRAGMENT = "initial_fragment";
     protected BottomNavigationView bottomNavigationView;
     private Fragment selectedFragment;
 
@@ -39,45 +39,72 @@ public class BaseActivity extends AppCompatActivity {
 
         setupBottomNavigation();
 
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.container, getInitialFragment())
-                .commit();
+        if (savedInstanceState == null) {
+            Fragment initialFragment = getInitialFragmentFromIntent();
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.container, initialFragment)
+                    .commit();
+        }
     }
 
-    // Sets Home Page as starting view
+    private Fragment getInitialFragmentFromIntent() {
+        String fragmentName = getIntent().getStringExtra(EXTRA_INITIAL_FRAGMENT);
+        if(fragmentName != null) {
+            if(fragmentName.equals(HomePageFragment.class.getName())){
+                return new HomePageFragment();
+            }
+        }
+        return getInitialFragment();
+    }
+
     protected Fragment getInitialFragment() {
         return new HomePageFragment();
     }
 
+    protected int getSelectedNavItem() {
+        return R.id.nav_home;
+    }
+
     private void setupBottomNavigation() {
-        // Your color state list code...
         bottomNavigationView.setOnItemSelectedListener(item -> {
-            if(item.getItemId() == R.id.nav_home){
-                selectedFragment = new HomePageFragment();
-            }
-            else if(item.getItemId() == R.id.nav_menus){
-                selectedFragment = new MenuFragment();
-            }
-            else if(item.getItemId() == R.id.nav_tracker){
-                selectedFragment = new TrackerFragment();
-            }
-            else if((item.getItemId() == R.id.nav_notifications)){
-                selectedFragment = new NotificationsFragment();
-            }
-            else if(item.getItemId() == R.id.nav_profile){
-                selectedFragment = new ProfileFragment();
-            }
-            else{
+            int itemId = item.getItemId();
+            Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.container);
+
+            if (itemId == R.id.nav_home) {
+                if (!(currentFragment instanceof HomePageFragment)) {
+                    selectedFragment = new HomePageFragment();
+                    loadFragment(selectedFragment, false);
+                }
+            } else if (itemId == R.id.nav_menus) {
+                if (!(currentFragment instanceof MenuFragment)) {
+                    selectedFragment = new MenuFragment();
+                    loadFragment(selectedFragment, false);
+                }
+            } else if (itemId == R.id.nav_tracker) {
+                if (!(currentFragment instanceof TrackerFragment)) {
+                    selectedFragment = new TrackerFragment();
+                    loadFragment(selectedFragment, false);
+                }
+            } else if (itemId == R.id.nav_goals) {
+                if (!(currentFragment instanceof GoalsFragment)) {
+                    selectedFragment = new GoalsFragment();
+                    loadFragment(selectedFragment, false);
+                }
+            } else if (itemId == R.id.nav_profile) {
+                if (!(currentFragment instanceof ProfileFragment)) {
+                    selectedFragment = new ProfileFragment();
+                    loadFragment(selectedFragment, false);
+                }
+            } else {
                 return false;
             }
-            loadFragment(selectedFragment);
+
             return true;
         });
     }
 
-    private void loadFragment(Fragment fragment) {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+    void loadFragment(Fragment fragment, boolean addToBackStack) {
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
 
         fragmentTransaction.setCustomAnimations(
                 R.anim.slide_in_right,
@@ -87,6 +114,19 @@ public class BaseActivity extends AppCompatActivity {
         );
 
         fragmentTransaction.replace(R.id.container, fragment);
+        if(addToBackStack){
+            fragmentTransaction.addToBackStack(null);
+        }
         fragmentTransaction.commit();
+    }
+
+    @Override
+    public void onBackPressed(){
+        if(getSupportFragmentManager().getBackStackEntryCount() > 0){
+            getSupportFragmentManager().popBackStack();
+        }
+        else {
+            super.onBackPressed();
+        }
     }
 }
