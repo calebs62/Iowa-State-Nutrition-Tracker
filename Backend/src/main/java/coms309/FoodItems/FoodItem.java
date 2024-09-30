@@ -1,6 +1,6 @@
-package coms309.Nutrition;
+package coms309.FoodItems;
 
-public class NutritionInfo {
+public class FoodItem {
     String name;
 
     // Unique id in
@@ -14,7 +14,7 @@ public class NutritionInfo {
     int totalCarbohydrate;
     int protein;
 
-    public NutritionInfo() {}
+    public FoodItem() {}
 
     public void changeName(String newName) {
         this.name = newName;
