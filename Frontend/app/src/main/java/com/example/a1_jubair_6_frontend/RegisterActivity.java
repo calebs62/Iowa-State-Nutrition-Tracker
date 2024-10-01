@@ -27,7 +27,8 @@ import java.util.Objects;
 public class RegisterActivity extends AppCompatActivity {
 
     private final String url = "coms-3090-009.class.las.iastate.edu";
-    private final boolean[] isSuccess = {false};
+    private final String postmanUrl = "https://a382bcf9-c472-4f17-95f4-094f6ab49a61.mock.pstmn.io";
+    private boolean[] isSuccess = {false};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,8 +68,9 @@ public class RegisterActivity extends AppCompatActivity {
                     Intent homeIntent = new Intent(RegisterActivity.this, LoginSignupActivity.class);
                     startActivity(homeIntent);
                 }
-                //If signup is not successful, create an error message
-                showSignupError();
+                else{
+                    showSignupError();
+                }
             }
         });
 
@@ -112,7 +114,7 @@ public class RegisterActivity extends AppCompatActivity {
 
     public void postCredentialsToServer(String email, String password) {
         //TODO change endpoint to what it is on server
-        String requestUrl = url + "/signup";
+        String requestUrl = postmanUrl + "/postCreds";
         JSONObject credentialsObject = new JSONObject();
 
         try{
