@@ -62,15 +62,6 @@ public class RegisterActivity extends AppCompatActivity {
                 //TODO call a method here to save account data to database and switch the view to the main page
                 Log.i("New Registration","Got email: [" + email + "] Password: [" + pass + "], posting to server");
                 postCredentialsToServer(email, pass);
-
-                if(isSuccess[0]){
-                    Toast.makeText(this, "Registered Successfully", Toast.LENGTH_SHORT).show();
-                    Intent homeIntent = new Intent(RegisterActivity.this, LoginSignupActivity.class);
-                    startActivity(homeIntent);
-                }
-                else{
-                    showSignupError();
-                }
             }
         });
 
@@ -130,12 +121,15 @@ public class RegisterActivity extends AppCompatActivity {
                 requestUrl,
                 credentialsObject,
                 response -> {
-                    isSuccess[0] = true;
                     Log.i("VolleyResponse", "Response: " + response);
+
+                    Toast.makeText(this, "Registered Successfully", Toast.LENGTH_SHORT).show();
+                    Intent homeIntent = new Intent(RegisterActivity.this, LoginSignupActivity.class);
+                    startActivity(homeIntent);
                 },
                 error -> {
-                    isSuccess[0] = false;
                     Log.e("VolleyError", "Error: " + error);
+                    showSignupError();
                 }
         );
         // Adding request to request queue
