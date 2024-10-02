@@ -1,4 +1,4 @@
-package coms309.FoodItems;
+package coms309.entity;
 
 import jakarta.persistence.*;
 

@@ -1,4 +1,4 @@
-package coms309.User;
+package coms309.entity;
 
 public class User {
     String username; //unique

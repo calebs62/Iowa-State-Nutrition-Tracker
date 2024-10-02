@@ -1,4 +1,4 @@
-package coms309.User;
+package coms309.controller;
 
 import org.springframework.web.bind.annotation.RestController;
 
