@@ -3,34 +3,48 @@ package coms309.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name="FoodItem")
+@Table(name="food_item")
 public class FoodItem {
 
     // Unique id
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "idfooditem")
-    int id;
+    private int id;
 
     @Column(name = "foodtype")
-    String name;
+    private String name;
 
     // Nutrition Info variables
     @Column(name = "calories")
-    int calories;
+    private int calories;
     @Column(name = "totalfat")
-    int totalFat;
+    private int totalFat;
     @Column(name = "sodium")
-    int sodium;
-    @Column(name = "carbohydrates")
-    int carbohydrate;
+    private int sodium;
+    @Column(name = "carbohydrate")
+    private int carbohydrate;
     @Column(name = "protein")
-    int protein;
-
+    private int protein;
+    @Column(name="servingsize")
+    private String servingsize;
     @Column(name="description")
-    String description;
+    private String description;
 
     public FoodItem() {}
+
+    public FoodItem(String name, int calories, int totalFat, int sodium, int carbohydrate,
+                    int protein, String servingsize, String description) {
+
+        this.name = name;
+        this.calories = calories;
+        this.totalFat = totalFat;
+        this.sodium = sodium;
+        this.carbohydrate = carbohydrate;
+        this.protein = protein;
+        this.servingsize = servingsize;
+        this.description = description;
+    }
     public void changeName(String newName) {
         this.name = newName;
     }
@@ -41,6 +55,8 @@ public class FoodItem {
     public int getSodium() {return sodium;}
     public int getCarbohydrate() {return carbohydrate;}
     public int getProtein() {return protein;}
+    public String getServingsize() {return servingsize;}
+    public String getDescription() {return description;};
     public String toString() {
         return "Id: " + id +
                 "/nName: " + name +
@@ -48,6 +64,8 @@ public class FoodItem {
                 "/nTotal Fat: " + totalFat +
                 "/nSodium: " + sodium +
                 "/nTotal Carbohydrate: " + carbohydrate +
-                "/nProtein: " + protein;
+                "/nProtein: " + protein +
+                "/nServing Size: " + servingsize +
+                "/nDescription: " + description;
     }
 }
