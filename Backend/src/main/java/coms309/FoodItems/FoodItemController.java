@@ -1,4 +1,4 @@
-package coms309.Nutrition;
+package coms309.FoodItems;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 
 @RestController
-public class NutritionInfoController {
+public class FoodItemController {
     // Create item
 
     // Get item from id
