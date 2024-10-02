@@ -20,6 +20,7 @@ public class FoodItemController {
 
 
     // Get item from id
+    @GetMapping("/item/{id}")
 
     // Update item
 
