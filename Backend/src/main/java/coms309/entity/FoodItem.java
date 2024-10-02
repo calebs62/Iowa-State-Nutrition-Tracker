@@ -1,4 +1,4 @@
-package coms309.FoodItems;
+package coms309.entity;
 
 import jakarta.persistence.*;
 
@@ -9,26 +9,28 @@ public class FoodItem {
     // Unique id
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @Column(name = "idfooditem")
     int id;
 
-    @Column(name = "food_name")
+    @Column(name = "foodtype")
     String name;
 
     // Nutrition Info variables
-    @Column(name = "Calories")
+    @Column(name = "calories")
     int calories;
-    @Column(name = "")
+    @Column(name = "totalfat")
     int totalFat;
-    @Column(name = "")
+    @Column(name = "sodium")
     int sodium;
-    @Column(name = "")
+    @Column(name = "carbohydrates")
     int carbohydrate;
-    @Column(name = "")
+    @Column(name = "protein")
     int protein;
 
-    public FoodItem() {}
+    @Column(name="description")
+    String description;
 
+    public FoodItem() {}
     public void changeName(String newName) {
         this.name = newName;
     }
