@@ -12,7 +12,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class FoodItemController {
+    @Autowired
+    FoodItemRepository foodRepo;
     // Create item
+    @PostMapping("/item")
+    public FoodItem saveFoodItem(@RequestBody FoodItem foodItem){
+        return foodRepo.save(foodItem);
+    }
+
 
     // Get item from id
 
