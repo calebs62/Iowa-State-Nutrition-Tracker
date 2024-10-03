@@ -18,19 +18,28 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageView
-        android:id="@+id/ivProfilePic"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/tvProfilePic"
         android:layout_width="100dp"
         android:layout_height="100dp"
+        app:cardCornerRadius="50dp"
+        app:cardBackgroundColor="@android:color/transparent"
+        app:strokeColor="#CCCCCC"
+        app:strokeWidth="2dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="32dp"
-        android:src="@drawable/profile_icon"
-        android:background="@drawable/circular_image_background"
-        android:padding="2dp"
-        android:scaleType="centerCrop"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvProfile"/>
+        app:layout_constraintTop_toBottomOf="@id/tvProfile">
+
+        <ImageView
+            android:id="@+id/ivProfilePic"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/profile_icon"
+            android:scaleType="centerCrop"
+            android:clipToOutline="true"/>
+    </com.google.android.material.card.MaterialCardView>
 
     <TextView
         android:id="@+id/tvName"
@@ -42,7 +51,7 @@
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/ivProfilePic" />
+        app:layout_constraintTop_toBottomOf="@id/tvProfilePic" />
 
     <LinearLayout
         android:id="@+id/llInfo"
@@ -62,7 +71,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="Weight\n-- kg" />
+            android:text="Weight\n-- lb" />
 
         <TextView
             android:id="@+id/tvHeight"
@@ -70,7 +79,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="Height\n-- cm" />
+            android:text="Height\n-- ft" />
 
 
     </LinearLayout>

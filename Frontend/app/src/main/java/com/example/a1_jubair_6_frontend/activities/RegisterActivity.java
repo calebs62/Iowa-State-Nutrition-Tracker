@@ -1,4 +1,4 @@
-package com.example.a1_jubair_6_frontend;
+package com.example.a1_jubair_6_frontend.activities;
 
 import android.content.Intent;
 import android.graphics.Color;
@@ -18,6 +18,11 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.example.a1_jubair_6_frontend.models.User;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -26,8 +31,8 @@ import java.util.Objects;
 
 public class RegisterActivity extends AppCompatActivity {
 
-    private final String url = "coms-3090-009.class.las.iastate.edu";
-    private final boolean[] isSuccess = {false};
+    private User user;
+    private ProfileDataManager profileDataManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,32 +48,31 @@ public class RegisterActivity extends AppCompatActivity {
             return insets;
         });
 
+        profileDataManager = new ProfileDataManager(this);
+
         Button registerButton = findViewById(R.id.btnRegister);
         EditText emailView = findViewById(R.id.emailText);
         EditText password = findViewById(R.id.registerPasswordText);
         EditText confirmPassword = findViewById(R.id.registerPasswordConfirmText);
+        EditText firstnameText = findViewById(R.id.firstNameText);
+        EditText lastnameText = findViewById(R.id.lastNameText);
 
         registerButton.setOnClickListener(view -> {
             String email = emailView.getText().toString();
             String pass = password.getText().toString();
             String confirmPass = confirmPassword.getText().toString();
+            String firstname = firstnameText.getText().toString();
+            String lastname = lastnameText.getText().toString();
+
+            user = new User(email, pass, firstname, lastname, 0, 0, "USER");
 
             if(!pass.equals(confirmPass)){
                 //Creates an error dialog when the passwords entered do not match
                 showPasswordMatchError();
             }
             else {
-                //TODO call a method here to save account data to database and switch the view to the main page
                 Log.i("New Registration","Got email: [" + email + "] Password: [" + pass + "], posting to server");
-                postCredentialsToServer(email, pass);
-
-                if(isSuccess[0]){
-                    Toast.makeText(this, "Registered Successfully", Toast.LENGTH_SHORT).show();
-                    Intent homeIntent = new Intent(RegisterActivity.this, LoginSignupActivity.class);
-                    startActivity(homeIntent);
-                }
-                //If signup is not successful, create an error message
-                showSignupError();
+                postCredentialsToServer(user);
             }
         });
 
@@ -110,14 +114,18 @@ public class RegisterActivity extends AppCompatActivity {
             confirmPassView.setTextColor(Color.RED);
     }
 
-    public void postCredentialsToServer(String email, String password) {
+    public void postCredentialsToServer(User user) {
         //TODO change endpoint to what it is on server
-        String requestUrl = url + "/signup";
-        JSONObject credentialsObject = new JSONObject();
-
+        String requestUrl = AppConstants.ALEX_POSTMAN_URL + "/user/signup";
+        JSONObject jsonBody = new JSONObject();
         try{
-            credentialsObject.put("email", email);
-            credentialsObject.put("password", password);
+            jsonBody.put("username", user.getUsername());
+            jsonBody.put("password", user.getPassword());
+            jsonBody.put("fname", user.getFname());
+            jsonBody.put("lname", user.getLname());
+            jsonBody.put("height", user.getHeight());
+            jsonBody.put("weight", user.getWeight());
+            jsonBody.put("accounttype", user.getAccounttype());
         }
         catch(JSONException ex){
             Log.e("JSONException", Objects.requireNonNull(ex.getMessage()));
@@ -126,14 +134,19 @@ public class RegisterActivity extends AppCompatActivity {
         JsonObjectRequest credentialsPostRequest = new JsonObjectRequest(
                 Request.Method.POST,
                 requestUrl,
-                credentialsObject,
+                jsonBody,
                 response -> {
-                    isSuccess[0] = true;
                     Log.i("VolleyResponse", "Response: " + response);
+
+                    profileDataManager.saveUserData(user);
+
+                    Toast.makeText(this, "Registered Successfully", Toast.LENGTH_SHORT).show();
+                    Intent homeIntent = new Intent(RegisterActivity.this, LoginSignupActivity.class);
+                    startActivity(homeIntent);
                 },
                 error -> {
-                    isSuccess[0] = false;
                     Log.e("VolleyError", "Error: " + error);
+                    showSignupError();
                 }
         );
         // Adding request to request queue

@@ -1,4 +1,4 @@
-package com.example.a1_jubair_6_frontend;
+package com.example.a1_jubair_6_frontend.network;
 
 
 import android.annotation.SuppressLint;

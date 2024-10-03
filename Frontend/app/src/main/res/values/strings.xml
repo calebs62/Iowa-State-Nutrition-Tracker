@@ -25,4 +25,9 @@
     <string name="notifications">Notifications</string>
     <string name="profile">Profile</string>
     <string name="goals">Goals</string>
+    <string name="update_profile_picture">Update profile picture</string>
+    <string name="firstname">Firstname</string>
+    <string name="lastname">Lastname</string>
+    <string name="invalid_credentials">Invalid Credentials!</string>
+    <string name="invalid_email_or_password_please_try_again">Invalid email or password. Please try again.</string>
 </resources>
