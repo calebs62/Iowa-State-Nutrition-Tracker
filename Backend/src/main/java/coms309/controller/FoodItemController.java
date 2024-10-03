@@ -32,14 +32,17 @@ public class FoodItemController {
         FoodItem item = foodRepo.findById(id).orElse(null);
         if (item != null) {
             item.setAll(foodItem);
+            foodRepo.save(item);
         }
+
         return item;
     }
-    @PostMapping("/item/update/name/{id}")
+    @GetMapping("/item/update/name/{id}")
     public FoodItem updateName(@PathVariable int id, @RequestBody String val) {
         FoodItem item = foodRepo.findById(id).orElse(null);
         if (item != null) {
             item.setName(val);
+            foodRepo.save(item);
         }
         return item;
     }
@@ -48,6 +51,7 @@ public class FoodItemController {
         FoodItem item = foodRepo.findById(id).orElse(null);
         if (item != null) {
             item.setCalories(val);
+            foodRepo.save(item);
         }
         return item;
     }
@@ -56,6 +60,7 @@ public class FoodItemController {
         FoodItem item = foodRepo.findById(id).orElse(null);
         if (item != null) {
             item.setTotalFat(val);
+            foodRepo.save(item);
         }
         return item;
     }
@@ -65,6 +70,7 @@ public class FoodItemController {
         FoodItem item = foodRepo.findById(id).orElse(null);
         if (item != null) {
             item.setSodium(val);
+            foodRepo.save(item);
         }
         return item;
     }
@@ -73,6 +79,7 @@ public class FoodItemController {
         FoodItem item = foodRepo.findById(id).orElse(null);
         if (item != null) {
             item.setCarbohydrate(val);
+            foodRepo.save(item);
         }
         return item;
     }
@@ -81,6 +88,7 @@ public class FoodItemController {
         FoodItem item = foodRepo.findById(id).orElse(null);
         if (item != null) {
             item.setProtein(val);
+            foodRepo.save(item);
         }
         return item;
     }
@@ -90,6 +98,7 @@ public class FoodItemController {
         FoodItem item = foodRepo.findById(id).orElse(null);
         if (item != null) {
             item.setServingSize(val);
+            foodRepo.save(item);
         }
         return item;
     }
@@ -98,6 +107,7 @@ public class FoodItemController {
         FoodItem item = foodRepo.findById(id).orElse(null);
         if (item != null) {
             item.setDescription(val);
+            foodRepo.save(item);
         }
         return item;
     }
