@@ -13,9 +13,19 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Objects;
+
 public class LoginSignupActivity extends AppCompatActivity {
     //TODO when we have the actual server change this url
     private final String url = "coms-3090-009.class.las.iastate.edu";
+    private final String postmanUrl = "https://eb035c41-1571-435e-80cc-65364f4dc54e.mock.pstmn.io";
 
     private EditText emailText;
     private EditText passwordText;
@@ -24,7 +34,7 @@ public class LoginSignupActivity extends AppCompatActivity {
     private String email;
     private String password;
 
-    final boolean[] isSuccess = {false};
+    private boolean isSuccess = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,10 +62,10 @@ public class LoginSignupActivity extends AppCompatActivity {
             //TODO send a GET request out to backend to see if email and password exists otherwise throw error or refuse signin
 
             ///For now until endpoint is setup, go to home page
-            isSuccess[0] = true;
+            getCredentialsFromServer(email, password);
 
             //Go to home page if successful
-            if(isSuccess[0]){
+            if(isSuccess){
                 Intent exploreIntent = new Intent(LoginSignupActivity.this, BaseActivity.class);
                 exploreIntent.putExtra(BaseActivity.EXTRA_INITIAL_FRAGMENT, HomePageFragment.class.getName());
                 startActivity(exploreIntent);
@@ -66,9 +76,29 @@ public class LoginSignupActivity extends AppCompatActivity {
 
         TextView registerView = findViewById(R.id.tvRegister);
         registerView.setOnClickListener(view -> {
-             Log.i("Register Button", "Register button clicked!");
-             Intent intent = new Intent(LoginSignupActivity.this, RegisterActivity.class);
-             startActivity(intent);
+            Log.i("Register Button", "Register button clicked!");
+            Intent intent = new Intent(LoginSignupActivity.this, RegisterActivity.class);
+            startActivity(intent);
         });
+    }
+
+    public void getCredentialsFromServer(String email, String password){
+        //TODO change endpoint to what it is on server
+        String requestUrl = postmanUrl + "/getCreds";
+        String url = "https://eb035c41-1571-435e-80cc-65364f4dc54e.mock.pstmn.io/getCredentials" + "?email=" + email + "&password=" + password;
+
+        StringRequest getCreds = new StringRequest(Request.Method.GET, url,
+                response -> {
+                    Log.i("Login", "Login Successful");
+                    Intent exploreIntent = new Intent(LoginSignupActivity.this, BaseActivity.class);
+                    exploreIntent.putExtra(BaseActivity.EXTRA_INITIAL_FRAGMENT, HomePageFragment.class.getName());
+                    startActivity(exploreIntent);
+                    finish();
+                }, error -> {
+            Log.e("Login Error", "Could not find account!");
+            isSuccess = false;
+        });
+
+        VolleySingleton.getInstance(this).addToRequestQueue(getCreds);
     }
 }
