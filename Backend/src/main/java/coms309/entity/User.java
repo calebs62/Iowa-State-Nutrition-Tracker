@@ -1,7 +1,6 @@
 package coms309.entity;
 
 import jakarta.persistence.*;
-import org.antlr.v4.runtime.Token;
 
 @Entity
 @Table(name="user")
