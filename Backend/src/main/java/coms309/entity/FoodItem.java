@@ -13,23 +13,23 @@ public class FoodItem {
     private int id;
 
     @Column(name = "foodtype")
-    private String name;
+    private String name = "";
 
     // Nutrition Info variables
     @Column(name = "calories")
-    private int calories;
+    private int calories = -1;
     @Column(name = "totalfat")
-    private int totalFat;
+    private int totalFat = -1;
     @Column(name = "sodium")
-    private int sodium;
+    private int sodium = -1;
     @Column(name = "carbohydrate")
-    private int carbohydrate;
+    private int carbohydrate = -1;
     @Column(name = "protein")
-    private int protein;
+    private int protein = -1;
     @Column(name="servingsize")
-    private String servingsize;
+    private String servingsize = null;
     @Column(name="description")
-    private String description;
+    private String description = null;
 
     public FoodItem() {}
 
@@ -45,9 +45,7 @@ public class FoodItem {
         this.servingsize = servingsize;
         this.description = description;
     }
-    public void changeName(String newName) {
-        this.name = newName;
-    }
+
     public String getName() { return name;}
     public int getId() {return id;}
     public int getCalories() {return calories;}
@@ -57,6 +55,30 @@ public class FoodItem {
     public int getProtein() {return protein;}
     public String getServingsize() {return servingsize;}
     public String getDescription() {return description;};
+
+    //Setters
+    public void setName(String newName) {
+        this.name = newName;
+    }
+    public void setCalories(int calories) {this.calories = calories;}
+    public void setTotalFat(int totalfat) {this.totalFat = totalfat;}
+    public void setSodium(int sodium) {this.sodium = sodium;}
+    public void setCarbohydrate(int carb) {this.carbohydrate = carb;}
+    public void setProtein(int protein) {this.protein = protein;}
+    public void setServingSize(String ss) {this.servingsize = ss;}
+    public void setDescription(String des) {this.description = des;}
+
+    public void setAll(FoodItem other) {
+        this.name = other.getName();
+        this.calories = other.getCalories();
+        this.totalFat = other.getTotalFat();
+        this.sodium = other.getSodium();
+        this.carbohydrate = other.getCarbohydrate();
+        this.protein = other.getProtein();
+        this.servingsize = other.getServingsize();
+        this.description = other.getDescription();
+    }
+
     public String toString() {
         return "Id: " + id +
                 "/nName: " + name +
