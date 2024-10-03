@@ -1,4 +1,4 @@
-package com.example.a1_jubair_6_frontend;
+package com.example.a1_jubair_6_frontend.activities;
 
 import android.annotation.SuppressLint;
 import android.content.res.ColorStateList;
@@ -8,6 +8,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.example.a1_jubair_6_frontend.fragments.GoalsFragment;
+import com.example.a1_jubair_6_frontend.fragments.HomePageFragment;
+import com.example.a1_jubair_6_frontend.fragments.MenuFragment;
+import com.example.a1_jubair_6_frontend.fragments.profile.ProfileFragment;
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.fragments.TrackerFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class BaseActivity extends AppCompatActivity {
@@ -52,6 +58,9 @@ public class BaseActivity extends AppCompatActivity {
         if(fragmentName != null) {
             if(fragmentName.equals(HomePageFragment.class.getName())){
                 return new HomePageFragment();
+            }
+            else if(fragmentName.equals(ProfileFragment.class.getName())){
+                return new ProfileFragment();
             }
         }
         return getInitialFragment();
@@ -103,7 +112,7 @@ public class BaseActivity extends AppCompatActivity {
         });
     }
 
-    void loadFragment(Fragment fragment, boolean addToBackStack) {
+    public void loadFragment(Fragment fragment, boolean addToBackStack) {
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
 
         fragmentTransaction.setCustomAnimations(

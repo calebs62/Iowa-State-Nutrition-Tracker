@@ -1,4 +1,4 @@
-package com.example.a1_jubair_6_frontend;
+package com.example.a1_jubair_6_frontend.activities;
 
 import android.content.Intent;
 import android.graphics.Color;
@@ -18,6 +18,9 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -25,10 +28,6 @@ import org.json.JSONObject;
 import java.util.Objects;
 
 public class RegisterActivity extends AppCompatActivity {
-
-    private final String url = "coms-3090-009.class.las.iastate.edu";
-    private final String postmanUrl = "https://a382bcf9-c472-4f17-95f4-094f6ab49a61.mock.pstmn.io";
-    private boolean[] isSuccess = {false};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,20 +47,23 @@ public class RegisterActivity extends AppCompatActivity {
         EditText emailView = findViewById(R.id.emailText);
         EditText password = findViewById(R.id.registerPasswordText);
         EditText confirmPassword = findViewById(R.id.registerPasswordConfirmText);
+        EditText firstnameText = findViewById(R.id.firstNameText);
+        EditText lastnameText = findViewById(R.id.lastNameText);
 
         registerButton.setOnClickListener(view -> {
             String email = emailView.getText().toString();
             String pass = password.getText().toString();
             String confirmPass = confirmPassword.getText().toString();
+            String firstname = firstnameText.getText().toString();
+            String lastname = lastnameText.getText().toString();
 
             if(!pass.equals(confirmPass)){
                 //Creates an error dialog when the passwords entered do not match
                 showPasswordMatchError();
             }
             else {
-                //TODO call a method here to save account data to database and switch the view to the main page
                 Log.i("New Registration","Got email: [" + email + "] Password: [" + pass + "], posting to server");
-                postCredentialsToServer(email, pass);
+                postCredentialsToServer(email, pass, firstname, lastname);
             }
         });
 
@@ -103,14 +105,16 @@ public class RegisterActivity extends AppCompatActivity {
             confirmPassView.setTextColor(Color.RED);
     }
 
-    public void postCredentialsToServer(String email, String password) {
+    public void postCredentialsToServer(String email, String password, String firstname, String lastname) {
         //TODO change endpoint to what it is on server
-        String requestUrl = postmanUrl + "/postCreds";
+        String requestUrl = AppConstants.ALEX_POSTMAN_URL + "/postCreds";
         JSONObject credentialsObject = new JSONObject();
 
         try{
             credentialsObject.put("email", email);
             credentialsObject.put("password", password);
+            credentialsObject.put("firstname", firstname);
+            credentialsObject.put("lastname", lastname);
         }
         catch(JSONException ex){
             Log.e("JSONException", Objects.requireNonNull(ex.getMessage()));
