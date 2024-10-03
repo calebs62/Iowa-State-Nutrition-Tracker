@@ -20,9 +20,9 @@ public class User {
     @Column(name="lname")
     String lname;
     @Column(name="height") //in inches
-    int height;
+    int height = -1;
     @Column(name="weight") //in lbs
-    int weight;
+    int weight = -1;
 
     //TODO - do we want public?
     public enum Account {
@@ -31,10 +31,10 @@ public class User {
         ADMINISTRATOR
     }
     @Column(name="accounttype")
-    Account accounttype;
+    Account accounttype = Account.USER;
 
     @Column(name="sessionToken")
-    String sessionToken;
+    String sessionToken = "**";
 
     public User() {}
     public User(String username, String password, String fname, String lname) {
@@ -42,10 +42,6 @@ public class User {
         this.password = password;
         this.fname = fname;
         this.lname = lname;
-        this.height = -1;
-        this.weight = -1;
-        this.accounttype = Account.USER;
-        this.sessionToken = "**";
     }
 
     public String getUsername() {return username;}
@@ -57,7 +53,6 @@ public class User {
     public String getAccountType() {return accounttype.toString();}
     public String getSessionToken() {return sessionToken;}
 
-    public void setUsername(String username) {this.username = username;}
     public void setPassword(String password) {this.password = password;}
     public void setFName(String fname) {this.fname = fname;}
     public void setLName(String lname) {this.lname = lname;}
