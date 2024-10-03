@@ -1,10 +1,12 @@
 package com.example.a1_jubair_6_frontend;
 
 import android.content.Intent;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 import android.util.Log;
@@ -19,7 +21,7 @@ import android.widget.Button;
 public class ProfileFragment extends Fragment {
 
     private float weight = 0f;
-    private int height = 0;
+    private float height = 0;
 
     private View rootView;
 
