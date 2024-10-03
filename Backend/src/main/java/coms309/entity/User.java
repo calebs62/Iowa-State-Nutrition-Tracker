@@ -57,7 +57,6 @@ public class User {
     public String getAccountType() {return accounttype.toString();}
     public String getSessionToken() {return sessionToken;}
 
-    public void setUsername(String username) {this.username = username;}
     public void setPassword(String password) {this.password = password;}
     public void setFName(String fname) {this.fname = fname;}
     public void setLName(String lname) {this.lname = lname;}

@@ -4,12 +4,14 @@ import coms309.entity.FoodItem;
 import coms309.repository.UserRepository;
 import coms309.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,11 +38,16 @@ public class UserController {
         list.addAll(userRepo.findAll());
         return list;
     }
+
     // Sign up
     @PostMapping("/user/signup")
-    public User signup(@RequestBody User tmp){
-        //if (userRepo.exists())
-        return userRepo.save(tmp);
+    public ResponseEntity<String> signup(@RequestBody User newUser) {
+        if (userRepo.existsById(newUser.getUsername())) {
+            return ResponseEntity.badRequest().body("Username already exists");
+        }
+
+        userRepo.save(newUser);
+        return ResponseEntity.ok().body("Registered Successfully");
     }
 
     // Log in
@@ -68,5 +75,7 @@ public class UserController {
 
     // Forget Password
 
+
+    // Update user profile
 
 }
