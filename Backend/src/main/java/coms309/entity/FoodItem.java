@@ -27,9 +27,9 @@ public class FoodItem {
     @Column(name = "protein")
     private int protein = -1;
     @Column(name="servingsize")
-    private String servingsize = null;
+    private String servingsize = "";
     @Column(name="description")
-    private String description = null;
+    private String description = "";
 
     public FoodItem() {}
 
