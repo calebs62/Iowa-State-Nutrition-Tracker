@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 @Table(name="user")
 
 public class User {
+    @Id
     @Column(name="username")
     String username; //unique
 
@@ -23,7 +24,8 @@ public class User {
     @Column(name="weight") //in lbs
     int weight;
 
-    enum Account {
+    //TODO - do we want public?
+    public enum Account {
         USER,
         CONTRIBUTOR,
         ADMINISTRATOR
@@ -31,6 +33,8 @@ public class User {
     @Column(name="accounttype")
     Account accounttype;
 
+    @Column(name="sessionToken")
+    String sessionToken;
 
     public User() {}
     public User(String username, String password, String fname, String lname) {
@@ -41,6 +45,7 @@ public class User {
         this.height = -1;
         this.weight = -1;
         this.accounttype = Account.USER;
+        this.sessionToken = "**";
     }
 
     public String getUsername() {return username;}
@@ -50,5 +55,15 @@ public class User {
     public int getHeight() {return height;}
     public int getWeight() {return weight;}
     public String getAccountType() {return accounttype.toString();}
+    public String getSessionToken() {return sessionToken;}
+
+    public void setUsername(String username) {this.username = username;}
+    public void setPassword(String password) {this.password = password;}
+    public void setFName(String fname) {this.fname = fname;}
+    public void setLName(String lname) {this.lname = lname;}
+    public void setHeight(int height) {this.height = height;}
+    public void setWeight(int weight) {this.weight = weight;}
+    public void setAccountType(Account accounttype) {this.accounttype = accounttype;}
+    public void setSessionToken(String sessionToken) {this.sessionToken = sessionToken;}
 
 }
