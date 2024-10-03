@@ -3,6 +3,7 @@
     <style name="Base.Theme._1_jubair_6_Frontend" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="colorPrimary">@color/Iowa_State_Red</item>
     </style>
 
     <style name="Theme._1_jubair_6_Frontend" parent="Base.Theme._1_jubair_6_Frontend" />
