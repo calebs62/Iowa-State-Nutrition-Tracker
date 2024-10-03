@@ -32,6 +32,7 @@ public class ProfileFragment extends Fragment {
 
     private View rootView;
     ImageView profilePicture;
+    TextView username;
     private Uri profilePictureUri;
     private ProfileDataManager profileDataManager;
 
@@ -73,6 +74,10 @@ public class ProfileFragment extends Fragment {
         setupMenuItems();
 
         profilePicture = view.findViewById(R.id.ivProfilePic);
+        username = view.findViewById(R.id.tvName);
+
+        String fullName = profileDataManager.getFirstname() + " " + profileDataManager.getLastname();
+        username.setText(fullName);
 
         // Load saved profile picture if it exists
         Uri savedUri = profileDataManager.getProfileImageUri();
