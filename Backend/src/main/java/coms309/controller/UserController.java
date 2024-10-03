@@ -25,6 +25,11 @@ public class UserController {
     // List all users
 
     // Sign up
+    @PostMapping("/user/signup")
+    public User signup(@RequestBody User tmp){
+        //if (userRepo.exists())
+        return userRepo.save(tmp);
+    }
 
     // Log in
 
