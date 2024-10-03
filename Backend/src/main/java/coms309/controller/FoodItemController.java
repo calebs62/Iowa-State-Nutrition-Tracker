@@ -28,7 +28,7 @@ public class FoodItemController {
     @GetMapping("/item")
     public List<FoodItem> getAllFoodItems() {
         List<FoodItem> list = new ArrayList<>();
-        foodRepo.findAll().forEach(list::add);
+        list.addAll(foodRepo.findAll());
         return list;
     }
 
