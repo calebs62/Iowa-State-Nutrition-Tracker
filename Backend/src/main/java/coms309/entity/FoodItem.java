@@ -79,6 +79,7 @@ public class FoodItem {
         this.description = other.getDescription();
     }
 
+    @Override
     public String toString() {
         return "Id: " + id +
                 "/nName: " + name +
