@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class UserController {
@@ -50,11 +51,11 @@ public class UserController {
 
     // Log in
     @PostMapping("/login")
-    public User login(@RequestBody String[] credentials) {
+    public User login(@RequestBody Map<String, String> credentials) {
         //credentials[0] = username
         //credentials[1] = password
-        String username = credentials[0];
-        String password = credentials[1];
+        String username = credentials.get("username");
+        String password = credentials.get("password");
         if (userRepo.existsById(username)) {
             User check = userRepo.findById(username).get();
             if (check.getPassword().equals(password)) {
