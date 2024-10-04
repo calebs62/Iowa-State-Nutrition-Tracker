@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Patterns;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -17,7 +18,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.android.volley.Request;
-import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
@@ -27,6 +28,8 @@ import com.example.a1_jubair_6_frontend.network.VolleySingleton;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public class RegisterActivity extends AppCompatActivity {
@@ -51,6 +54,10 @@ public class RegisterActivity extends AppCompatActivity {
         profileDataManager = new ProfileDataManager(this);
 
         Button registerButton = findViewById(R.id.btnRegister);
+        TextView emptyFormError = findViewById(R.id.tvFormEmptyError);
+        TextView invalidEmailError = findViewById(R.id.tvInvalidEmailError);
+        TextView invalidPassLengthError = findViewById(R.id.tvPasswordLengthError);
+
         EditText emailView = findViewById(R.id.emailText);
         EditText password = findViewById(R.id.registerPasswordText);
         EditText confirmPassword = findViewById(R.id.registerPasswordConfirmText);
@@ -58,13 +65,37 @@ public class RegisterActivity extends AppCompatActivity {
         EditText lastnameText = findViewById(R.id.lastNameText);
 
         registerButton.setOnClickListener(view -> {
+            //Make sure none of the errors are showing if user is trying again
+            emptyFormError.setVisibility(TextView.GONE);
+            invalidEmailError.setVisibility(TextView.GONE);
+            invalidPassLengthError.setVisibility(TextView.GONE);
+
             String email = emailView.getText().toString();
             String pass = password.getText().toString();
             String confirmPass = confirmPassword.getText().toString();
             String firstname = firstnameText.getText().toString();
             String lastname = lastnameText.getText().toString();
 
-            user = new User(email, pass, firstname, lastname, 0, 0, "USER");
+            if(email.isEmpty() || pass.isEmpty() || confirmPass.isEmpty() || firstname.isEmpty() || lastname.isEmpty()){
+                Log.e("Form Empty Error", "One or more of the register forms were empty!");
+                emptyFormError.setVisibility(TextView.VISIBLE);
+                return;
+            }
+
+            if(!Patterns.EMAIL_ADDRESS.matcher(email).matches()){
+                Log.e("Invalid Email Error", "Email is not a valid email!");
+                invalidEmailError.setText(String.format("%s is not a valid email!", email));
+                invalidEmailError.setVisibility(TextView.VISIBLE);
+                return;
+            }
+
+            if(pass.length() < 6){
+                Log.e("Password Length Error", "Password was not at least 6 characters!");
+                invalidPassLengthError.setVisibility(TextView.VISIBLE);
+                return;
+            }
+
+            user = new User(email, pass, firstname, lastname, -1, -1, User.Account.USER);
 
             if(!pass.equals(confirmPass)){
                 //Creates an error dialog when the passwords entered do not match
@@ -99,10 +130,10 @@ public class RegisterActivity extends AppCompatActivity {
             confirmPassView.setTextColor(Color.RED);
     }
 
-    private void showSignupError() {
+    private void showSignupError(String message) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-        builder.setMessage("Could not get response from server for signup!")
+        builder.setMessage(message)
                 .setCancelable(false)
                 .setPositiveButton("OK", (dialog, id) -> dialog.dismiss());
 
@@ -115,26 +146,28 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     public void postCredentialsToServer(User user) {
-        //TODO change endpoint to what it is on server
-        String requestUrl = AppConstants.ALEX_POSTMAN_URL + "/user/signup";
+        String requestUrl = AppConstants.SERVER_URL + "/user/signup";
         JSONObject jsonBody = new JSONObject();
         try{
             jsonBody.put("username", user.getUsername());
             jsonBody.put("password", user.getPassword());
+            jsonBody.put("profilepicture", 0);
             jsonBody.put("fname", user.getFname());
             jsonBody.put("lname", user.getLname());
             jsonBody.put("height", user.getHeight());
             jsonBody.put("weight", user.getWeight());
-            jsonBody.put("accounttype", user.getAccounttype());
+            jsonBody.put("accounttype", User.Account.USER);
+            jsonBody.put("sessionToken", "**");
+
+            Log.d("RequestBody", "JSON being sent: " + jsonBody.toString());
         }
         catch(JSONException ex){
             Log.e("JSONException", Objects.requireNonNull(ex.getMessage()));
         }
 
-        JsonObjectRequest credentialsPostRequest = new JsonObjectRequest(
+        StringRequest credentialsPostRequest = new StringRequest(
                 Request.Method.POST,
                 requestUrl,
-                jsonBody,
                 response -> {
                     Log.i("VolleyResponse", "Response: " + response);
 
@@ -146,10 +179,28 @@ public class RegisterActivity extends AppCompatActivity {
                 },
                 error -> {
                     Log.e("VolleyError", "Error: " + error);
-                    showSignupError();
+                    String errorMessage;
+                    if (error.networkResponse != null && error.networkResponse.data != null) {
+                        errorMessage = new String(error.networkResponse.data);
+                    } else {
+                        errorMessage = error.getMessage();
+                    }
+                    Log.e("ServerError", "Error response: " + errorMessage);
+                    showSignupError(errorMessage);
                 }
-        );
-        // Adding request to request queue
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Content-Type", "application/json");
+                return headers;
+            }
+            @Override
+            public byte[] getBody() {
+                return jsonBody.toString().getBytes();
+            }
+        };
+
         VolleySingleton.getInstance(this).addToRequestQueue(credentialsPostRequest);
     }
 }
