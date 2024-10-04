@@ -20,7 +20,7 @@ public class Menu {
     private String meal = "*"; //Breakfast/Lunch/Dinner
 
     @Column(name = "date")
-    private Timestamp date = Timestamp.valueOf("2000-01-01");
+    private Timestamp date = getDate();
 
     public Menu() {}
     public Menu(String location, String meal, Timestamp date) {
