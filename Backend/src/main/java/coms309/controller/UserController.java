@@ -49,7 +49,7 @@ public class UserController {
     }
 
     // Log in
-    @GetMapping("/login")
+    @PostMapping("/login")
     public User login(@RequestBody String[] credentials) {
         //credentials[0] = username
         //credentials[1] = password
