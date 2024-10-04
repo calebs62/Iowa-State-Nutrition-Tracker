@@ -31,7 +31,7 @@ public class ProfileDataManager {
                 .putString(KEY_PASSWORD, user.getPassword())
                 .putInt(KEY_HEIGHT, user.getHeight())
                 .putInt(KEY_WEIGHT, user.getWeight())
-                .putString(KEY_ACCOUNT, user.getAccounttype())
+                .putString(KEY_ACCOUNT, user.getAccounttype().toString())
                 .apply();
     }
 
@@ -81,5 +81,18 @@ public class ProfileDataManager {
 
     public String getAccountType(){
         return preferences.getString(KEY_ACCOUNT, null);
+    }
+
+    public void clearUserData() {
+        preferences.edit()
+                .remove(KEY_FIRSTNAME)
+                .remove(KEY_LASTNAME)
+                .remove(KEY_EMAIL)
+                .remove(KEY_PASSWORD)
+                .remove(KEY_WEIGHT)
+                .remove(KEY_HEIGHT)
+                .remove(KEY_ACCOUNT)
+                .remove(KEY_PROFILE_IMAGE_URI)
+                .apply();
     }
 }

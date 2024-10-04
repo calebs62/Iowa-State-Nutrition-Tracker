@@ -12,7 +12,7 @@ public class User {
     private String lname;
     private int height;
     private int weight;
-    private String accounttype; // Account type (USER, CONTRIBUTOR, ADMINISTRATOR)
+    private Account accounttype; // Account type (USER, CONTRIBUTOR, ADMINISTRATOR)
 
     public enum Account {
         USER,
@@ -20,7 +20,7 @@ public class User {
         ADMINISTRATOR
     }
 
-    public User(String username, String password, String fname, String lname, int height, int weight, String accounttype) {
+    public User(String username, String password, String fname, String lname, int height, int weight, Account accounttype) {
         this.username = username;
         this.password = password;
         this.fname = fname;
@@ -55,7 +55,7 @@ public class User {
         return weight;
     }
 
-    public String getAccounttype() {
+    public Account getAccounttype() {
         return accounttype;
     }
 }

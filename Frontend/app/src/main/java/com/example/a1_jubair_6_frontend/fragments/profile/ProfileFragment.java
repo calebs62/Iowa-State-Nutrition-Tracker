@@ -1,5 +1,7 @@
 package com.example.a1_jubair_6_frontend.fragments.profile;
 
+import static java.lang.String.*;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.net.Uri;
@@ -29,13 +31,12 @@ import com.example.a1_jubair_6_frontend.activities.UpdateProfilePictureActivity;
 
 public class ProfileFragment extends Fragment {
 
-    private float weight = 0f;
-    private int height = 0;
-
     private View rootView;
     ImageView profilePicture;
     TextView username;
     Button logout;
+    TextView weight;
+    TextView height;
     private Uri profilePictureUri;
     private ProfileDataManager profileDataManager;
 
@@ -73,25 +74,27 @@ public class ProfileFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstancesState) {
         super.onViewCreated(view, savedInstancesState);
 
-        updateUserInfo();
         setupMenuItems();
 
         profilePicture = view.findViewById(R.id.ivProfilePic);
         username = view.findViewById(R.id.tvName);
+        weight = view.findViewById(R.id.tvWeight);
+        height = view.findViewById(R.id.tvHeight);
+
+        updateUserInfo();
 
         logout = view.findViewById(R.id.btnLogout);
         logout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                profileDataManager.clearUserData();
+
                 Intent intent = new Intent(getActivity(), LoginSignupActivity.class);
                 // Clear the back stack to prevent the user from going back to the profile screen
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
             }
         });
-
-        String fullName = profileDataManager.getFirstname() + " " + profileDataManager.getLastname();
-        username.setText(fullName);
 
         // Load saved profile picture if it exists
         Uri savedUri = profileDataManager.getProfileImageUri();
@@ -118,7 +121,16 @@ public class ProfileFragment extends Fragment {
     }
 
     private void updateUserInfo() {
-        //TODO make a request to server to get weight, height, and profile picture, then change the values if they are not found in shared preferences
+        String fullName = profileDataManager.getFirstname() + " " + profileDataManager.getLastname();
+        username.setText(fullName);
+
+        int weightVal = profileDataManager.getWeight();
+        if(weightVal > -1)
+            weight.setText(String.format("Height\n%d lb", weightVal));
+
+        int heightVal = profileDataManager.getHeight();
+        if(heightVal > -1)
+            height.setText(String.format("Weight\n%d ft", heightVal));
     }
 
     private void setupMenuItems(){

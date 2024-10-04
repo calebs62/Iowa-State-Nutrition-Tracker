@@ -17,17 +17,16 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.android.volley.Request;
-import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
 import com.example.a1_jubair_6_frontend.fragments.HomePageFragment;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
 import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.models.User;
 import com.example.a1_jubair_6_frontend.network.VolleySingleton;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.Objects;
 
 public class LoginSignupActivity extends AppCompatActivity {
     private EditText emailText;
@@ -82,7 +81,11 @@ public class LoginSignupActivity extends AppCompatActivity {
                 if(saveLogin.isChecked()){
                     profileDataManager.saveEmailAndPassword(email, password);
                 }
+            try {
                 getCredentialsFromServer(email, password);
+            } catch (JSONException e) {
+                Log.e("JSON Exception", e.getMessage());
+            }
         });
 
         TextView registerView = findViewById(R.id.tvRegister);
@@ -93,28 +96,51 @@ public class LoginSignupActivity extends AppCompatActivity {
         });
     }
 
-    public void getCredentialsFromServer(String email, String password){
-        //TODO change endpoint to what it is on server
-        String requestUrl = AppConstants.ALEX_POSTMAN_URL + "/getCreds";
-        String url = requestUrl + "?email=" + email + "&password=" + password;
-        JSONObject credentialsObject = new JSONObject();
+    public void getCredentialsFromServer(String email, String password) throws JSONException {
+        String requestUrl = AppConstants.SERVER_URL + "/login";
 
-        try{
-            credentialsObject.put("email", email);
-            credentialsObject.put("password", password);
-        }
-        catch(JSONException ex){
-            Log.e("JSONException", Objects.requireNonNull(ex.getMessage()));
-        }
-        StringRequest getCreds = new StringRequest(Request.Method.GET, url,
+        JSONObject credentials = new JSONObject();
+
+        credentials.put("username", email);
+        credentials.put("password", password);
+
+        JsonObjectRequest getCreds = new JsonObjectRequest(
+            Request.Method.POST,
+            requestUrl,
+            credentials,
             response -> {
-            Toast.makeText(this, "Login Successful", Toast.LENGTH_SHORT).show();
-            Intent exploreIntent = new Intent(LoginSignupActivity.this, BaseActivity.class);
-            exploreIntent.putExtra(BaseActivity.EXTRA_INITIAL_FRAGMENT, HomePageFragment.class.getName());
-            startActivity(exploreIntent);
-            finish();
+                try {
+                    String username = response.getString("username");
+                    String userPass = response.getString("password");
+                    String fname = response.getString("fname");
+                    String lname = response.getString("lname");
+                    int height = response.getInt("height");
+                    int weight = response.getInt("weight");
+                    String accountType = response.getString("accountType");
+
+                    Log.i("User Info", "Logged in user: " + username + ", " + fname + " " + lname);
+
+                    User user = new User(username, userPass, fname, lname, height, weight, User.Account.valueOf(accountType));
+
+                    profileDataManager.saveUserData(user);
+
+                    Toast.makeText(this, "Login Successful", Toast.LENGTH_SHORT).show();
+                    Intent exploreIntent = new Intent(LoginSignupActivity.this, BaseActivity.class);
+                    exploreIntent.putExtra(BaseActivity.EXTRA_INITIAL_FRAGMENT, HomePageFragment.class.getName());
+                    startActivity(exploreIntent);
+                    finish();
+
+                } catch (JSONException e) {
+                    Log.e("JSONException", e.getMessage());
+                    loginError.setText(R.string.unexpected_error_occurred);
+                    loginError.setVisibility(TextView.VISIBLE);
+                }
         }, error -> {
-            Log.e("Login Error", Objects.requireNonNull(error.getMessage()));
+            String errorMessage = error.getMessage();
+            if(errorMessage == null){
+                errorMessage = "An unknown error occurred";
+            }
+            Log.e("Login Error", errorMessage);
             loginError.setText(R.string.invalid_email_or_password_please_try_again);
             loginError.setVisibility(TextView.VISIBLE);
         });
@@ -127,6 +153,7 @@ public class LoginSignupActivity extends AppCompatActivity {
         String savedPassword = profileDataManager.getPassword();
 
         if (!savedEmail.isEmpty() && !savedPassword.isEmpty()) {
+            saveLogin.setChecked(true);
             emailText.setText(savedEmail);
             passwordText.setText(savedPassword);
         }
