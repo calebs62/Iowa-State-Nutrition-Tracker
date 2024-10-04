@@ -37,7 +37,7 @@ public class FoodItemController {
 
         return item;
     }
-    @GetMapping("/item/update/name/{id}")
+    @PutMapping("/item/update/name/{id}")
     public FoodItem updateName(@PathVariable int id, @RequestBody String val) {
         FoodItem item = foodRepo.findById(id).orElse(null);
         if (item != null) {
@@ -46,7 +46,7 @@ public class FoodItemController {
         }
         return item;
     }
-    @PostMapping("/item/update/calories/{id}")
+    @PutMapping("/item/update/calories/{id}")
     public FoodItem updateName(@PathVariable int id, @RequestBody int val) {
         FoodItem item = foodRepo.findById(id).orElse(null);
         if (item != null) {
@@ -55,7 +55,7 @@ public class FoodItemController {
         }
         return item;
     }
-    @PostMapping("/item/update/totalfat/{id}")
+    @PutMapping("/item/update/totalfat/{id}")
     public FoodItem updateTotalFat(@PathVariable int id, @RequestBody int val) {
         FoodItem item = foodRepo.findById(id).orElse(null);
         if (item != null) {
@@ -65,7 +65,7 @@ public class FoodItemController {
         return item;
     }
 
-    @PostMapping("/item/update/sodium/{id}")
+    @PutMapping("/item/update/sodium/{id}")
     public FoodItem updateSodium(@PathVariable int id, @RequestBody int val) {
         FoodItem item = foodRepo.findById(id).orElse(null);
         if (item != null) {
@@ -74,7 +74,7 @@ public class FoodItemController {
         }
         return item;
     }
-    @PostMapping("/item/update/carbohydrate/{id}")
+    @PutMapping("/item/update/carbohydrate/{id}")
     public FoodItem updateCarbohydrate(@PathVariable int id, @RequestBody int val) {
         FoodItem item = foodRepo.findById(id).orElse(null);
         if (item != null) {
@@ -83,7 +83,7 @@ public class FoodItemController {
         }
         return item;
     }
-    @PostMapping("/item/update/protein/{id}")
+    @PutMapping("/item/update/protein/{id}")
     public FoodItem updateProtein(@PathVariable int id, @RequestBody int val) {
         FoodItem item = foodRepo.findById(id).orElse(null);
         if (item != null) {
@@ -93,7 +93,7 @@ public class FoodItemController {
         return item;
     }
 
-    @PostMapping("/item/update/servingsize/{id}")
+    @PutMapping("/item/update/servingsize/{id}")
     public FoodItem updateServingSize(@PathVariable int id, @RequestBody String val) {
         FoodItem item = foodRepo.findById(id).orElse(null);
         if (item != null) {
@@ -102,7 +102,7 @@ public class FoodItemController {
         }
         return item;
     }
-    @PostMapping("/item/update/description/{id}")
+    @PutMapping("/item/update/description/{id}")
     public FoodItem updateDescription(@PathVariable int id, @RequestBody String val) {
         FoodItem item = foodRepo.findById(id).orElse(null);
         if (item != null) {
