@@ -55,6 +55,30 @@ public class ProfileDataManager {
                 .apply();
     }
 
+    public void setEmail(String email){
+        preferences.edit()
+                .putString(KEY_EMAIL, email)
+                .apply();
+    }
+
+    public void setPassword(String password){
+        preferences.edit()
+                .putString(KEY_PASSWORD, password)
+                .apply();
+    }
+
+    public void setWeight(int weight){
+        preferences.edit()
+                .putInt(KEY_WEIGHT, weight)
+                .apply();
+    }
+
+    public void setHeight(int height){
+        preferences.edit()
+                .putInt(KEY_HEIGHT, height)
+                .apply();
+    }
+
     public String getEmail(){
         return preferences.getString(KEY_EMAIL, "");
     }

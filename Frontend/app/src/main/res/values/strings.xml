@@ -33,4 +33,16 @@
     <string name="unexpected_error_occurred">Unexpected Error Occurred</string>
     <string name="one_or_more_of_the_forms_were_empty">One or more of the forms were empty!</string>
     <string name="password_needs_to_be_at_least_6_characters_long">Password needs to be at least 6 characters long!</string>
+    <string name="password_amp_security"><![CDATA[Password & Security]]></string>
+    <string name="edit_password">Edit Password</string>
+    <string name="new_password_confirm">New Password Confirm</string>
+    <string name="new_password">New Password</string>
+    <string name="old_password">Old Password</string>
+    <string name="save">Save</string>
+    <string name="passwords_do_not_match">Passwords do not match!</string>
+    <string name="personal_info">Personal Info</string>
+    <string name="delete_account">Delete Account</string>
+    <string name="height_ft">Height: -- ft</string>
+    <string name="weight_lbs">Weight: -- lbs</string>
+    <string name="cancel">Cancel</string>
 </resources>
