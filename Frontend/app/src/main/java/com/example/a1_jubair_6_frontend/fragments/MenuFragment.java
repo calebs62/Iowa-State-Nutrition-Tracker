@@ -13,9 +13,18 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.adapters.FoodAdapter;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
 import com.example.a1_jubair_6_frontend.models.FoodItem;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
+import com.google.gson.Gson;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,24 +35,13 @@ public class MenuFragment extends Fragment {
     private RecyclerView foodList;
     private FoodAdapter foodAdapter;
     private List<FoodItem> foodItemList;
+    private Gson gson = new Gson();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         foodItemList = new ArrayList<>();
-
-        //Mock data for testing
-        foodItemList.add(new FoodItem("Food 1", 100, 0, 0, 0, 0, "", ""));
-        foodItemList.add(new FoodItem("Food 2", 150, 0, 0, 0, 0, "", ""));
-        foodItemList.add(new FoodItem("Food 3", 50, 0, 0, 0, 0, "", ""));
-        foodItemList.add(new FoodItem("Food 4", 200, 0, 0, 0, 0, "", ""));
-        foodItemList.add(new FoodItem("Food 5", 200, 0, 0, 0, 0, "", ""));
-        foodItemList.add(new FoodItem("Food 6", 200, 0, 0, 0, 0, "", ""));
-        foodItemList.add(new FoodItem("Food 7", 200, 0, 0, 0, 0, "", ""));
-        foodItemList.add(new FoodItem("Food 8", 200, 0, 0, 0, 0, "", ""));
-        foodItemList.add(new FoodItem("Food 9", 200, 0, 0, 0, 0, "", ""));
-        foodItemList.add(new FoodItem("Food 10", 200, 0, 0, 0, 0, "", ""));
     }
 
     @Override
@@ -71,6 +69,150 @@ public class MenuFragment extends Fragment {
 
         //TODO: need to make it so the list updates its quantity when the increment or decrement is clicked
 
+        //TODO: This is not how we should get the data, this is just to see if it works. Need to put each food items in their corresponding menu
+        getAllFoodItems();
+    }
+
+    // <editor-fold desc="HTTP Requests">
+
+    private void getAllFoodItems() {
+        String url = AppConstants.SERVER_URL + "/item";
+
+        JsonArrayRequest request = new JsonArrayRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    foodItemList.clear();
+                    for (int i = 0; i < response.length(); i++){
+                        try{
+                            FoodItem item = gson.fromJson(response.getJSONObject(i).toString(), FoodItem.class);
+                            foodItemList.add(item);
+                        }
+                        catch (Exception e){
+                            Log.e("Response Error", String.valueOf(e.getMessage()));
+                        }
+                    }
+                    foodAdapter.notifyDataSetChanged();
+                },
+                error ->{
+                    Log.e("Request Error", String.valueOf(error.getMessage()));
+                }
+        );
+
+        VolleySingleton.getInstance(getContext()).addToRequestQueue(request);
+    }
+
+    private void getFoodItemById(int id) {
+        String url = AppConstants.SERVER_URL + "/item/" + id;
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+                    FoodItem item = gson.fromJson(response.toString(), FoodItem.class);
+                    //TODO: Do something with the item, this will probably be used for the search bar
+                },
+                error -> {
+                    Log.e("Request Error", String.valueOf(error.getMessage()));
+                }
+        );
+    }
+
+    private void createFoodItem(FoodItem foodItem) throws JSONException {
+        String url = AppConstants.SERVER_URL + "/item";
+
+        JSONObject jsonBody = new JSONObject(gson.toJson(foodItem));
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, jsonBody,
+                response -> {
+                    FoodItem createdItem = gson.fromJson(response.toString(), FoodItem.class);
+                    foodItemList.add(createdItem);
+                    foodAdapter.notifyDataSetChanged();
+                },
+                error -> {
+                    Log.e("Request Error", String.valueOf(error.getMessage()));
+                }
+        );
+        VolleySingleton.getInstance(getContext()).addToRequestQueue(request);
+    }
+
+    private void updateFoodItem(int id, FoodItem foodItem) throws JSONException {
+        String url = AppConstants.SERVER_URL + "/item/update/" + id;
+
+        JSONObject jsonBody = new JSONObject(gson.toJson(foodItem));
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, jsonBody,
+                response -> {
+                    FoodItem updatedItem = gson.fromJson(response.toString(), FoodItem.class);
+
+                    // Update the item in the list
+                    updateItemInList(updatedItem);
+                },
+                error -> {
+                    Log.e("Request Error", String.valueOf(error.getMessage()));
+                }
+        );
+        VolleySingleton.getInstance(getContext()).addToRequestQueue(request);
+    }
+
+    private void updateField(int id, String field, Object value) {
+        String url = AppConstants.SERVER_URL + "/item/update/" + field + "/" + id;
+
+        JSONObject jsonBody = new JSONObject();
+        try {
+            jsonBody.put("val", value);
+        } catch (Exception e) {
+            Log.e("JSON Error", String.valueOf(e.getMessage()));
+            return;
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.PUT, url, jsonBody,
+                response -> {
+                    FoodItem updatedItem = gson.fromJson(response.toString(), FoodItem.class);
+                    updateItemInList(updatedItem);
+                },
+                error -> {
+                    Log.e("Request Error", String.valueOf(error.getMessage()));
+                }
+        );
+        VolleySingleton.getInstance(getContext()).addToRequestQueue(request);
+    }
+
+    private void deleteFoodItem(int id) {
+        String url = AppConstants.SERVER_URL + "/item/" + id;
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.DELETE, url, null,
+                response -> {
+                    removeItemFromList(id);
+                },
+                error -> {
+                    Log.e("Request Error", String.valueOf(error.getMessage()));
+                }
+        );
+        VolleySingleton.getInstance(getContext()).addToRequestQueue(request);
+    }
+
+    // </editor-fold>
+
+    // <editor-fold desc="Helper Methods">
+
+    private void updateItemInList(FoodItem updatedItem) {
+        for (int i = 0; i < foodItemList.size(); i++) {
+            if (foodItemList.get(i).getId() == updatedItem.getId()) {
+                foodItemList.set(i, updatedItem);
+                foodAdapter.notifyItemChanged(i);
+                break;
+            }
+        }
+    }
+
+    private void removeItemFromList(int id) {
+        for (int i = 0; i < foodItemList.size(); i++) {
+            if (foodItemList.get(i).getId() == id) {
+                foodItemList.remove(i);
+                foodAdapter.notifyItemRemoved(i);
+                break;
+            }
+        }
     }
 
     public Map<String, Integer> getFoodItemQuantities() {
@@ -81,4 +223,5 @@ public class MenuFragment extends Fragment {
         }
         return quantities;
     }
+    //</editor-fold>
 }
