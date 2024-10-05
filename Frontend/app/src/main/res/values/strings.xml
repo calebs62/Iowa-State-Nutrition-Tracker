@@ -45,4 +45,6 @@
     <string name="height_ft">Height: -- ft</string>
     <string name="weight_lbs">Weight: -- lbs</string>
     <string name="cancel">Cancel</string>
+    <string name="food">Food</string>
+    <string name="cal">Cal</string>
 </resources>

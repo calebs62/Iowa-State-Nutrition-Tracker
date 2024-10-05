@@ -10,6 +10,7 @@ public class FoodItem {
         private int protein;
         private String servingsize;
         private String description;
+        private int quantity;
 
         public FoodItem() {}
         public FoodItem(String name, int calories, int totalFat, int sodium, int carbohydrate,
@@ -23,6 +24,7 @@ public class FoodItem {
             this.protein = protein;
             this.servingsize = servingsize;
             this.description = description;
+            this.quantity = 0;
         }
         public void changeName(String newName) {
             this.name = newName;
@@ -46,5 +48,13 @@ public class FoodItem {
                     "/nProtein: " + protein +
                     "/nServing Size: " + servingsize +
                     "/nDescription: " + description;
+        }
+
+        public int getQuantity() {
+            return this.quantity;
+        }
+
+        public void setQuantity(int quantity){
+            this.quantity = quantity;
         }
 }
