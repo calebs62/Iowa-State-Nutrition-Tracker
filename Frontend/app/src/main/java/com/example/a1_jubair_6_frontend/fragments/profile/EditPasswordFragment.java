@@ -84,6 +84,10 @@ public class EditPasswordFragment extends Fragment {
         Fragment passwordAndSecurityFragment = new PasswordAndSecurityFragment();
 
         getParentFragmentManager().beginTransaction()
+                .setCustomAnimations(R.anim.slide_in_right,
+                        R.anim.slide_out_right,
+                        R.anim.slide_in_left,
+                        R.anim.slide_out_left)
                 .replace(R.id.container, passwordAndSecurityFragment)
                 .addToBackStack(null)
                 .commit();

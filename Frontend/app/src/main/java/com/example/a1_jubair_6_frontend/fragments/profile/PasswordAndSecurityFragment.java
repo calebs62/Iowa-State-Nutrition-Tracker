@@ -17,15 +17,17 @@ import android.widget.TextView;
 import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.activities.BaseActivity;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.google.android.material.button.MaterialButton;
 
 
 public class PasswordAndSecurityFragment extends Fragment {
 
-    View rootview;
-    ImageView goBack;
-    TextView passwordText;
-
-    ProfileDataManager profileDataManager;
+    private View rootview;
+    private ImageView goBack;
+    private TextView passwordText;
+    private MaterialButton btnChangePassword;
+    private MaterialButton btnSetup2FA;
+    private ProfileDataManager profileDataManager;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -44,43 +46,42 @@ public class PasswordAndSecurityFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstancesState) {
         super.onViewCreated(view, savedInstancesState);
 
-        goBack = view.findViewById(R.id.backArrow2);
-        goBack.setOnClickListener(c -> goBack());
+        initializeViews(view);
+        setupClickListeners();
+        displayPassword();
+    }
+
+    private void initializeViews(View view) {
+        goBack = view.findViewById(R.id.backArrow);
+        passwordText = view.findViewById(R.id.tvPasswordHidden);
+        btnChangePassword = view.findViewById(R.id.btnChangePassword);
+        btnSetup2FA = view.findViewById(R.id.btnSetup2FA);
+    }
+
+    private void displayPassword() {
+        String password = profileDataManager.getPassword();
 
         StringBuilder hiddenPassword = new StringBuilder();
-
-        for (int i = 0; i < profileDataManager.getPassword().length(); i++){
+        for (int i = 0; i < password.length(); i++) {
             hiddenPassword.append("•");
         }
-
-        passwordText = view.findViewById(R.id.tvPasswordHidden);
-        passwordText.setText(String.format("Password: %s", hiddenPassword));
-
-        setupMenuItem(R.id.editPassword);
+        passwordText.setText(hiddenPassword.toString());
     }
 
-    private void setupMenuItem(int itemId) {
-        View item = rootview.findViewById(itemId);
-        ImageView icon = item.findViewById(R.id.icon);
-        ImageView rightArrow = item.findViewById(R.id.rightArrow);
-        TextView titleView = item.findViewById(R.id.title);
+    private void setupClickListeners() {
+        goBack.setOnClickListener(v -> goBack());
 
-        titleView.setText(R.string.edit_password);
-
-        item.setOnClickListener(v -> {
+        btnChangePassword.setOnClickListener(v -> {
             v.startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.click_animation));
-            titleView.setTextColor(getResources().getColor(R.color.Iowa_State_Red));
-            icon.setColorFilter(getResources().getColor(R.color.Iowa_State_Red));
-            rightArrow.setColorFilter(getResources().getColor(R.color.Iowa_State_Red));
+            navigateToSubFragment(new EditPasswordFragment());
+        });
 
-            if (itemId == R.id.editPassword) {
-                navigateToSubFragment(new EditPasswordFragment());
-            }
-            else {
-                Log.e("Navigation Error", "Could not navigate from password & security page!");
-            }
+        btnSetup2FA.setOnClickListener(v -> {
+            v.startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.click_animation));
+            // TODO: Implement 2FA setup navigation
         });
     }
+
 
     private void navigateToSubFragment(Fragment fragment){
         if(getActivity() instanceof BaseActivity){
@@ -92,6 +93,10 @@ public class PasswordAndSecurityFragment extends Fragment {
         Fragment profileFragment = new ProfileFragment();
 
         getParentFragmentManager().beginTransaction()
+                .setCustomAnimations(R.anim.slide_in_right,
+                        R.anim.slide_out_right,
+                        R.anim.slide_in_left,
+                        R.anim.slide_out_left)
                 .replace(R.id.container, profileFragment)
                 .addToBackStack(null)
                 .commit();

@@ -1,6 +1,7 @@
 package com.example.a1_jubair_6_frontend.fragments.profile;
 
 import android.app.Dialog;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -10,6 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import android.text.InputType;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,7 +22,11 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.activities.LoginSignupActivity;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
 
 public class PersonalInfoFragment extends Fragment {
@@ -62,10 +68,13 @@ public class PersonalInfoFragment extends Fragment {
         weight = view.findViewById(R.id.weightText);
         height = view.findViewById(R.id.heightText);
 
-        editEmail = view.findViewById(R.id.btnEditEmail);
         editWeight = view.findViewById(R.id.btnEditWeight);
         editHeight = view.findViewById(R.id.btnEditHeight);
         deleteAccount = view.findViewById(R.id.btnDeleteAccount);
+
+        deleteAccount.setOnClickListener(v -> {
+            showDeleteAccountDialog();
+        });
 
         refreshPersonalInfoValues();
         setupEditButtons();
@@ -74,7 +83,6 @@ public class PersonalInfoFragment extends Fragment {
     }
 
     private void setupEditButtons(){
-        editEmail.setOnClickListener(v -> showEditDialog("Email", "Enter new email", InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS));
         editWeight.setOnClickListener(v -> showEditDialog("Weight", "Enter weight in lbs", InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL));
         editHeight.setOnClickListener(v -> showEditDialog("Height", "Enter height in ft", InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL));
     }
@@ -116,10 +124,6 @@ public class PersonalInfoFragment extends Fragment {
 
     private void saveNewValue(String field, String value) {
         switch (field) {
-            case "Email":
-                profileDataManager.setEmail(value);
-                // Save email to server
-                break;
             case "Weight":
                 profileDataManager.setWeight(Integer.parseInt(value));
                 // Save weight to server
@@ -135,7 +139,7 @@ public class PersonalInfoFragment extends Fragment {
         int weightVal = profileDataManager.getWeight();
         int heightVal = profileDataManager.getHeight();
 
-        email.setText(String.format("Email - %s", profileDataManager.getEmail()));
+        email.setText(String.format("Email: %s", profileDataManager.getEmail()));
 
         if ((weightVal != -1)) {
             weight.setText(String.format("Weight  %d lbs", weightVal));
@@ -150,10 +154,68 @@ public class PersonalInfoFragment extends Fragment {
         }
     }
 
+    public void showDeleteAccountDialog() {
+        Dialog dialog = new Dialog(requireContext());
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.delete_user_dialog);
+
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        WindowManager.LayoutParams params = dialog.getWindow().getAttributes();
+        params.width = WindowManager.LayoutParams.MATCH_PARENT;
+        dialog.getWindow().setAttributes(params);
+
+        EditText editTextField = dialog.findViewById(R.id.editTextField);
+        Button btnCancel = dialog.findViewById(R.id.btnCancel);
+        Button btnSave = dialog.findViewById(R.id.btnSave);
+
+        editTextField.setInputType(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        btnSave.setOnClickListener(v -> {
+            String emailValue = editTextField.getText().toString();
+            if (emailValue.isEmpty()) {
+                editTextField.setError("This field cannot be empty");
+            }
+            else if(!emailValue.equals(profileDataManager.getEmail())){
+                editTextField.setError("Entered email does not match account email");
+            }
+            else{
+                deleteUserFromServer();
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
+    }
+
+    public void  deleteUserFromServer(){
+        String url = AppConstants.SERVER_URL + "/deleteUser/" + profileDataManager.getEmail();
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
+            Request.Method.DELETE,
+            url,
+            null,
+            response -> {
+                profileDataManager.clearUserData();
+                Intent intent = new Intent(getActivity(), LoginSignupActivity.class);
+                // Clear the back stack to prevent the user from going back to the personal info screen
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+            },
+            error -> {
+                Log.e("Request Error", String.valueOf(error.getMessage()));
+        });
+    }
+
     public void goBack(){
         Fragment profileFragment = new ProfileFragment();
 
         getParentFragmentManager().beginTransaction()
+                .setCustomAnimations(R.anim.slide_in_right,
+                        R.anim.slide_out_right,
+                        R.anim.slide_in_left,
+                        R.anim.slide_out_left)
                 .replace(R.id.container, profileFragment)
                 .addToBackStack(null)
                 .commit();
