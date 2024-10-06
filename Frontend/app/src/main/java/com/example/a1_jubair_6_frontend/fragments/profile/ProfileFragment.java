@@ -149,7 +149,6 @@ public class ProfileFragment extends Fragment {
         titleView.setText(title);
 
         item.setOnClickListener(v -> {
-            //TODO make it so that it goes to
             v.startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.click_animation));
             titleView.setTextColor(getResources().getColor(R.color.Iowa_State_Red));
             icon.setColorFilter(getResources().getColor(R.color.Iowa_State_Red));
