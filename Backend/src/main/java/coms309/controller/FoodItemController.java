@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -27,94 +28,40 @@ public class FoodItemController {
     }
 
     // Update item fields
-    @PostMapping("/item/update/{id}")
-    public FoodItem updateFoodItem(@PathVariable int id, @RequestBody FoodItem foodItem) {
+    @PutMapping("/item/update/{id}")
+    public FoodItem updateFoodItem(@PathVariable int id, @RequestBody Map<String, Object> foodItem) {
         FoodItem item = foodRepo.findById(id).orElse(null);
         if (item != null) {
-            item.setAll(foodItem);
+            if (foodItem.containsKey("name")) {
+                item.setName((String)foodItem.get("name"));
+            }
+            if (foodItem.containsKey("calories")) {
+                item.setCalories((Integer)foodItem.get("calories"));
+            }
+            if (foodItem.containsKey("totalFat")) {
+                item.setTotalFat((Integer)foodItem.get("totalFat"));
+            }
+            if (foodItem.containsKey("sodium")) {
+                item.setSodium((Integer)foodItem.get("sodium"));
+            }
+            if (foodItem.containsKey("carbohydrate")) {
+                item.setCarbohydrate((Integer)foodItem.get("carbohydrate"));
+            }
+            if (foodItem.containsKey("protein")) {
+                item.setProtein((Integer)foodItem.get("protein"));
+            }
+            if (foodItem.containsKey("servingsize")) {
+                item.setServingSize((String)foodItem.get("servingsize"));
+            }
+            if (foodItem.containsKey("description")) {
+                item.setDescription((String)foodItem.get("description"));
+            }
             foodRepo.save(item);
         }
 
         return item;
     }
-    @PutMapping("/item/update/name/{id}")
-    public FoodItem updateName(@PathVariable int id, @RequestBody String val) {
-        FoodItem item = foodRepo.findById(id).orElse(null);
-        if (item != null) {
-            item.setName(val);
-            foodRepo.save(item);
-        }
-        return item;
-    }
-    @PutMapping("/item/update/calories/{id}")
-    public FoodItem updateName(@PathVariable int id, @RequestBody int val) {
-        FoodItem item = foodRepo.findById(id).orElse(null);
-        if (item != null) {
-            item.setCalories(val);
-            foodRepo.save(item);
-        }
-        return item;
-    }
-    @PutMapping("/item/update/totalfat/{id}")
-    public FoodItem updateTotalFat(@PathVariable int id, @RequestBody int val) {
-        FoodItem item = foodRepo.findById(id).orElse(null);
-        if (item != null) {
-            item.setTotalFat(val);
-            foodRepo.save(item);
-        }
-        return item;
-    }
-
-    @PutMapping("/item/update/sodium/{id}")
-    public FoodItem updateSodium(@PathVariable int id, @RequestBody int val) {
-        FoodItem item = foodRepo.findById(id).orElse(null);
-        if (item != null) {
-            item.setSodium(val);
-            foodRepo.save(item);
-        }
-        return item;
-    }
-    @PutMapping("/item/update/carbohydrate/{id}")
-    public FoodItem updateCarbohydrate(@PathVariable int id, @RequestBody int val) {
-        FoodItem item = foodRepo.findById(id).orElse(null);
-        if (item != null) {
-            item.setCarbohydrate(val);
-            foodRepo.save(item);
-        }
-        return item;
-    }
-    @PutMapping("/item/update/protein/{id}")
-    public FoodItem updateProtein(@PathVariable int id, @RequestBody int val) {
-        FoodItem item = foodRepo.findById(id).orElse(null);
-        if (item != null) {
-            item.setProtein(val);
-            foodRepo.save(item);
-        }
-        return item;
-    }
-
-    @PutMapping("/item/update/servingsize/{id}")
-    public FoodItem updateServingSize(@PathVariable int id, @RequestBody String val) {
-        FoodItem item = foodRepo.findById(id).orElse(null);
-        if (item != null) {
-            item.setServingSize(val);
-            foodRepo.save(item);
-        }
-        return item;
-    }
-    @PutMapping("/item/update/description/{id}")
-    public FoodItem updateDescription(@PathVariable int id, @RequestBody String val) {
-        FoodItem item = foodRepo.findById(id).orElse(null);
-        if (item != null) {
-            item.setDescription(val);
-            foodRepo.save(item);
-        }
-        return item;
-    }
-
-
-
-    // Delete item
+       // Delete item
     @DeleteMapping("/item/{id}")
     public FoodItem delete(@PathVariable int id) {
         FoodItem val = foodRepo.findById(id).orElse(null);
