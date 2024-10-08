@@ -104,6 +104,7 @@ public class LoginSignupActivity extends AppCompatActivity {
         credentials.put("username", email);
         credentials.put("password", password);
 
+        Log.i("Starting Login Request", "Searching for user " + email + " on server [" + requestUrl + "]");
         JsonObjectRequest getCreds = new JsonObjectRequest(
             Request.Method.POST,
             requestUrl,
