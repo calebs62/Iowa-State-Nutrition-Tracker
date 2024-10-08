@@ -1,5 +1,6 @@
 package coms309.controller;
 
+import coms309.entity.FoodItem;
 import coms309.repository.UserRepository;
 import coms309.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,16 +18,47 @@ public class UserController {
 
     // Get user from id
     @GetMapping("/user/{id}")
-    public User getUserById(@PathVariable String id) {
+    public User getUserById(@PathVariable int id) {
         return userRepo.findById(id).orElse(null);
     }
 
     // Update user info
-
+    @PutMapping("/user/update/{id}")
+    public User updateUser(@PathVariable int id, @RequestBody Map<String, Object> updatedUser) {
+        User currUser = userRepo.findById(id).orElse(null);
+        if (currUser != null) {
+            if (updatedUser.containsKey("password")) {
+                currUser.setPassword((String)updatedUser.get("password"));
+            }
+            if(updatedUser.containsKey("fname")){
+                currUser.setFName((String) updatedUser.get("fname"));
+            }
+            if(updatedUser.containsKey("lname")){
+                currUser.setFName((String) updatedUser.get("lname"));
+            }
+            if(updatedUser.containsKey("height")){
+                currUser.setHeight((int) updatedUser.get("height"));
+            }
+            if(updatedUser.containsKey("weight")){
+                currUser.setWeight((int) updatedUser.get("weight"));
+            }
+            if(updatedUser.containsKey("accounttype")){
+                currUser.setAccountType((User.Account) updatedUser.get("accounttype"));
+            }
+            if(updatedUser.containsKey("sessiontoken")){
+                currUser.setSessionToken((String) updatedUser.get("sessiontoken"));
+            }
+            if(updatedUser.containsKey("img")){
+                currUser.setImg((String) updatedUser.get("img"));
+            }
+            userRepo.save(currUser);
+        }
+        return currUser;
+    }
 
     // Delete  user
     @DeleteMapping("/user/{id}")
-    public User delete(@PathVariable String id){
+    public User delete(@PathVariable int id){
         User delUser = userRepo.findById(id).orElse(null);
 
         if (userRepo.existsById(id)){
@@ -47,7 +79,7 @@ public class UserController {
     // Sign up
     @PostMapping("/user/signup")
     public ResponseEntity<String> signup(@RequestBody User newUser) {
-        if (userRepo.existsById(newUser.getUsername())) {
+        if (userRepo.findByusername(newUser.getUsername()) != null) {
             return ResponseEntity.badRequest().body("Username already exists");
         }
 
