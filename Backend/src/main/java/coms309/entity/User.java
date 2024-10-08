@@ -7,22 +7,26 @@ import jakarta.persistence.*;
 
 public class User {
     @Id
-    @Column(name="username")
-    String username; //unique
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="UID")
+    private int uid;
+
+    @Column(name="username", unique = true)
+    private String username; //unique
 
     @Column(name="password")
-    String password; //will have to figure out how to hash it
+    private String password; //will have to figure out how to hash it
 
     @Column(name="profilepicture")
-    int img;
+    private String img;
     @Column(name="fname")
-    String fname;
+    private String fname;
     @Column(name="lname")
-    String lname;
+    private String lname;
     @Column(name="height") //in inches
-    int height = -1;
+    private int height = -1;
     @Column(name="weight") //in lbs
-    int weight = -1;
+    private int weight = -1;
 
     //TODO - do we want public?
     public enum Account {
@@ -31,10 +35,10 @@ public class User {
         ADMINISTRATOR
     }
     @Column(name="accounttype")
-    Account accounttype = Account.USER;
+    private Account accounttype = Account.USER;
 
     @Column(name="sessionToken")
-    String sessionToken = "**";
+    private String sessionToken = "**";
 
     public User() {}
     public User(String username, String password, String fname, String lname) {
@@ -44,6 +48,7 @@ public class User {
         this.lname = lname;
     }
 
+    public int getUid(){return uid;}
     public String getUsername() {return username;}
     public String getPassword() {return password;}
     public String getFName() {return fname;}
@@ -52,7 +57,9 @@ public class User {
     public int getWeight() {return weight;}
     public String getAccountType() {return accounttype.toString();}
     public String getSessionToken() {return sessionToken;}
+    public String getImg(){return img;}
 
+    public void setId(int uid) {this.uid = uid;}
     public void setPassword(String password) {this.password = password;}
     public void setFName(String fname) {this.fname = fname;}
     public void setLName(String lname) {this.lname = lname;}
@@ -60,5 +67,5 @@ public class User {
     public void setWeight(int weight) {this.weight = weight;}
     public void setAccountType(Account accounttype) {this.accounttype = accounttype;}
     public void setSessionToken(String sessionToken) {this.sessionToken = sessionToken;}
-
+    public void setImg(String img){this.img = img;}
 }
