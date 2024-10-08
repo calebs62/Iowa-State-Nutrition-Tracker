@@ -88,10 +88,8 @@ public class UserController {
     }
 
     // Log in
-    @GetMapping("/login")
+    @PutMapping("/login")
     public User login(@RequestBody Map<String, Object> credentials) {
-        //credentials[0] = username
-        //credentials[1] = password
         int uid = (int) credentials.get("uid");
         String password = (String) credentials.get("password");
         if (userRepo.existsById(uid)) {
@@ -111,6 +109,20 @@ public class UserController {
 
 
     // Forget Password
+    @PutMapping("/password")
+    public User forgotPassword(@RequestBody Map<String, Object> credentials) {
+        int uid = (int)credentials.get("uid");
+        String password = (String) credentials.get("password");
+        if (userRepo.existsById(uid)) {
+            User check = userRepo.findById(uid).get();
+            check.setPassword((String)credentials.get("newPassword"));
+            userRepo.save(check);
+            return check;
+        }
+        else {
+            return null;
+        }
+    }
 
 
     // Update user profile
