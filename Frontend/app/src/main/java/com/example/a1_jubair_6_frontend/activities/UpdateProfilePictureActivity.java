@@ -18,6 +18,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.bumptech.glide.Glide;
@@ -28,6 +29,9 @@ import com.example.a1_jubair_6_frontend.network.VolleySingleton;
 import com.example.a1_jubair_6_frontend.utils.ImageUtils;
 
 import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class UpdateProfilePictureActivity extends AppCompatActivity {
 
@@ -168,19 +172,43 @@ public class UpdateProfilePictureActivity extends AppCompatActivity {
                     requestUrl,
                     jsonBody,
                     response -> {
-                        Toast.makeText(this, "Upload Sucessful", Toast.LENGTH_SHORT).show();
-                        profileDataManager.saveProfileImageUri(imageUri);
+                        try {
+                            if (response.has("img")) {
+                                String updatedImageUrl = response.getString("img");
+                                profileDataManager.saveProfileImageUri(imageUri);
+                                Toast.makeText(this, "Profile picture updated successfully", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(this, "Upload successful but no image URL returned", Toast.LENGTH_SHORT).show();
+                            }
+                        }catch (Exception e){
+                            Toast.makeText(this, "Error processing server response", Toast.LENGTH_SHORT).show();
+                            Log.e("ImageUploadError", "Error processing response: " + e.getMessage());
+                        }
                     },
                     error -> {
-                        Toast.makeText(this, "Upload Failed", Toast.LENGTH_SHORT).show();
-                        Log.e("Upload Failed", error.getMessage());
+                        String errorMessage = "Upload failed";
+                        if (error.networkResponse != null) {
+                            errorMessage += " (Status: " + error.networkResponse.statusCode + ")";
+                        }
+                        Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
+                        Log.e("UploadError", "Error: " + error.getMessage());
                     }
-            );
+            ){
+                @Override
+                public Map<String, String> getHeaders(){
+                    Map<String, String> headers = new HashMap<>();
+                    headers.put("Content-Type", "application/json");
+                    return headers;
+                }
+            };
+
+            jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(30000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
 
             VolleySingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
         } catch (Exception e) {
-            e.printStackTrace();
             Toast.makeText(this, "Error processing image", Toast.LENGTH_SHORT).show();
+            Log.e("UploadError", "Error processing image: " + e.getMessage());
         }
     }
 }
