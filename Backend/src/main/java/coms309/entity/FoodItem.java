@@ -2,6 +2,8 @@ package coms309.entity;
 
 import jakarta.persistence.*;
 
+import java.util.Set;
+
 @Entity
 @Table(name="food_item")
 public class FoodItem {
@@ -30,6 +32,9 @@ public class FoodItem {
     private String servingsize = "";
     @Column(name="description")
     private String description = "";
+
+    @ManyToMany (mappedBy="foodItems")
+    private Set<Menu> menus;
 
     public FoodItem() {}
 
