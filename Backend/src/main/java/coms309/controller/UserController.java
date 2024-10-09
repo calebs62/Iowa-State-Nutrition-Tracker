@@ -89,11 +89,11 @@ public class UserController {
 
     // Log in
     @PutMapping("/login")
-    public User login(@RequestBody Map<String, Object> credentials) {
-        int uid = (int) credentials.get("uid");
-        String password = (String) credentials.get("password");
-        if (userRepo.existsById(uid)) {
-            User check = userRepo.findById(uid).get();
+    public User login(@RequestBody Map<String, String> credentials) {
+        String username = credentials.get("username");
+        String password = credentials.get("password");
+        if (userRepo.findByusername(username) != null) {
+            User check = userRepo.findByusername(username);
             if (check.getPassword().equals(password)) {
                 return check;
             }
