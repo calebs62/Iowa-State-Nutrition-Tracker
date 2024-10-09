@@ -1,8 +1,10 @@
 package com.example.a1_jubair_6_frontend.activities;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.nfc.Tag;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Base64;
@@ -30,33 +32,31 @@ import com.example.a1_jubair_6_frontend.utils.ImageUtils;
 
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
 public class UpdateProfilePictureActivity extends AppCompatActivity {
-
-    ImageView profilePicture;
-    ImageView backArrow;
+    private static final String TAG = "UpdateProfilePicture";
     private static final int REQUEST_PERMISSION = 100;
+    private static final int MAX_IMAGE_SIZE = 500 * 1024; //500KB
+
+    private ImageView profilePicture;
+    private ImageView backArrow;
     private Uri selectedImageUri;
     private ProfileDataManager profileDataManager;
 
-    private final ActivityResultLauncher<Intent> getContentLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-                if (result.getResultCode() == RESULT_OK) {
-                    Intent data = result.getData();
-                    if (data != null) {
-                        selectedImageUri = data.getData();
-                        if (selectedImageUri != null) {
-                            Glide.with(this)
-                                    .load(selectedImageUri)
-                                    .circleCrop()
-                                    .into(profilePicture);
-                            saveResultAndFinish();
-                        }
-                    }
+
+    private final ActivityResultLauncher<Intent> galleryLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if(result.getResultCode() == RESULT_OK && result.getData() != null){
+                    handleImageSelection(result.getData().getData());
                 }
-            });
+            }
+    );
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,125 +73,82 @@ public class UpdateProfilePictureActivity extends AppCompatActivity {
         profilePicture = findViewById(R.id.ivProfilePic);
 
         // Load the current profile picture if it exists
-        String currentPictureUriString = getIntent().getStringExtra("currentPictureUri");
-        if (currentPictureUriString != null) {
-            Uri currentPictureUri = Uri.parse(currentPictureUriString);
-            Glide.with(this)
-                    .load(currentPictureUri)
-                    .circleCrop()
-                    .into(profilePicture);
-        }
-    }
-
-    private void checkPermissionAndShowOptions() {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
-            if(ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED){
-                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.READ_MEDIA_IMAGES}, REQUEST_PERMISSION);
-            }
-            else{
-                showImageOptions();
-            }
-        }
-        else{
-            showImageOptions();
-        }
+        String currentPictureUrl = getIntent().getStringExtra("currentPictureUri");
+        if(currentPictureUrl != null && !currentPictureUrl.isEmpty())
+            loadProfileImage(currentPictureUrl);
     }
 
     private void setupClickListeners() {
         backArrow.setOnClickListener(v -> finish());
+        findViewById(R.id.btnUpdateProfile).setOnClickListener(v -> checkPermissionAndShowOptions());
+    }
 
-        findViewById(R.id.btnUpdateProfile).setOnClickListener(v ->
-                checkPermissionAndShowOptions());
+    private void checkPermissionAndShowOptions() {
+        String permission = Manifest.permission.READ_MEDIA_IMAGES;
+
+        if(ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED)
+            ActivityCompat.requestPermissions(this, new String[]{permission}, REQUEST_PERMISSION);
+        else
+            showImageOptions();
     }
 
     private void showImageOptions() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Update Profile Picture")
-                .setItems(new String[]{"Upload from Library", "Take Photo"}, (dialog, which) -> {
-                    switch (which){
-                        case 0:
-                            openGallery();
-                            break;
-                        case 1:
-                            //TODO take photo
-                            break;
-                    }
-                })
+        new AlertDialog.Builder(this)
+                .setTitle("Update Profile Picture")
+                .setItems(new String[]{"Upload from Gallery"}, (dialog, which) -> openGallery())
                 .show();
     }
 
     private void openGallery() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("image/*");
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        getContentLauncher.launch(intent);
+        galleryLauncher.launch(intent);
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults){
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(requestCode == REQUEST_PERMISSION) {
-            if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                showImageOptions();
-            }
-            else {
-                //TODO if permission is denied, maybe show an error to user??
-            }
+    private void handleImageSelection(Uri imageUri){
+        if (imageUri != null){
+            selectedImageUri = imageUri;
+            loadProfileImage(imageUri.toString());
+            uploadProfilePicture();
         }
     }
 
-    private void saveResultAndFinish() {
-        if (selectedImageUri != null) {
-            // Save the URI to SharedPreferences
-            profileDataManager.saveProfileImageUri(selectedImageUri);
-
-            //Upload to Server
-            uploadProfilePictureToServer(selectedImageUri);
-
-            // Return the result to the calling fragment
-            Intent resultIntent = new Intent();
-            resultIntent.putExtra("imageUri", selectedImageUri.toString());
-            setResult(RESULT_OK, resultIntent);
-        }
-        finish();
+    private void loadProfileImage(String imageUri) {
+        Glide.with(this)
+                .load(imageUri)
+                .circleCrop()
+                .placeholder(R.drawable.profile_icon)
+                .error(R.drawable.circular_image_background)
+                .into(profilePicture);
     }
 
-    private void uploadProfilePictureToServer(Uri imageUri) {
+    private void uploadProfilePicture() {
         try {
-            byte[] imageData = ImageUtils.uriToByteArray(this, imageUri);
+            String base64Image = ImageUtils.processAndEncodeImage(this, selectedImageUri);
+            if(base64Image == null) return;
 
-            String base64Image = Base64.encodeToString(imageData, Base64.DEFAULT);
+            String logPreview = base64Image.length() > 100
+                    ? base64Image.substring(0, 100) + "..."
+                    : base64Image;
 
-            JSONObject jsonBody = new JSONObject();
-            jsonBody.put("img", base64Image);
+            Log.d(TAG, "Base64 image length: " + base64Image.length() + ", Preview: " + logPreview);
 
-            String requestUrl = AppConstants.SERVER_URL + "/user/update/" + profileDataManager.getId();
+            JSONObject requestBody = new JSONObject();
+            requestBody.put("img", base64Image);
 
-            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
+            String url = AppConstants.SERVER_URL + "user/update/" + profileDataManager.getId();
+
+            JsonObjectRequest request = new JsonObjectRequest(
                     Request.Method.PUT,
-                    requestUrl,
-                    jsonBody,
+                    url,
+                    requestBody,
                     response -> {
-                        try {
-                            if (response.has("img")) {
-                                String updatedImageUrl = response.getString("img");
-                                profileDataManager.saveProfileImageUri(imageUri);
-                                Toast.makeText(this, "Profile picture updated successfully", Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(this, "Upload successful but no image URL returned", Toast.LENGTH_SHORT).show();
-                            }
-                        }catch (Exception e){
-                            Toast.makeText(this, "Error processing server response", Toast.LENGTH_SHORT).show();
-                            Log.e("ImageUploadError", "Error processing response: " + e.getMessage());
-                        }
+                        Toast.makeText(this, "Profile picture updated sucessfully", Toast.LENGTH_SHORT).show();
+                        setSucessResult();
                     },
                     error -> {
-                        String errorMessage = "Upload failed";
-                        if (error.networkResponse != null) {
-                            errorMessage += " (Status: " + error.networkResponse.statusCode + ")";
-                        }
-                        Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
-                        Log.e("UploadError", "Error: " + error.getMessage());
+                        Log.e(TAG, "Upload error: " + error.toString());
+                        Toast.makeText(this, "Failed to update profile picture", Toast.LENGTH_SHORT).show();
                     }
             ){
                 @Override
@@ -202,13 +159,26 @@ public class UpdateProfilePictureActivity extends AppCompatActivity {
                 }
             };
 
-            jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(30000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
-
-            VolleySingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
+            VolleySingleton.getInstance(this).addToRequestQueue(request);
         } catch (Exception e) {
-            Toast.makeText(this, "Error processing image", Toast.LENGTH_SHORT).show();
-            Log.e("UploadError", "Error processing image: " + e.getMessage());
+            Log.e(TAG, "Error preparing upload: " + e.getMessage());
+            Toast.makeText(this, "Error preparing image upload", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void setSucessResult() {
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra("imageUri", selectedImageUri.toString());
+        setResult(RESULT_OK, resultIntent);
+        finish();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults){
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_PERMISSION && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+            showImageOptions();
+        else
+            Toast.makeText(this, "Permission required to access gallery", Toast.LENGTH_SHORT).show();
     }
 }
