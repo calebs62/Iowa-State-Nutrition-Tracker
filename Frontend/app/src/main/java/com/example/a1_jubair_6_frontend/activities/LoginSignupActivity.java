@@ -101,15 +101,18 @@ public class LoginSignupActivity extends AppCompatActivity {
 
         JSONObject credentials = new JSONObject();
 
+        int uid = profileDataManager.getId();
+
         credentials.put("username", email);
         credentials.put("password", password);
 
         JsonObjectRequest getCreds = new JsonObjectRequest(
-            Request.Method.POST,
+            Request.Method.PUT,
             requestUrl,
             credentials,
             response -> {
                 try {
+                    int id = response.getInt("uid");
                     String username = response.getString("username");
                     String userPass = response.getString("password");
                     String fname = response.getString("fname");
@@ -120,7 +123,7 @@ public class LoginSignupActivity extends AppCompatActivity {
 
                     Log.i("User Info", "Logged in user: " + username + ", " + fname + " " + lname);
 
-                    User user = new User(username, userPass, fname, lname, height, weight, User.Account.valueOf(accountType));
+                    User user = new User(id, username, userPass, fname, lname, height, weight, User.Account.valueOf(accountType));
 
                     profileDataManager.saveUserData(user);
 

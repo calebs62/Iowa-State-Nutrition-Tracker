@@ -28,6 +28,9 @@ import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.activities.LoginSignupActivity;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.example.a1_jubair_6_frontend.models.User;
+
+import org.json.JSONObject;
 
 public class PersonalInfoFragment extends Fragment {
 
@@ -126,11 +129,11 @@ public class PersonalInfoFragment extends Fragment {
         switch (field) {
             case "Weight":
                 profileDataManager.setWeight(Integer.parseInt(value));
-                // Save weight to server
+                profileDataManager.updateUserToServer();
                 break;
             case "Height":
                 profileDataManager.setHeight(Integer.parseInt(value));
-                // Save height to server
+                profileDataManager.updateUserToServer();
                 break;
         }
     }
@@ -189,23 +192,23 @@ public class PersonalInfoFragment extends Fragment {
         dialog.show();
     }
 
-    public void  deleteUserFromServer(){
+    public void  deleteUserFromServer() {
         String url = AppConstants.SERVER_URL + "/deleteUser/" + profileDataManager.getEmail();
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
-            Request.Method.DELETE,
-            url,
-            null,
-            response -> {
-                profileDataManager.clearUserData();
-                Intent intent = new Intent(getActivity(), LoginSignupActivity.class);
-                // Clear the back stack to prevent the user from going back to the personal info screen
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-            },
-            error -> {
-                Log.e("Request Error", String.valueOf(error.getMessage()));
-        });
+                Request.Method.DELETE,
+                url,
+                null,
+                response -> {
+                    profileDataManager.clearUserData();
+                    Intent intent = new Intent(getActivity(), LoginSignupActivity.class);
+                    // Clear the back stack to prevent the user from going back to the personal info screen
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                },
+                error -> {
+                    Log.e("Request Error", String.valueOf(error.getMessage()));
+                });
     }
 
     public void goBack(){

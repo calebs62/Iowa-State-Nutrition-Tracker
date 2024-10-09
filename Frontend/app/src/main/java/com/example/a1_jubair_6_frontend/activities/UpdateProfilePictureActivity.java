@@ -159,13 +159,12 @@ public class UpdateProfilePictureActivity extends AppCompatActivity {
             String base64Image = Base64.encodeToString(imageData, Base64.DEFAULT);
 
             JSONObject jsonBody = new JSONObject();
-            jsonBody.put("profile_picture", base64Image);
-            jsonBody.put("email", profileDataManager.getEmail());
+            jsonBody.put("img", base64Image);
 
-            String requestUrl = AppConstants.ALEX_POSTMAN_URL + "/postProfilePicture";
+            String requestUrl = AppConstants.SERVER_URL + "/user/update/" + profileDataManager.getId();
 
             JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
-                    Request.Method.POST,
+                    Request.Method.PUT,
                     requestUrl,
                     jsonBody,
                     response -> {
