@@ -89,8 +89,34 @@ public class ForgotPasswordActivity extends AppCompatActivity {
             }
             else {
                 Log.i("New Password","Got email: [" + email + "] Password: [" + pass + "], posting to server");
-                Intent intent = new Intent(ForgotPasswordActivity.this, LoginSignupActivity.class);
-                startActivity(intent);
+
+                JSONObject jsonBody = new JSONObject();
+                try {
+                    jsonBody.put("email", email);
+                    jsonBody.put("newPassword", pass);
+                    jsonBody.put("confirmPassword", confirmPass);
+                } catch (JSONException e) {
+                    Log.e("JSON Exception", e.getMessage());
+                }
+
+                String url = AppConstants.SERVER_URL + "/password";
+
+                JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
+                        Request.Method.POST,
+                        url,
+                        jsonBody,
+                        response -> {
+                            Toast.makeText(ForgotPasswordActivity.this, "Password reset successful!", Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(ForgotPasswordActivity.this, LoginSignupActivity.class);
+                            startActivity(intent);
+                        },
+                        error -> {
+                            Log.e("Volley Error", "Error occurred during password reset: " + error.getMessage());
+                            Toast.makeText(ForgotPasswordActivity.this, "Error resetting password. Please try again.", Toast.LENGTH_SHORT).show();
+                        }
+                );
+
+                VolleySingleton.getInstance(ForgotPasswordActivity.this).addToRequestQueue(jsonObjectRequest);
             }
         });
 
