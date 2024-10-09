@@ -34,7 +34,7 @@ public class UserController {
                 currUser.setFName((String) updatedUser.get("fname"));
             }
             if(updatedUser.containsKey("lname")){
-                currUser.setFName((String) updatedUser.get("lname"));
+                currUser.setLName((String) updatedUser.get("lname"));
             }
             if(updatedUser.containsKey("height")){
                 currUser.setHeight((int) updatedUser.get("height"));

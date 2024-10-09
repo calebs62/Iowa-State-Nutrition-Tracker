@@ -17,8 +17,7 @@ import java.util.List;
 public class MenuController {
     @Autowired
     MenuRepository menuRepo;
-//    MenuItemRepository menuItemRepo;
-//    FoodItemRepository foodItemRepo;
+    FoodItemRepository foodRepo;
 
     // Create
     @PostMapping("/menu")
@@ -38,6 +37,30 @@ public class MenuController {
         Menu currMenu = menuRepo.findById(id).orElse(null);
         if (currMenu != null){
             currMenu.setAll(updatedMenu);
+            menuRepo.save(currMenu);
+        }
+        return currMenu;
+    }
+
+    // Add item to menu
+    @PutMapping("/menu/{menuid}/add/{foodid}")
+    public Menu addFood(@PathVariable int menuId, @PathVariable int foodId){
+        Menu currMenu = menuRepo.findById(menuId).orElse(null);
+        FoodItem newItem = foodRepo.findById(foodId).orElse(null);
+        if (currMenu != null && newItem != null){
+            currMenu.addFoodItem(newItem);
+            menuRepo.save(currMenu);
+        }
+        return currMenu;
+    }
+
+    // Remove item from menu
+    @PutMapping("/menu/{menuid/remove/{foodid}")
+    public Menu removeFood(@PathVariable int menuId, @PathVariable int foodId){
+        Menu currMenu = menuRepo.findById(menuId).orElse(null);
+        FoodItem delItem = foodRepo.findById(foodId).orElse(null);
+        if (currMenu != null && delItem != null){
+            currMenu.removeFoodItem(delItem);
             menuRepo.save(currMenu);
         }
         return currMenu;
