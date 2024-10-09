@@ -20,7 +20,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            android:text="Are you sure you want to delete your account?"
+            android:text="@string/are_you_sure_you_want_to_delete_your_account_this_action_cannot_be_undone"
             android:textSize="20sp"
             android:textStyle="bold" />
 

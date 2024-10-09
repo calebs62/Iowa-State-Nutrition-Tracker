@@ -21,6 +21,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
@@ -28,6 +29,7 @@ import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.activities.LoginSignupActivity;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
 
 public class PersonalInfoFragment extends Fragment {
 
@@ -190,8 +192,10 @@ public class PersonalInfoFragment extends Fragment {
     }
 
     public void  deleteUserFromServer(){
-        String url = AppConstants.SERVER_URL + "/deleteUser/" + profileDataManager.getEmail();
+        String url = AppConstants.SERVER_URL + "/user/" + profileDataManager.getEmail();
 
+
+        Log.i("Deleting User", "Deleting user " + profileDataManager.getEmail() + " from server at url [" + url + "]");
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
             Request.Method.DELETE,
             url,
@@ -199,13 +203,26 @@ public class PersonalInfoFragment extends Fragment {
             response -> {
                 profileDataManager.clearUserData();
                 Intent intent = new Intent(getActivity(), LoginSignupActivity.class);
+
+                Toast.makeText(getContext(), "Account Deletion Successful. Goodbye!", Toast.LENGTH_LONG).show();
                 // Clear the back stack to prevent the user from going back to the personal info screen
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
+                if(getActivity() != null){
+                    getActivity().finish();
+                }
             },
             error -> {
-                Log.e("Request Error", String.valueOf(error.getMessage()));
+                Log.e("Delete Account Error", String.valueOf(error.getMessage()));
+
+                if(getContext() != null){
+                    Toast.makeText(getContext(), "Failed to delete account. Please try again.", Toast.LENGTH_LONG).show();
+                }
         });
+
+        if(getContext() != null){
+            VolleySingleton.getInstance(getContext()).addToRequestQueue(jsonObjectRequest);
+        }
     }
 
     public void goBack(){
