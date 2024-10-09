@@ -1,6 +1,6 @@
 package com.example.a1_jubair_6_frontend;
 
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 import static org.junit.Assert.*;
 
