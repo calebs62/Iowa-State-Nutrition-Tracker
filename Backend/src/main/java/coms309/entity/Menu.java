@@ -23,7 +23,12 @@ public class Menu {
     @Column(name = "date")
     private Timestamp date = getDate();
 
-    @ManyToMany(mappedBy = "menus")
+    @ManyToMany(cascade = {
+            CascadeType.PERSIST
+    })
+    @JoinTable(name = "menu_food",
+            joinColumns = {@JoinColumn(name = "menu_id")},
+            inverseJoinColumns = {@JoinColumn(name = "fooditem_id")})
     private Set<FoodItem> foodItems;
 
     public Menu() {}
