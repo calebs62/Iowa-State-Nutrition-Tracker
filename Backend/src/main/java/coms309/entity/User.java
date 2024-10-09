@@ -17,7 +17,8 @@ public class User {
     @Column(name="password")
     private String password; //will have to figure out how to hash it
 
-    @Column(name="profilepicture")
+    @Column(name="profilepicture",
+            columnDefinition="LONGTEXT")
     private String img;
     @Column(name="fname")
     private String fname;
