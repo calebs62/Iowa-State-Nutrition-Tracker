@@ -94,6 +94,13 @@ public class LoginSignupActivity extends AppCompatActivity {
              Intent intent = new Intent(LoginSignupActivity.this, RegisterActivity.class);
              startActivity(intent);
         });
+
+        TextView forgotPasswordView = findViewById(R.id.tvForgotPassword);
+        forgotPasswordView.setOnClickListener(view -> {
+            Log.i("Forgot Password Button", "Forgot password button clicked!");
+            Intent intent = new Intent(LoginSignupActivity.this, ForgotPasswordActivity.class);
+            startActivity(intent);
+        });
     }
 
     public void getCredentialsFromServer(String email, String password) throws JSONException {
