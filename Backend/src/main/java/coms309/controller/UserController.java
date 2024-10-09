@@ -111,10 +111,10 @@ public class UserController {
     // Forget Password
     @PutMapping("/password")
     public User forgotPassword(@RequestBody Map<String, Object> credentials) {
-        int uid = (int)credentials.get("uid");
+        String username = (String)credentials.get("username");
         String password = (String) credentials.get("password");
-        if (userRepo.existsById(uid)) {
-            User check = userRepo.findById(uid).get();
+        if (userRepo.findByusername(username) != null) {
+            User check = userRepo.findByusername(username);
             check.setPassword((String)credentials.get("newPassword"));
             userRepo.save(check);
             return check;
