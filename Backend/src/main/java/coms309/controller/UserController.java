@@ -135,4 +135,23 @@ public class UserController {
         }
     }
 
+    // Set user to Contributor
+    @PutMapping("/give/{uid}/Contributor")
+    public ResponseEntity<String> makeContributor(@PathVariable int uid, @RequestBody String sessionToken){
+        User currUser = userRepo.findById(uid).orElse(null);
+        String[] array = sessionToken.split(":");
+        if (currUser == null) {
+            return ResponseEntity.notFound().build(); //User doesn't exist
+        }
+        if (Integer.parseInt(array[1]) == 0 || Integer.parseInt(array[1]) > 2){
+            return ResponseEntity.badRequest().body("User not authorized");
+        }
+        currUser.setAccountType(User.Account.CONTRIBUTOR);
+        userRepo.save(currUser);
+        return ResponseEntity.ok().body("User now a Contributor");
+    }
+
+    // Set user to Admin
+
+
 }
