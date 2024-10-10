@@ -5,6 +5,7 @@ import android.net.Uri;
 import com.example.a1_jubair_6_frontend.utils.ImageUtils;
 
 public class User {
+    private int id;
     private String username;
     private String password;
     private String img;
@@ -20,7 +21,8 @@ public class User {
         ADMINISTRATOR
     }
 
-    public User(String username, String password, String fname, String lname, int height, int weight, Account accounttype) {
+    public User(int id, String username, String password, String fname, String lname, int height, int weight, Account accounttype) {
+        this.id = id;
         this.username = username;
         this.password = password;
         this.fname = fname;
@@ -58,4 +60,6 @@ public class User {
     public Account getAccounttype() {
         return accounttype;
     }
+
+    public int getId() {return id; }
 }

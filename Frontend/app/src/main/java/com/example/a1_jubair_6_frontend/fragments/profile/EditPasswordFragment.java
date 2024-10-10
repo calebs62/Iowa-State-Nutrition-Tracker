@@ -74,6 +74,8 @@ public class EditPasswordFragment extends Fragment {
                 invalidPassError.setVisibility(View.VISIBLE);
             }
             else{
+                profileDataManager.setPassword(newPasswordText);
+                profileDataManager.updateUserToServer();
                 goBack();
             }
         });

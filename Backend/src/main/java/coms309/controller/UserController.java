@@ -105,16 +105,27 @@ public class UserController {
     }
 
     // Logout
-
+    @PutMapping("/logout")
+    public String logout(@RequestBody String sessionToken){
+        String[] array = sessionToken.split(":",3);
+        int uid = Integer.parseInt(array[2]);
+        User currUser = userRepo.findById(uid).orElse(null);
+        if (currUser != null){
+            currUser.logoutSession();
+            userRepo.save(currUser);
+            return "Logout successful";
+        }
+        return "Logout not successful";
+    }
 
 
     // Forget Password
     @PutMapping("/password")
     public User forgotPassword(@RequestBody Map<String, Object> credentials) {
-        int uid = (int)credentials.get("uid");
+        String username = (String)credentials.get("username");
         String password = (String) credentials.get("password");
-        if (userRepo.existsById(uid)) {
-            User check = userRepo.findById(uid).get();
+        if (userRepo.findByusername(username) != null) {
+            User check = userRepo.findByusername(username);
             check.setPassword((String)credentials.get("newPassword"));
             userRepo.save(check);
             return check;
@@ -124,7 +135,36 @@ public class UserController {
         }
     }
 
+    // Set user to Contributor
+    @PutMapping("/give/{uid}/Contributor")
+    public ResponseEntity<String> makeContributor(@PathVariable int uid, @RequestBody String sessionToken){
+        User currUser = userRepo.findById(uid).orElse(null);
+        String[] array = sessionToken.split(":");
+        if (currUser == null) {
+            return ResponseEntity.notFound().build(); //User doesn't exist
+        }
+        if (Integer.parseInt(array[1]) == 0 || Integer.parseInt(array[1]) > 2){
+            return ResponseEntity.badRequest().body("User not authorized");
+        }
+        currUser.setAccountType(User.Account.CONTRIBUTOR);
+        userRepo.save(currUser);
+        return ResponseEntity.ok().body("User now a Contributor");
+    }
 
-    // Update user profile
+    // Set user to Admin
+    @PutMapping("/give/{uid}/Administrator")
+    public ResponseEntity<String> makeAdmin(@PathVariable int uid, @RequestBody String sessionToken){
+        User currUser = userRepo.findById(uid).orElse(null);
+        String[] array = sessionToken.split(":");
+        if (currUser == null) {
+            return ResponseEntity.notFound().build(); //User doesn't exist
+        }
+        if (Integer.parseInt(array[1]) != 2){
+            return ResponseEntity.badRequest().body("User not authorized");
+        }
+        currUser.setAccountType(User.Account.ADMINISTRATOR);
+        userRepo.save(currUser);
+        return ResponseEntity.ok().body("User now a Administrator");
+    }
 
 }

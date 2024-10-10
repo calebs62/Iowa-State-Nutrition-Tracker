@@ -32,7 +32,6 @@ public class LoginSignupActivity extends AppCompatActivity {
     private EditText emailText;
     private EditText passwordText;
     private TextView loginError;
-    private CheckBox saveLogin;
 
     private String email;
     private String password;
@@ -60,7 +59,6 @@ public class LoginSignupActivity extends AppCompatActivity {
         emailText = findViewById(R.id.emailText);
         passwordText = findViewById(R.id.passwordText);
         loginError = findViewById(R.id.tvLoginError);
-        saveLogin = findViewById(R.id.saveLoginCheckBox);
 
         loadSavedCredentials();
 
@@ -78,9 +76,7 @@ public class LoginSignupActivity extends AppCompatActivity {
                 loginError.setVisibility(TextView.VISIBLE);
             }
             else
-                if(saveLogin.isChecked()){
                     profileDataManager.saveEmailAndPassword(email, password);
-                }
             try {
                 getCredentialsFromServer(email, password);
             } catch (JSONException e) {
@@ -108,16 +104,19 @@ public class LoginSignupActivity extends AppCompatActivity {
 
         JSONObject credentials = new JSONObject();
 
+        int uid = profileDataManager.getId();
+
         credentials.put("username", email);
         credentials.put("password", password);
 
         Log.i("Starting Login Request", "Searching for user " + email + " on server [" + requestUrl + "]");
         JsonObjectRequest getCreds = new JsonObjectRequest(
-            Request.Method.POST,
+            Request.Method.PUT,
             requestUrl,
             credentials,
             response -> {
                 try {
+                    int id = response.getInt("uid");
                     String username = response.getString("username");
                     String userPass = response.getString("password");
                     String fname = response.getString("fname");
@@ -128,7 +127,12 @@ public class LoginSignupActivity extends AppCompatActivity {
 
                     Log.i("User Info", "Logged in user: " + username + ", " + fname + " " + lname);
 
-                    User user = new User(username, userPass, fname, lname, height, weight, User.Account.valueOf(accountType));
+                    if(response.has("img") && !response.isNull("img") && !response.getString("img").isEmpty()) {
+                        String base64Image = response.getString("img");
+                        profileDataManager.saveBase64Image(base64Image);
+                    }
+
+                    User user = new User(id, username, userPass, fname, lname, height, weight, User.Account.valueOf(accountType));
 
                     profileDataManager.saveUserData(user);
 
@@ -161,7 +165,6 @@ public class LoginSignupActivity extends AppCompatActivity {
         String savedPassword = profileDataManager.getPassword();
 
         if (!savedEmail.isEmpty() && !savedPassword.isEmpty()) {
-            saveLogin.setChecked(true);
             emailText.setText(savedEmail);
             passwordText.setText(savedPassword);
         }

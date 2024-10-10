@@ -31,8 +31,14 @@ import com.example.a1_jubair_6_frontend.constants.AppConstants;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
 import com.example.a1_jubair_6_frontend.network.VolleySingleton;
 
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public class PersonalInfoFragment extends Fragment {
 
+    private static final String TAG = "PersonalInfoFragment";
     ProfileDataManager profileDataManager;
 
     TextView email;
@@ -125,14 +131,15 @@ public class PersonalInfoFragment extends Fragment {
     }
 
     private void saveNewValue(String field, String value) {
+        int val = Integer.parseInt(value);
         switch (field) {
             case "Weight":
-                profileDataManager.setWeight(Integer.parseInt(value));
-                // Save weight to server
+                profileDataManager.setWeight(val);
+                updateWeightToServer(val);
                 break;
             case "Height":
-                profileDataManager.setHeight(Integer.parseInt(value));
-                // Save height to server
+                profileDataManager.setHeight(val);
+                updateHeightToServer(val);
                 break;
         }
     }
@@ -192,10 +199,8 @@ public class PersonalInfoFragment extends Fragment {
     }
 
     public void  deleteUserFromServer(){
-        String url = AppConstants.SERVER_URL + "/user/" + profileDataManager.getEmail();
+        String url = AppConstants.SERVER_URL + "/deleteUser/" + profileDataManager.getId();
 
-
-        Log.i("Deleting User", "Deleting user " + profileDataManager.getEmail() + " from server at url [" + url + "]");
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
             Request.Method.DELETE,
             url,
@@ -203,25 +208,81 @@ public class PersonalInfoFragment extends Fragment {
             response -> {
                 profileDataManager.clearUserData();
                 Intent intent = new Intent(getActivity(), LoginSignupActivity.class);
-
-                Toast.makeText(getContext(), "Account Deletion Successful. Goodbye!", Toast.LENGTH_LONG).show();
                 // Clear the back stack to prevent the user from going back to the personal info screen
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
-                if(getActivity() != null){
-                    getActivity().finish();
-                }
             },
             error -> {
-                Log.e("Delete Account Error", String.valueOf(error.getMessage()));
-
-                if(getContext() != null){
-                    Toast.makeText(getContext(), "Failed to delete account. Please try again.", Toast.LENGTH_LONG).show();
-                }
+                Toast.makeText(getContext(), "Error deleting account, please try again", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, error.toString());
         });
+    }
 
-        if(getContext() != null){
-            VolleySingleton.getInstance(getContext()).addToRequestQueue(jsonObjectRequest);
+    public void updateWeightToServer(int weight){
+        try {
+            JSONObject requestBody = new JSONObject();
+            requestBody.put("weight", weight);
+
+            String url = AppConstants.SERVER_URL + "/user/update/" + profileDataManager.getId();
+
+            JsonObjectRequest request = new JsonObjectRequest(
+                    Request.Method.PUT,
+                    url,
+                    requestBody,
+                    response -> {
+                        Toast.makeText(getContext(), "Weight updated successfully", Toast.LENGTH_SHORT).show();
+                    },
+                    error -> {
+                        Log.e(TAG, "Upload error: " + error.toString());
+                        Toast.makeText(getContext(), "Failed to update weight", Toast.LENGTH_SHORT).show();
+                    }
+            ){
+                @Override
+                public Map<String, String> getHeaders(){
+                    Map<String, String> headers = new HashMap<>();
+                    headers.put("Content-Type", "application/json");
+                    return headers;
+                }
+            };
+
+            VolleySingleton.getInstance(getContext()).addToRequestQueue(request);
+        } catch (Exception e) {
+            Log.e(TAG, "Error preparing upload: " + e.getMessage());
+            Toast.makeText(getContext(), "Error preparing weight upload", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void updateHeightToServer(int height){
+        try {
+            JSONObject requestBody = new JSONObject();
+            requestBody.put("height", height);
+
+            String url = AppConstants.SERVER_URL + "/user/update/" + profileDataManager.getId();
+
+            JsonObjectRequest request = new JsonObjectRequest(
+                    Request.Method.PUT,
+                    url,
+                    requestBody,
+                    response -> {
+                        Toast.makeText(getContext(), "Height updated successfully", Toast.LENGTH_SHORT).show();
+                    },
+                    error -> {
+                        Log.e(TAG, "Upload error: " + error.toString());
+                        Toast.makeText(getContext(), "Failed to update height", Toast.LENGTH_SHORT).show();
+                    }
+            ){
+                @Override
+                public Map<String, String> getHeaders(){
+                    Map<String, String> headers = new HashMap<>();
+                    headers.put("Content-Type", "application/json");
+                    return headers;
+                }
+            };
+
+            VolleySingleton.getInstance(getContext()).addToRequestQueue(request);
+        } catch (Exception e) {
+            Log.e(TAG, "Error preparing upload: " + e.getMessage());
+            Toast.makeText(getContext(), "Error preparing height upload", Toast.LENGTH_SHORT).show();
         }
     }
 
