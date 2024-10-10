@@ -24,7 +24,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
 import com.android.volley.Request;
@@ -96,39 +99,47 @@ public class ProfileFragment extends Fragment {
         logout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String sessionToken = "**";
+                String sessionToken = "0:0:2";
                 String requestUrl = AppConstants.SERVER_URL + "/logout";
 
-                JSONObject requestBody = new JSONObject();
-                try{
-                    requestBody.put("sessionToken", sessionToken);
-                } catch (JSONException e){
-                    e.printStackTrace();
-                }
-
-                JsonObjectRequest logoutRequest = new JsonObjectRequest(
+                StringRequest logoutRequest = new StringRequest(
                         Request.Method.PUT,
                         requestUrl,
-                        requestBody,
-                        response -> {
-                            try {
-                                String message = response.toString();
-                                Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
-                                if(message.equals("Logout successful")) {
+                        new Response.Listener<String>() {
+                            @Override
+                            public void onResponse(String response) {
+                                // Handle the response (which is a plain string in this case)
+                                Toast.makeText(getActivity(), response, Toast.LENGTH_SHORT).show();
+
+                                if(response.equals("Logout successful")) {
                                     Intent intent = new Intent(getActivity(), LoginSignupActivity.class);
                                     profileDataManager.clearUserData();
                                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                     startActivity(intent);
                                 }
-                            } catch (Exception e){
-                                e.printStackTrace();
                             }
                         },
-                        error -> {
-                            Log.e("Volley Error", "Logout failed: " + error.getMessage());
-                            Toast.makeText(getActivity(), "Logout failed. Please try again.", Toast.LENGTH_SHORT).show();
+                        new Response.ErrorListener() {
+                            @Override
+                            public void onErrorResponse(VolleyError error) {
+                                // Handle error
+                                Log.e("Volley Error", "Logout failed: " + error.getMessage());
+                                Toast.makeText(getActivity(), "Logout failed. Please try again.", Toast.LENGTH_SHORT).show();
+                            }
                         }
-                );
+                ) {
+                    @Override
+                    public byte[] getBody() {
+                        // Send the sessionToken string in the body of the request
+                        return sessionToken.getBytes();
+                    }
+
+                    @Override
+                    public String getBodyContentType() {
+                        // Specify the content type as plain text
+                        return "text/plain; charset=utf-8";
+                    }
+                };
                 VolleySingleton.getInstance(getActivity()).addToRequestQueue(logoutRequest);
             }
         });
