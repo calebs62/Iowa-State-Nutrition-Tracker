@@ -95,6 +95,7 @@ public class UserController {
         if (userRepo.findByusername(username) != null) {
             User check = userRepo.findByusername(username);
             if (check.getPassword().equals(password)) {
+                check.loginSession();
                 return check;
             }
             else return null;
