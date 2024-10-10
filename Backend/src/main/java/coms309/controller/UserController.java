@@ -152,7 +152,7 @@ public class UserController {
     }
 
     // Set user to Admin
-    @PutMapping("/give/{uid}/Admin")
+    @PutMapping("/give/{uid}/Administrator")
     public ResponseEntity<String> makeAdmin(@PathVariable int uid, @RequestBody String sessionToken){
         User currUser = userRepo.findById(uid).orElse(null);
         String[] array = sessionToken.split(":");
