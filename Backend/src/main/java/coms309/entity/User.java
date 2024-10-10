@@ -39,7 +39,7 @@ public class User {
     private Account accounttype = Account.USER;
 
     @Column(name="sessionToken")
-    private String sessionToken = "**";
+    private String sessionToken = "0:0:0";
 
     public User() {}
     public User(String username, String password, String fname, String lname) {
@@ -69,4 +69,19 @@ public class User {
     public void setAccountType(Account accounttype) {this.accounttype = accounttype;}
     public void setSessionToken(String sessionToken) {this.sessionToken = sessionToken;}
     public void setImg(String img){this.img = img;}
+
+    public void updateSessionToken(){
+        String[] tmp = sessionToken.split(":", 3);
+        sessionToken = tmp[0] + ":" + accounttype.ordinal() + ":" + uid;
+    }
+    public void loginSession(){
+        String[] tmp = sessionToken.split(":", 3);
+        tmp[0] = "1";
+        sessionToken = tmp[0] + ":" + accounttype.ordinal() + ":" + uid;
+    }
+    public void logoutSession(){
+        String[] tmp = sessionToken.split(":", 3);
+        tmp[0] = "0";
+        sessionToken = tmp[0] + ":" + accounttype.ordinal() + ":" + uid;
+    }
 }
