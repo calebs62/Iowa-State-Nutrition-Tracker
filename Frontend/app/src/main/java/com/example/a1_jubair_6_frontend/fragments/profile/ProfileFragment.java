@@ -21,13 +21,22 @@ import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
-import com.example.a1_jubair_6_frontend.activities.LoginSignupActivity;
-import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.a1_jubair_6_frontend.R;
-import com.example.a1_jubair_6_frontend.activities.BaseActivity;
-import com.example.a1_jubair_6_frontend.activities.UpdateProfilePictureActivity;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.example.a1_jubair_6_frontend.models.User;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
+import com.example.a1_jubair_6_frontend.activities.*;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class ProfileFragment extends Fragment {
 
@@ -87,12 +96,40 @@ public class ProfileFragment extends Fragment {
         logout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                profileDataManager.clearUserData();
+                String sessionToken = "**";
+                String requestUrl = AppConstants.SERVER_URL + "/logout";
 
-                Intent intent = new Intent(getActivity(), LoginSignupActivity.class);
-                // Clear the back stack to prevent the user from going back to the profile screen
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
+                JSONObject requestBody = new JSONObject();
+                try{
+                    requestBody.put("sessionToken", sessionToken);
+                } catch (JSONException e){
+                    e.printStackTrace();
+                }
+
+                JsonObjectRequest logoutRequest = new JsonObjectRequest(
+                        Request.Method.PUT,
+                        requestUrl,
+                        requestBody,
+                        response -> {
+                            try {
+                                String message = response.toString();
+                                Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
+                                if(message.equals("Logout successful")) {
+                                    Intent intent = new Intent(getActivity(), LoginSignupActivity.class);
+                                    profileDataManager.clearUserData();
+                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                    startActivity(intent);
+                                }
+                            } catch (Exception e){
+                                e.printStackTrace();
+                            }
+                        },
+                        error -> {
+                            Log.e("Volley Error", "Logout failed: " + error.getMessage());
+                            Toast.makeText(getActivity(), "Logout failed. Please try again.", Toast.LENGTH_SHORT).show();
+                        }
+                );
+                VolleySingleton.getInstance(getActivity()).addToRequestQueue(logoutRequest);
             }
         });
 

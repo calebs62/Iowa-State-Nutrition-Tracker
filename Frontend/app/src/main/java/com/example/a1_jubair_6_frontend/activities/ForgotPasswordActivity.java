@@ -93,7 +93,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
                 JSONObject jsonBody = new JSONObject();
                 try {
-                    jsonBody.put("uid", uid);
+                    jsonBody.put("username", email);
                     jsonBody.put("password", pass);
                     jsonBody.put("newPassword", confirmPass);
 
