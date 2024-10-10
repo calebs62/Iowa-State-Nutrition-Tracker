@@ -136,7 +136,7 @@ public class UpdateProfilePictureActivity extends AppCompatActivity {
             JSONObject requestBody = new JSONObject();
             requestBody.put("img", base64Image);
 
-            String url = AppConstants.SERVER_URL + "user/update/" + profileDataManager.getId();
+            String url = AppConstants.SERVER_URL + "/user/update/" + profileDataManager.getId();
 
             JsonObjectRequest request = new JsonObjectRequest(
                     Request.Method.PUT,
