@@ -12,6 +12,7 @@ constraintlayout = "2.1.4"
 volley = "1.2.1"
 junitJunit = "4.12"
 testng = "6.9.6"
+androidxJunit = "1.2.1"
 
 [libraries]
 compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glide" }
@@ -27,6 +28,7 @@ constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayo
 volley = { module = "com.android.volley:volley", version.ref = "volley" }
 junit-junit = { group = "junit", name = "junit", version.ref = "junitJunit" }
 testng = { group = "org.testng", name = "testng", version.ref = "testng" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxJunit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
