@@ -152,6 +152,19 @@ public class UserController {
     }
 
     // Set user to Admin
-
+    @PutMapping("/give/{uid}/Admin")
+    public ResponseEntity<String> makeAdmin(@PathVariable int uid, @RequestBody String sessionToken){
+        User currUser = userRepo.findById(uid).orElse(null);
+        String[] array = sessionToken.split(":");
+        if (currUser == null) {
+            return ResponseEntity.notFound().build(); //User doesn't exist
+        }
+        if (Integer.parseInt(array[1]) != 2){
+            return ResponseEntity.badRequest().body("User not authorized");
+        }
+        currUser.setAccountType(User.Account.ADMINISTRATOR);
+        userRepo.save(currUser);
+        return ResponseEntity.ok().body("User now a Administrator");
+    }
 
 }
