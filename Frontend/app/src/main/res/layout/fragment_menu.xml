@@ -17,6 +17,28 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <LinearLayout
+        android:id="@+id/adminToolsContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginEnd="16dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/titleMenus"
+        app:layout_constraintBottom_toBottomOf="@id/titleMenus">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAddFood"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/Iowa_State_Red"
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_marginEnd="8dp"/>
+    </LinearLayout>
+
     <EditText
         android:id="@+id/searchBar"
         android:layout_width="0dp"

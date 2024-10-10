@@ -176,11 +176,13 @@ public class ProfileFragment extends Fragment {
     }
 
     private void updateProfilePicture() {
-        if (profilePictureUri != null && getContext() != null) {
-            Glide.with(getContext())
-                    .load(profilePictureUri)
-                    .circleCrop()
-                    .into(profilePicture);
-        }
+        if (getContext() == null) return;
+
+        Glide.with(getContext())
+                .load(profilePictureUri)
+                .placeholder(R.drawable.circular_image_background)
+                .error(R.drawable.circular_image_background)
+                .circleCrop()
+                .into(profilePicture);
     }
 }

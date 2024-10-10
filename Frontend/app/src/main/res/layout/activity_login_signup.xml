@@ -138,18 +138,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <CheckBox
-        android:id="@+id/saveLoginCheckBox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="44dp"
-        android:layout_marginTop="4dp"
-        android:text="Save Login?"
-        android:textColor="@color/black"
-        app:layout_constraintLeft_toLeftOf="@id/tilPassword"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tilPassword" />
-
     <TextView
         android:id="@+id/tvLoginError"
         android:layout_width="wrap_content"

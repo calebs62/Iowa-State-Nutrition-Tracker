@@ -1,41 +1,68 @@
 package com.example.a1_jubair_6_frontend.utils;
 
+import android.content.ContentProvider;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Base64;
-
-import androidx.core.content.FileProvider;
+import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class ImageUtils {
-    public static byte[] uriToByteArray(Context context, Uri imageUri) throws IOException {
-        Bitmap bitmap = MediaStore.Images.Media.getBitmap(context.getContentResolver(), imageUri);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    private static final String TAG = "ImageUtil";
+    private static final int MAX_IMAGE_DIMENSION = 1024;
+    private static final int COMPRESSION_QUALITY = 80;
 
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, byteArrayOutputStream);
+    public static String processAndEncodeImage(Context context, Uri imageUri) throws Exception {
+        InputStream inputStream = context.getContentResolver().openInputStream(imageUri);
 
-        return byteArrayOutputStream.toByteArray();
-    }
+        BitmapFactory.Options boundsOptions = new BitmapFactory.Options();
+        boundsOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeStream(inputStream, null, boundsOptions);
+        inputStream.close();
 
-    public static Uri base64ToUri(Context context, String base64Image) throws IOException {
-        byte[] imageData = Base64.decode(base64Image, Base64.DEFAULT);
+        int sampleSize = calculateSampleSize(boundsOptions);
 
-        Bitmap bitmap = BitmapFactory.decodeByteArray(imageData, 0, imageData.length);
+        inputStream = context.getContentResolver().openInputStream(imageUri);
+        BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
+        bitmapOptions.inSampleSize = sampleSize;
+        Bitmap originalBitmap = BitmapFactory.decodeStream(inputStream, null, bitmapOptions);
+        inputStream.close();
 
-        File tempFile = File.createTempFile("image", ".jpg", context.getCacheDir());
-
-        try (FileOutputStream fos = new FileOutputStream(tempFile)) {
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, fos);
-            fos.flush();
+        if (originalBitmap == null) {
+            throw new Exception("Failed to decode image");
         }
 
-        return FileProvider.getUriForFile(context, context.getPackageName() + ".provider", tempFile);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        originalBitmap.compress(Bitmap.CompressFormat.JPEG, COMPRESSION_QUALITY, outputStream);
+
+        byte[] imageBytes = outputStream.toByteArray();
+        String base64Image = Base64.encodeToString(imageBytes, Base64.DEFAULT);
+
+        Log.d(TAG, "Base64 string length: " + base64Image.length());
+
+        outputStream.close();
+        originalBitmap.recycle();
+
+        return base64Image;
+    }
+
+    private static int calculateSampleSize(BitmapFactory.Options options) {
+        int height = options.outHeight;
+        int width = options.outWidth;
+        int sampleSize = 1;
+
+        while (height > MAX_IMAGE_DIMENSION || width > MAX_IMAGE_DIMENSION) {
+            height /= 2;
+            width /= 2;
+            sampleSize *= 2;
+        }
+
+        return sampleSize;
     }
 }

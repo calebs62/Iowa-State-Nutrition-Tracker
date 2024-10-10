@@ -95,7 +95,7 @@ public class RegisterActivity extends AppCompatActivity {
                 return;
             }
 
-            user = new User(email, pass, firstname, lastname, -1, -1, User.Account.USER);
+            user = new User(-1, email, pass, firstname, lastname, -1, -1, User.Account.USER);
 
             if(!pass.equals(confirmPass)){
                 //Creates an error dialog when the passwords entered do not match
@@ -151,7 +151,7 @@ public class RegisterActivity extends AppCompatActivity {
         try{
             jsonBody.put("username", user.getUsername());
             jsonBody.put("password", user.getPassword());
-            jsonBody.put("profilepicture", 0);
+            jsonBody.put("profilepicture", "");
             jsonBody.put("fname", user.getFname());
             jsonBody.put("lname", user.getLname());
             jsonBody.put("height", user.getHeight());
