@@ -55,7 +55,7 @@ public class MenuController {
     }
 
     // Remove item from menu
-    @PutMapping("/menu/{menuid/remove/{foodid}")
+    @PutMapping("/menu/{menuid}/remove/{foodid}")
     public Menu removeFood(@PathVariable int menuId, @PathVariable int foodId){
         Menu currMenu = menuRepo.findById(menuId).orElse(null);
         FoodItem delItem = foodRepo.findById(foodId).orElse(null);

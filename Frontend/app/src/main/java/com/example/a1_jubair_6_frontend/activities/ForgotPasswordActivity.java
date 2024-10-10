@@ -65,6 +65,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
             String email = emailView.getText().toString();
             String pass = password.getText().toString();
             String confirmPass = confirmPassword.getText().toString();
+            int uid = 2;
 
             if(email.isEmpty() || pass.isEmpty() || confirmPass.isEmpty()){
                 Log.e("Form Empty Error", "One or more of the register forms were empty!");
@@ -92,17 +93,18 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
                 JSONObject jsonBody = new JSONObject();
                 try {
-                    jsonBody.put("email", email);
-                    jsonBody.put("newPassword", pass);
-                    jsonBody.put("confirmPassword", confirmPass);
+                    jsonBody.put("uid", uid);
+                    jsonBody.put("password", pass);
+                    jsonBody.put("newPassword", confirmPass);
+
                 } catch (JSONException e) {
                     Log.e("JSON Exception", e.getMessage());
                 }
 
                 String url = AppConstants.SERVER_URL + "/password";
 
-                JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
-                        Request.Method.POST,
+                JsonObjectRequest forgotPasswordRequest = new JsonObjectRequest(
+                        Request.Method.PUT,
                         url,
                         jsonBody,
                         response -> {
@@ -116,7 +118,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                         }
                 );
 
-                VolleySingleton.getInstance(ForgotPasswordActivity.this).addToRequestQueue(jsonObjectRequest);
+                VolleySingleton.getInstance(ForgotPasswordActivity.this).addToRequestQueue(forgotPasswordRequest);
             }
         });
 
