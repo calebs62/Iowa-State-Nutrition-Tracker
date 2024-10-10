@@ -105,7 +105,18 @@ public class UserController {
     }
 
     // Logout
-
+    @PutMapping("/logout")
+    public String logout(@RequestBody String sessionToken){
+        String[] array = sessionToken.split(":",3);
+        int uid = Integer.parseInt(array[2]);
+        User currUser = userRepo.findById(uid).orElse(null);
+        if (currUser != null){
+            currUser.logoutSession();
+            userRepo.save(currUser);
+            return "Logout successful";
+        }
+        return "Logout not successful";
+    }
 
 
     // Forget Password
@@ -123,8 +134,5 @@ public class UserController {
             return null;
         }
     }
-
-
-    // Update user profile
 
 }
