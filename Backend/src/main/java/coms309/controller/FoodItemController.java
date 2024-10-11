@@ -75,7 +75,20 @@ public class FoodItemController {
 
     // List all items
     @GetMapping("/item")
-    public List<FoodItem> getAllFoodItems() {
-        return new ArrayList<>(foodRepo.findAll());
+    public List<FoodItem> getAllFoodItems(@RequestParam(defaultValue="") String keyword) {
+        List<FoodItem> items = foodRepo.findAll();
+        if (keyword.equals("")) {
+            return items;
+        }
+        for (int i = 0; i < items.size(); i++) {
+            FoodItem item = items.get(i);
+            String name = item.getName().toLowerCase();
+            String key = keyword.toLowerCase();
+            if (!(name.contains(key))) {
+                items.remove(item);
+                i--;
+            }
+        }
+        return items;
     }
 }
