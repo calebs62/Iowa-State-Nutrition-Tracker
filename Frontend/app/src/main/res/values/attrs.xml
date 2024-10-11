@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="NutrientProgressView">
+        <attr name="legendTextSize" format="dimension" />
+        <attr name="bulletRadius" format="dimension" />
+        <attr name="legendSpacing" format="dimension" />
+        <attr name="textStartPadding" format="dimension" />
+    </declare-styleable>
+</resources>
