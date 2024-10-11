@@ -82,7 +82,7 @@ public class UserController {
         if (userRepo.findByusername(newUser.getUsername()) != null) {
             return ResponseEntity.badRequest().body("Username already exists");
         }
-
+        newUser.updateSessionToken();
         userRepo.save(newUser);
         return ResponseEntity.ok().body("Registered Successfully");
     }
@@ -95,13 +95,12 @@ public class UserController {
         if (userRepo.findByusername(username) != null) {
             User check = userRepo.findByusername(username);
             if (check.getPassword().equals(password)) {
+                check.loginSession();
+                userRepo.save(check);
                 return check;
             }
-            else return null;
         }
-        else {
-            return null;
-        }
+         return null;
     }
 
     // Logout
@@ -130,9 +129,7 @@ public class UserController {
             userRepo.save(check);
             return check;
         }
-        else {
-            return null;
-        }
+        return null;
     }
 
     // Set user to Contributor

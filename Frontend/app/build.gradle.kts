@@ -39,6 +39,7 @@ dependencies {
     implementation(libs.volley)
     implementation(libs.glide)
     implementation(libs.gson)
+    implementation(libs.androidx.junit)
     testImplementation(libs.junit.junit)
     testImplementation(libs.testng)
 }

@@ -21,14 +21,26 @@ import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
 import com.example.a1_jubair_6_frontend.activities.AdminPanelFragment;
 import com.example.a1_jubair_6_frontend.activities.LoginSignupActivity;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
 import com.example.a1_jubair_6_frontend.R;
-import com.example.a1_jubair_6_frontend.activities.BaseActivity;
-import com.example.a1_jubair_6_frontend.activities.UpdateProfilePictureActivity;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.example.a1_jubair_6_frontend.models.User;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
+import com.example.a1_jubair_6_frontend.activities.*;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class ProfileFragment extends Fragment {
 
@@ -91,12 +103,48 @@ public class ProfileFragment extends Fragment {
         logout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                profileDataManager.clearUserData();
+                String sessionToken = "0:0:2";
+                String requestUrl = AppConstants.SERVER_URL + "/logout";
 
-                Intent intent = new Intent(getActivity(), LoginSignupActivity.class);
-                // Clear the back stack to prevent the user from going back to the profile screen
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
+                StringRequest logoutRequest = new StringRequest(
+                        Request.Method.PUT,
+                        requestUrl,
+                        new Response.Listener<String>() {
+                            @Override
+                            public void onResponse(String response) {
+                                // Handle the response (which is a plain string in this case)
+                                Toast.makeText(getActivity(), response, Toast.LENGTH_SHORT).show();
+
+                                if(response.equals("Logout successful")) {
+                                    Intent intent = new Intent(getActivity(), LoginSignupActivity.class);
+                                    profileDataManager.clearUserData();
+                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                    startActivity(intent);
+                                }
+                            }
+                        },
+                        new Response.ErrorListener() {
+                            @Override
+                            public void onErrorResponse(VolleyError error) {
+                                // Handle error
+                                Log.e("Volley Error", "Logout failed: " + error.getMessage());
+                                Toast.makeText(getActivity(), "Logout failed. Please try again.", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                ) {
+                    @Override
+                    public byte[] getBody() {
+                        // Send the sessionToken string in the body of the request
+                        return sessionToken.getBytes();
+                    }
+
+                    @Override
+                    public String getBodyContentType() {
+                        // Specify the content type as plain text
+                        return "text/plain; charset=utf-8";
+                    }
+                };
+                VolleySingleton.getInstance(getActivity()).addToRequestQueue(logoutRequest);
             }
         });
 
