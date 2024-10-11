@@ -49,7 +49,7 @@ public class Menu {
     public Set<FoodItem> getFoodItems() {return foodItems;}
 
     public void setId(int id) {this.id = id;}
-    public void setName(String name) {this.name = name};
+    public void setName(String name) {this.name = name;};
     public void setLocation(String location) {this.location = location;}
     public void setMeal(String meal) {this.meal = meal;}
     public void setDate(String dateString) {this.date = LocalDate.parse(dateString);}
