@@ -23,6 +23,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.example.a1_jubair_6_frontend.activities.AdminPanelFragment;
 import com.example.a1_jubair_6_frontend.activities.LoginSignupActivity;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
 import com.example.a1_jubair_6_frontend.R;
@@ -39,6 +40,7 @@ public class ProfileFragment extends Fragment {
     TextView height;
     private Uri profilePictureUri;
     private ProfileDataManager profileDataManager;
+    boolean isAdmin = false;
 
     private final ActivityResultLauncher<Intent> updateProfilePictureLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
@@ -59,6 +61,8 @@ public class ProfileFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         profileDataManager = new ProfileDataManager(requireContext());
+        String accountType = profileDataManager.getAccountType();
+        isAdmin = accountType.equals("ADMINISTRATOR") || accountType.equals("CONTRIBUTOR");
     }
 
     @Nullable
@@ -137,6 +141,8 @@ public class ProfileFragment extends Fragment {
         setupMenuItem(R.id.personalInfo, R.drawable.profile_icon, "Personal Information");
         setupMenuItem(R.id.passwordSecurity, R.drawable.security_icon, "Password & Security");
         setupMenuItem(R.id.notifications, R.drawable.notifications_icon, "Notifications");
+        if(isAdmin)
+            setupMenuItem(R.id.adminPanel, R.drawable.menu_icon, "Admin Panel");
     }
 
     private void setupMenuItem(int itemId, int iconResId, String title) {
@@ -147,6 +153,9 @@ public class ProfileFragment extends Fragment {
 
         icon.setImageResource(iconResId);
         titleView.setText(title);
+        if(itemId == R.id.adminPanel){
+            item.setVisibility(View.VISIBLE);
+        }
 
         item.setOnClickListener(v -> {
             v.startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.click_animation));
@@ -162,6 +171,9 @@ public class ProfileFragment extends Fragment {
             }
             else if(itemId == R.id.notifications){
                 navigateToSubFragment(new NotificationsFragment());
+            }
+            else if(itemId == R.id.adminPanel){
+                navigateToSubFragment(new AdminPanelFragment());
             }
             else{
                 Log.e("Navigation Error", "Could not navigate from profile page!");

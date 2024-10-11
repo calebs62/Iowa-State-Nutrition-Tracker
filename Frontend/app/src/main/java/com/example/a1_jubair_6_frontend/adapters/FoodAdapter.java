@@ -25,6 +25,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
 import com.example.a1_jubair_6_frontend.models.FoodItem;
+import com.example.a1_jubair_6_frontend.models.Menu;
 import com.example.a1_jubair_6_frontend.network.VolleySingleton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.gson.Gson;
@@ -40,6 +41,7 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
     Context context;
     private Gson gson = new Gson();
     private boolean isAdmin;
+    Menu currentMenu;
 
     public FoodAdapter(List<FoodItem> foodItemList, boolean isAdmin) {
         this.foodItemList = foodItemList;
@@ -123,6 +125,10 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
             buttonEdit = itemView.findViewById(R.id.btnEdit);
             buttonDelete = itemView.findViewById(R.id.btnDelete);
         }
+    }
+
+    public void setCurrentMenu(Menu menu){
+        currentMenu = menu;
     }
 
     private void showFoodDetailsDialog(FoodItem item) {
@@ -259,7 +265,10 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
 
     public void deleteItem(int position){
         int id = foodItemList.get(position).getId();
-        deleteFoodItem(id);
+        if( currentMenu != null)
+            deleteMenuFoodItem(id);
+        else
+            deleteFoodItem(id);
         foodItemList.remove(position);
         notifyItemRemoved(position);
         notifyItemRangeChanged(position, foodItemList.size());
@@ -267,7 +276,10 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
 
     public void editItem(int position, FoodItem updatedItem) throws JSONException {
         int id = updatedItem.getId();
-        updateFoodItem(id, updatedItem);
+        if(currentMenu != null)
+            updateMenuFoodItem(id, updatedItem);
+        else
+            updateFoodItem(id, updatedItem);
         foodItemList.set(position, updatedItem);
         notifyItemChanged(position);
     }
@@ -301,6 +313,46 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
                     Log.e("Request Error", String.valueOf(error.getMessage()));
                 }
         );
+        VolleySingleton.getInstance(context).addToRequestQueue(request);
+    }
+
+    private void deleteMenuFoodItem(int id){
+        String url = AppConstants.SERVER_URL + "/menu/" + currentMenu.getId() + "/remove/" + id;
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.DELETE,
+                url,
+                null,
+                response -> {
+                    Log.i("Update Menu", "Successfully updated menu" + currentMenu);
+                    Toast.makeText(context, "Successfully updated menu", Toast.LENGTH_SHORT).show();
+                },
+                error -> {
+                    Log.e("Request Error", String.valueOf(error.getMessage()));
+                    Toast.makeText(context, "Error updating menu", Toast.LENGTH_SHORT).show();
+                }
+        );
+
+        VolleySingleton.getInstance(context).addToRequestQueue(request);
+    }
+
+    private void updateMenuFoodItem(int id, FoodItem foodItem){
+        String url = AppConstants.SERVER_URL + "/menu/" + currentMenu.getId() + "/add/" + id;
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.PUT,
+                url,
+                null,
+                response -> {
+                    Log.i("Update Menu", "Successfully updated menu" + currentMenu);
+                    Toast.makeText(context, "Successfully updated menu", Toast.LENGTH_SHORT).show();
+                },
+                error -> {
+                    Log.e("Request Error", String.valueOf(error.getMessage()));
+                    Toast.makeText(context, "Error updating menu", Toast.LENGTH_SHORT).show();
+                }
+        );
+
         VolleySingleton.getInstance(context).addToRequestQueue(request);
     }
 }
