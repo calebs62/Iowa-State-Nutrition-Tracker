@@ -24,7 +24,7 @@ public class Menu {
     private String meal; //Breakfast/Lunch/Dinner
 
     @Column(name = "date")
-    private LocalDate date = LocalDate.now();
+    private LocalDate date;
 
     @ManyToMany(cascade = {
             CascadeType.PERSIST
