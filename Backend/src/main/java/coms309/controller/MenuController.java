@@ -41,7 +41,7 @@ public class MenuController {
 
     // Add item to menu
     @PutMapping("/menu/{menuid}/add/{foodid}")
-    public Menu addFood(@PathVariable int menuId, @PathVariable int foodId){
+    public Menu addFood(@PathVariable("menuid") int menuId, @PathVariable("foodid") int foodId){
         Menu currMenu = menuRepo.findById(menuId).orElse(null);
         FoodItem newItem = foodRepo.findById(foodId).orElse(null);
         if (currMenu != null && newItem != null){
