@@ -29,10 +29,10 @@
         app:layout_constraintBottom_toBottomOf="@id/titleMenus">
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnAddFood"
+            android:id="@+id/btnViewMenus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Add"
+            android:text="Menus"
             android:textColor="@android:color/white"
             android:backgroundTint="@color/Iowa_State_Red"
             style="@style/Widget.MaterialComponents.Button"
