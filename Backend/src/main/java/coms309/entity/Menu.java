@@ -3,6 +3,7 @@ package coms309.entity;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -28,11 +29,11 @@ public class Menu {
 
     @ManyToMany(cascade = {
             CascadeType.PERSIST
-    })
+    }, fetch = FetchType.EAGER)
     @JoinTable(name = "menu_food",
             joinColumns = {@JoinColumn(name = "menu_id")},
             inverseJoinColumns = {@JoinColumn(name = "fooditem_id")})
-    private Set<FoodItem> foodItems;
+    private Set<FoodItem> foodItems = new HashSet<>();
 
     public Menu() {}
     public Menu(String name, String location, String meal, String dateString) {
