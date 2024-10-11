@@ -107,7 +107,7 @@ public class UserController {
     @PutMapping("/logout")
     public String logout(@RequestBody String sessionToken){
         String[] array = sessionToken.split(":",3);
-        int uid = Integer.parseInt(array[2]);
+        int uid = Integer.parseInt(array[2].trim());
         User currUser = userRepo.findById(uid).orElse(null);
         if (currUser != null){
             currUser.logoutSession();
