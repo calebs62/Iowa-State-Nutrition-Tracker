@@ -4,6 +4,9 @@
     <color name="white">#FFFFFFFF</color>
     <color name="Iowa_State_Red">#C8102E</color>
     <color name="Iowa_State_Gold">#F1BE48</color>
+    <color name="Iowa_State_Brown">#524727</color>
+    <color name="Iowa_State_Light_Brown">#9B945F</color>
+    <color name="Iowa_State_White">#CAC7A7</color>
     <color name="dark_grey">#707372</color>
     <color name="red">#FF0000</color>
     <color name="divider">#1F000000</color>

@@ -72,6 +72,14 @@ public class ViewMenusActivity extends AppCompatActivity {
                 throw new RuntimeException(e);
             }
         });
+        delete.setOnClickListener(v ->{
+            String menuId = id.getText().toString();
+            try{
+                deleteMenuToServer(menuId);
+            } catch (JSONException e){
+                throw new RuntimeException(e);
+            }
+        });
 
         edit.setOnClickListener(v -> {
             String menuID = updateId.getText().toString();
