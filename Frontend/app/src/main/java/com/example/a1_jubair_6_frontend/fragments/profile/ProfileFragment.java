@@ -103,7 +103,7 @@ public class ProfileFragment extends Fragment {
         logout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String sessionToken = "0:0:2";
+                String sessionToken = "0:0:3";
                 String requestUrl = AppConstants.SERVER_URL + "/logout";
 
                 StringRequest logoutRequest = new StringRequest(
