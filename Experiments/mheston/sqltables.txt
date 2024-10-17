@@ -1,0 +1,28 @@
+CREATE TABLE `DB309`.`menu` (
+  `idmenu` INT NOT NULL,
+  `location` VARCHAR(45) NULL,
+  `meal` VARCHAR(45) NULL,
+  `date` DATETIME NULL,
+  PRIMARY KEY (`idmenu`)
+);
+
+CREATE TABLE `DB309`.`menu_item` (
+  `idmenuitem` INT NOT NULL,
+  `menu` INT NOT NULL,
+  `fooditem` INT NOT NULL,
+  PRIMARY KEY (`idmenuitem`),
+  FOREIGN KEY (`menu`) REFERENCES menu(idmenu),
+  FOREIGN KEY (`fooditem`) REFERENCES food_item(idfooditem)
+);
+
+CREATE TABLE `DB309`.`user` (
+  `username` VARCHAR(255) NOT NULL,
+  `password` VARCHAR(255) NOT NULL,
+  `profilepicture` INT,
+  `fname` VARCHAR(255),
+  `lname` VARCHAR(255),
+  `height` INT,
+  `weight` INT,
+  `accounttype` VARCHAR(255),
+  PRIMARY KEY (`username`)
+);

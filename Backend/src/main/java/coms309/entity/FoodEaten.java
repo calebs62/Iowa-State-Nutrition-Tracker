@@ -36,10 +36,12 @@ public class FoodEaten {
     public int getUser() {return user;};
     public int getFood() {return food;};
     public int getServings() {return servings;}
+    public Timestamp getTime() {return time;}
 
     public void setUser(int user) {this.user = user;}
     public void setFood(int food) {this.food = food;}
     public void setServings(int servings) {this.servings = servings;}
+    public void setTime(Timestamp time) {this.time = time;}
 
 
 }
