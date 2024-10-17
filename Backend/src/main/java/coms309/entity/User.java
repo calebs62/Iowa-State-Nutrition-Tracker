@@ -43,9 +43,6 @@ public class User {
     @Column(name="sessionToken")
     private String sessionToken = "0:0:0";
 
-    @OneToMany
-    private Set<FoodEaten> eaten;
-
     public User() {}
     public User(String username, String password, String fname, String lname) {
         this.username = username;
