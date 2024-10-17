@@ -21,11 +21,11 @@ public class FoodEaten {
     @ManyToOne
     @JoinColumn(name = "user_id")
     @JsonIgnore
-    private int user;
+    private User user;
 
     @ManyToOne
-    @JoinColumn(name = "food")
-    private int food;
+    @JoinColumn(name = "foodItem_id")
+    private FoodItem food;
 
     @Column(name="servings")
     private int servings;
@@ -33,13 +33,13 @@ public class FoodEaten {
     public FoodEaten() {}
 
     public int getId() {return id;}
-    public int getUser() {return user;};
-    public int getFood() {return food;};
+    public User getUser() {return user;};
+    public FoodItem getFood() {return food;};
     public int getServings() {return servings;}
     public Timestamp getTime() {return time;}
 
-    public void setUser(int user) {this.user = user;}
-    public void setFood(int food) {this.food = food;}
+    public void setUser(User user) {this.user = user;}
+    public void setFood(FoodItem food) {this.food = food;}
     public void setServings(int servings) {this.servings = servings;}
     public void setTime(Timestamp time) {this.time = time;}
 

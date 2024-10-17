@@ -5,23 +5,22 @@ import jakarta.persistence.*;
 import java.util.Set;
 
 @Entity
-@Table(name="group")
+@Table(name="groups")
 public class Group {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="group_id")
+    @Column(name="idgroup")
     private int id;
 
     @Column(name="groupName")
     private String groupName;
 
     @OneToMany
-    @JoinTable(name="groupMembers")
+    @JoinColumn(name="groupMembers")
     private Set<GroupMember> members;
 
     @ManyToOne
     @JoinColumn(name="foodPlan")
-    @JsonIgnore
     private FoodPlan plan;
 
     public Group() {};

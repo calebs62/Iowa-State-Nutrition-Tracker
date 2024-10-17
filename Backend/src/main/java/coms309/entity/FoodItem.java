@@ -36,6 +36,7 @@ public class FoodItem {
     @ManyToMany (mappedBy="foodItems")
     private Set<Menu> menus;
 
+
     public FoodItem() {}
 
     public FoodItem(String name, int calories, int totalFat, int sodium, int carbohydrate,
