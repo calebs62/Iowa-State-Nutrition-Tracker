@@ -2,6 +2,8 @@ package coms309.entity;
 
 import jakarta.persistence.*;
 
+import java.util.Set;
+
 @Entity
 @Table(name="user")
 
@@ -40,6 +42,9 @@ public class User {
 
     @Column(name="sessionToken")
     private String sessionToken = "**";
+
+    @OneToMany
+    private Set<FoodEaten> eaten;
 
     public User() {}
     public User(String username, String password, String fname, String lname) {
