@@ -40,6 +40,7 @@ dependencies {
     implementation(libs.glide)
     implementation(libs.gson)
     implementation(libs.androidx.junit)
+    implementation(libs.okhttp)
     testImplementation(libs.junit.junit)
     testImplementation(libs.testng)
 }
