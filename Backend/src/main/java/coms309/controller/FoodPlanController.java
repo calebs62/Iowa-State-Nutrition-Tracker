@@ -5,6 +5,7 @@ import coms309.repository.FoodPlanRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -25,7 +26,7 @@ public class FoodPlanController {
     }
 
     // Update
-    @PostMapping("/plan/update/{id}")
+    @PutMapping("/plan/update/{id}")
     public FoodPlan updatePlan(@PathVariable int id, @RequestBody Map<String, Object> newPlan){
         FoodPlan currPlan = planRepo.findById(id).orElse(null);
         if (currPlan != null){
@@ -50,5 +51,34 @@ public class FoodPlanController {
             planRepo.save(currPlan);
         }
         return currPlan;
+    }
+
+    // Delete
+    @DeleteMapping("/plan/{id}")
+    public FoodPlan delete(@PathVariable int id){
+        FoodPlan plan = planRepo.findById(id).orElse(null);
+        if (planRepo.existsById(id)){
+            planRepo.deleteById(id);
+        }
+        return plan;
+    }
+
+    //List all plans
+    @GetMapping("/allPlans")
+    public List<FoodPlan> getAllPlans(@RequestParam(defaultValue = "") String keyword){
+        List<FoodPlan> plans = planRepo.findAll();
+        if (keyword.equals("")){
+            return plans;
+        }
+        for (int i = 0; i < plans.size(); i++) {
+            FoodPlan plan = plans.get(i);
+            String name = plan.getName().toLowerCase();
+            String key = keyword.toLowerCase();
+            if (!(name.contains(key))){
+                plans.remove(plan);
+                i--;
+            }
+        }
+        return plans;
     }
 }
