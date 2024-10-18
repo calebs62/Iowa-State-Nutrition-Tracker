@@ -232,16 +232,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnEditMenu"
-        app:layout_constraintWidth_max="320dp">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/menuIdText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="textEmailAddress"
-            android:textColor="@color/black" />
-
-    </com.google.android.material.textfield.TextInputLayout>
+        app:layout_constraintWidth_max="320dp"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnDeleteMenu"

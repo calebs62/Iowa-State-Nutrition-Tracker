@@ -131,7 +131,7 @@ public class MenuFragment extends Fragment {
         viewMenus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(getActivity(), ViewMenusActivity.class);
+                Intent intent = new Intent(getActivity(), ViewMenusActivityTesting.class);
 
                 // Serialize the mock menu into a JSON string and pass it as an extra
                 Menu mockBreakfastMenu = createMockBreakfastMenu(); // Get your mock menu
