@@ -45,7 +45,7 @@ public class ViewMenusActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_view_menus);
+        setContentView(R.layout.view_menus_item);
 
         add = findViewById(R.id.btnAddMenu);
         edit = findViewById(R.id.btnEditMenu);

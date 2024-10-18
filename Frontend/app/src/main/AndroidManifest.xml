@@ -33,6 +33,7 @@
         <activity android:name=".activities.BaseActivity" />
         <activity android:name=".activities.ForgotPasswordActivity"/>
         <activity android:name=".activities.ViewMenusActivity"/>
+        <activity android:name=".activities.ViewMenusActivityTesting"/>
     </application>
 
 </manifest>
