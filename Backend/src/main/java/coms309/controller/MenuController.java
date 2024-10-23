@@ -80,4 +80,21 @@ public class MenuController {
         return new ArrayList<>(menuRepo.findAll());
     }
 
+    // Search by keyword
+    @GetMapping("/menu/search")
+    public List<Menu> searchMenus(@RequestParam(defaultValue="") String keyword){
+        List<Menu> menus = menuRepo.findAll();
+        if (keyword.isEmpty()){
+            return menus;
+        }
+        for(Menu m : menus){
+            String name = m.getName().toLowerCase();
+            String key = keyword.toLowerCase();
+            if (!(name.contains(key))){
+                menus.remove(m);
+            }
+        }
+        return menus;
+    }
+
 }
