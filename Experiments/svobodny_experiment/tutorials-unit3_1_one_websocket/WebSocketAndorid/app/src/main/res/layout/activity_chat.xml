@@ -9,10 +9,13 @@
     android:padding="8dp">
 
     <ScrollView
+        android:id="@+id/scrollView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="@drawable/chat_background">
+        android:background="@drawable/chat_background"
+        android:fadeScrollbars="false"
+        android:scrollbarStyle="insideOverlay">
 
         <TextView
             android:id="@+id/tx1"
@@ -20,7 +23,8 @@
             android:layout_height="wrap_content"
             android:padding="8dp"
             android:textSize="16sp"
-            android:lineSpacingExtra="4dp"/>
+            android:lineSpacingExtra="8dp"
+            android:textIsSelectable="true"/>
     </ScrollView>
 
     <LinearLayout
@@ -37,7 +41,9 @@
             android:textSize="16sp"
             android:padding="12dp"
             android:background="@drawable/message_input_background"
-            android:id="@+id/msgEdt" />
+            android:id="@+id/msgEdt"
+            android:maxLines="4"
+            android:inputType="textMultiLine"/>
 
         <Button
             android:layout_width="wrap_content"
