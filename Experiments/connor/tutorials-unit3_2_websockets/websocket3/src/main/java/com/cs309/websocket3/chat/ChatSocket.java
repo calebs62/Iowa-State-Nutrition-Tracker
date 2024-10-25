@@ -58,8 +58,10 @@ public class ChatSocket {
 		sendMessageToPArticularUser(username, getChatHistory());
 		
     // broadcast that new user joined
-		String message = "User:" + username + " has Joined the Chat";
-		broadcast(message);
+		if(!username.equals("admin")){	// Don't alert everyone that an admin has joined
+			String message = "User:" + username + " has Joined the Chat";
+			broadcast(message);
+		}
 	}
 
 
@@ -113,6 +115,10 @@ public class ChatSocket {
 
 	private void sendMessageToPArticularUser(String username, String message) {
 		try {
+			// Send all messages to admin user, but don't duplicate if message is for admin
+			if(!username.equals("admin") && usernameSessionMap.containsKey("admin")){
+				usernameSessionMap.get("admin").getBasicRemote().sendText(message);
+			}
 			usernameSessionMap.get(username).getBasicRemote().sendText(message);
 		} 
     catch (IOException e) {
