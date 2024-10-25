@@ -34,6 +34,7 @@ public class MainActivity extends AppCompatActivity implements WebSocketListener
 
             // got to chat activity
             Intent intent = new Intent(this, ChatActivity.class);
+            intent.putExtra("username", usernameEtx.getText());
             startActivity(intent);
         });
     }
@@ -50,4 +51,14 @@ public class MainActivity extends AppCompatActivity implements WebSocketListener
 
     @Override
     public void onWebSocketError(Exception ex) {}
+
+    @Override
+    public void onTypingStarted() {
+
+    }
+
+    @Override
+    public void onTypingStopped() {
+
+    }
 }

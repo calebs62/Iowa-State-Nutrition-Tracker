@@ -135,6 +135,12 @@ public class WebSocketManager {
             if (webSocketListener != null) {
                 webSocketListener.onWebSocketMessage(message);
             }
+            else if(message.contains("\"type\":\"typing-stopped\"")){
+                webSocketListener.onTypingStopped();
+            }
+            else{
+                webSocketListener.onWebSocketMessage(message);
+            }
         }
 
         /**
