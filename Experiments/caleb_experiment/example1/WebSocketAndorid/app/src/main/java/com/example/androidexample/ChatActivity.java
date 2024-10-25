@@ -10,48 +10,62 @@ import android.widget.TextView;
 
 import org.java_websocket.handshake.ServerHandshake;
 
-public class ChatActivity extends AppCompatActivity implements WebSocketListener{
+public class ChatActivity extends AppCompatActivity implements WebSocketListener {
 
     private Button sendBtn;
     private EditText msgEtx;
     private TextView msgTv;
+    private String username;
+
+    private boolean isTyping = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-        /* initialize UI elements */
-        sendBtn = (Button) findViewById(R.id.sendBtn);
-        msgEtx = (EditText) findViewById(R.id.msgEdt);
-        msgTv = (TextView) findViewById(R.id.tx1);
+        username = getIntent().getStringExtra("username");
 
-        /* connect this activity to the websocket instance */
+        sendBtn = findViewById(R.id.sendBtn);
+        msgEtx = findViewById(R.id.msgEdt);
+        msgTv = findViewById(R.id.tx1);
+
         WebSocketManager.getInstance().setWebSocketListener(ChatActivity.this);
 
-        /* send button listener */
+        msgEtx.setOnKeyListener((v, keyCode, event) -> {
+            if (!isTyping) {
+                WebSocketManager.getInstance().sendMessage("{\"type\":\"typing-started\", \"user\":\"" + username + "\"}");
+                isTyping = true;
+            }
+
+            return false;
+        });
+
         sendBtn.setOnClickListener(v -> {
-            try {
-                // send message
-                WebSocketManager.getInstance().sendMessage(msgEtx.getText().toString());
-            } catch (Exception e) {
-                Log.d("ExceptionSendMessage:", e.getMessage().toString());
+            if (isTyping) {
+                WebSocketManager.getInstance().sendMessage("{\"type\":\"typing-stopped\", \"user\":\"" + username + "\"}");
+                isTyping = false;
+            }
+
+            String message = msgEtx.getText().toString();
+            if (!message.isEmpty()) {
+                WebSocketManager.getInstance().sendMessage(message);
+                msgEtx.setText("");
             }
         });
     }
 
-
     @Override
     public void onWebSocketMessage(String message) {
-        /**
-         * In Android, all UI-related operations must be performed on the main UI thread
-         * to ensure smooth and responsive user interfaces. The 'runOnUiThread' method
-         * is used to post a runnable to the UI thread's message queue, allowing UI updates
-         * to occur safely from a background or non-UI thread.
-         */
         runOnUiThread(() -> {
-            String s = msgTv.getText().toString();
-            msgTv.setText(s + "\n"+message);
+            if (message.contains("\"type\":\"typing-started\"")) {
+                onTypingStarted();
+            } else if (message.contains("\"type\":\"typing-stopped\"")) {
+                onTypingStopped();
+            } else {
+                String s = msgTv.getText().toString();
+                msgTv.setText(s + "\n" + message);
+            }
         });
     }
 
@@ -69,4 +83,26 @@ public class ChatActivity extends AppCompatActivity implements WebSocketListener
 
     @Override
     public void onWebSocketError(Exception ex) {}
+
+    public void onTypingStarted() {
+        runOnUiThread(() -> {
+            String currentText = msgTv.getText().toString();
+            msgTv.setText(currentText + "\nA user is typing...");
+        });
+    }
+
+    public void onTypingStopped() {
+        runOnUiThread(() -> {
+            String currentText = msgTv.getText().toString();
+            String[] lines = currentText.split("\n");
+            if (lines.length > 0) {
+                StringBuilder updatedText = new StringBuilder();
+                for (int i = 0; i < lines.length - 1; i++) {
+                    updatedText.append(lines[i]).append("\n");
+                }
+                msgTv.setText(updatedText.toString());
+            }
+        });
+    }
 }
+
