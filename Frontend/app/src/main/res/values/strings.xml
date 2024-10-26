@@ -52,4 +52,10 @@
     <string name="enter_in_your_email_to_confirm">Enter in your email to confirm.</string>
     <string name="use_a_strong_unique_password_n_enable_two_factor_authentication_n_never_share_your_password_n_update_your_password_regularly">• Use a strong, unique password\n• Enable two-factor authentication\n• Never share your password\n• Update your password regularly</string>
     <string name="are_you_sure_you_want_to_delete_your_account_this_action_cannot_be_undone">Are you sure you want to delete your account? This action cannot be undone.</string>
+    <string name="system_notifications">System Notifications</string>
+    <string name="setting_to_allow_push_of_notifications_to_user_s_phone">Setting to allow push of notifications to user\'s phone</string>
+    <string name="push_notifications">Push Notifications</string>
+    <string name="configures_notifications_to_be_sent_as_push_notifications">Configures notifications to be sent as push notifications</string>
+    <string name="reminders">Reminders</string>
+    <string name="sets_reminders_of_calorie_intakes_or_meals">Sets reminders of calorie intakes or meals</string>
 </resources>
