@@ -30,8 +30,9 @@ public class GroupMember {
     @Column(name = "permission")
     private Permission_Level permissionLvl;
 
+    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "joinDate")
-    private Date joinDate;
+    private Date joinDate = new Date();
 
 
     public GroupMember() {}
