@@ -15,6 +15,9 @@ public class Group {
     @Column(name="groupName")
     private String groupName;
 
+    @Column(name = "groupOwner")
+    private int ownerId;
+
     @OneToMany
     @JoinColumn(name="groupMembers")
     private Set<GroupMember> members;
@@ -27,16 +30,27 @@ public class Group {
 
     public int getId() {return id;}
     public String getGroupName() {return groupName;}
+    public int getOwnerId() {
+        return ownerId;
+    }
     public Set<GroupMember> getMembers() {return members;}
     public FoodPlan getPlan() {return plan;}
 
     public void setName(String name) {this.groupName = name;}
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
+    }
     public void setMembers(Set<GroupMember> members) {this.members = members;}
     public void setPlan(FoodPlan plan) {this.plan = plan;}
 
     public Set<GroupMember> addMember(GroupMember mem) {
         members.add(mem);
-        return this.members;
+        return members;
+    }
+
+    public Set<GroupMember> removeMember(GroupMember mem){
+        members.remove(mem);
+        return members;
     }
 
 }
