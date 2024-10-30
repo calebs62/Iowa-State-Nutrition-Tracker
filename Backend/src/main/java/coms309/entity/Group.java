@@ -37,9 +37,7 @@ public class Group {
     public FoodPlan getPlan() {return plan;}
 
     public void setName(String name) {this.groupName = name;}
-    public void setGroupName(String groupName) {
-        this.groupName = groupName;
-    }
+    public void setOwnerId(int id){ownerId = id;}
     public void setMembers(Set<GroupMember> members) {this.members = members;}
     public void setPlan(FoodPlan plan) {this.plan = plan;}
 
@@ -53,4 +51,11 @@ public class Group {
         return members;
     }
 
+    public Boolean isOwnerLevel(int userId){
+        return true;
+    }
+
+    public Boolean isModLevel(int userId){
+        return true;
+    }
 }
