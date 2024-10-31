@@ -2,7 +2,9 @@ package coms309.controller;
 
 import coms309.entity.Group;
 import coms309.entity.GroupMember;
+import coms309.entity.User;
 import coms309.repository.GroupRepository;
+import coms309.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,6 +15,8 @@ import java.util.Map;
 public class GroupController {
     @Autowired
     GroupRepository groupRepo;
+    @Autowired
+    UserRepository userRepo;  //TODO - should this be a GroupMemberRepo?
 
     // Create
     @PostMapping("/group")
@@ -59,7 +63,33 @@ public class GroupController {
         return currGroup;
     }
 
+    //TODO - should this create groupMember?
+    @PutMapping("/group/{id}/join")
+    public Boolean memberJoin(@PathVariable int id, @RequestBody int uid){
+        Group currGroup = groupRepo.findById(id).orElse(null);
+        User currUser = userRepo.findById(uid).orElse(null);
+        if (currGroup != null && currUser != null) {
+            GroupMember groupMember = new GroupMember(currGroup, currUser);
+            return currGroup.addMember(groupMember);
+        }
+        return false;
+    }
+
+    //TODO - fix, shouldn't create new groupMember should find current
+    @PutMapping("/group/{id}/leave")
+    public Boolean memberLeave(@PathVariable int id, @RequestBody int uid){
+        Group currGroup = groupRepo.findById(id).orElse(null);
+        User currUser = userRepo.findById(uid).orElse(null);
+        GroupMember currMember;
+        if (currGroup != null && currUser != null) {
+            GroupMember groupMember = new GroupMember(currGroup, currUser);
+            return currGroup.removeMember(groupMember);
+        }
+        return false;
+    }
+
     // Delete
+    //TODO - let only owner / admin delete group
     @DeleteMapping("/group/{id}")
     public Group delete(@PathVariable int id){
         Group group = groupRepo.findById(id).orElse(null);

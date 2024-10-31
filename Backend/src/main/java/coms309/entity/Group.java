@@ -49,10 +49,12 @@ public class Group {
         return members.remove(mem);
     }
 
+    //TODO - do authentication
     public Boolean isOwnerLevel(int userId){
         return true;
     }
 
+    //TODO - do authentication
     public Boolean isModLevel(int userId){
         return true;
     }
