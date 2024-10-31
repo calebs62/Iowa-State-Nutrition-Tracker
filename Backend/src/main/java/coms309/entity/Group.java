@@ -41,14 +41,12 @@ public class Group {
     public void setMembers(Set<GroupMember> members) {this.members = members;}
     public void setPlan(FoodPlan plan) {this.plan = plan;}
 
-    public Set<GroupMember> addMember(GroupMember mem) {
-        members.add(mem);
-        return members;
+    public Boolean addMember(GroupMember mem) {
+        return members.add(mem);
     }
 
-    public Set<GroupMember> removeMember(GroupMember mem){
-        members.remove(mem);
-        return members;
+    public Boolean removeMember(GroupMember mem){
+        return members.remove(mem);
     }
 
     public Boolean isOwnerLevel(int userId){
