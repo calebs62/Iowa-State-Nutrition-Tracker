@@ -19,6 +19,7 @@ public class GroupMember {
     @Column(name="groupmemberid")
     private int id;
 
+    //TODO - connections aren't correct
     @ManyToOne
     @JoinColumn(name = "group_id")
     private Group group;
@@ -36,6 +37,12 @@ public class GroupMember {
 
 
     public GroupMember() {}
+
+    public GroupMember(Group group, User user) {
+        this.group = group;
+        this.user = user;
+        this.permissionLvl = Permission_Level.User;
+    }
 
     public Group getGroup() {return group;}
     public User getUser() {return user;}
