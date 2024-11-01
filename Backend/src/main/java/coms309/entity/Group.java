@@ -50,12 +50,12 @@ public class Group {
     }
 
     //TODO - do authentication
-    public Boolean isOwnerLevel(int userId){
+    public Boolean isOwnerLevel(String sessionToken){
         return true;
     }
 
     //TODO - do authentication
-    public Boolean isModLevel(int userId){
+    public Boolean isModLevel(String sessionToken){
         return true;
     }
 }
