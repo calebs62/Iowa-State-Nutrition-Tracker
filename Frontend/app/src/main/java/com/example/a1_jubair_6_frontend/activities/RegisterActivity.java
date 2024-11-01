@@ -174,7 +174,7 @@ public class RegisterActivity extends AppCompatActivity {
                     profileDataManager.saveUserData(user);
 
                     Toast.makeText(this, "Registered Successfully", Toast.LENGTH_SHORT).show();
-                    Intent homeIntent = new Intent(RegisterActivity.this, LoginSignupActivity.class);
+                    Intent homeIntent = new Intent(RegisterActivity.this, ProfileInitialize.class);
                     startActivity(homeIntent);
                 },
                 error -> {

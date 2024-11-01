@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Greeting the user at the top left -->
+    <TextView
+        android:id="@+id/tvGreeting"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hello, User!"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:gravity="start" />
+
+    <!-- Prompt for setting measurements -->
+    <TextView
+        android:id="@+id/tvSetMeasurements"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Set your current measurements"
+        android:textSize="18sp"
+        android:layout_marginTop="16dp"
+        android:gravity="start" />
+
+    <!-- Weight input field with unit -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:gravity="start">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Weight:"
+            android:textSize="16sp"
+            android:layout_gravity="center_vertical" />
+
+        <EditText
+            android:id="@+id/etWeight"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:inputType="number"
+            android:gravity="center" />
+
+        <TextView
+            android:id="@+id/tvWeightUnit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="lbs"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="4dp" />
+    </LinearLayout>
+
+    <!-- Height input field with unit -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:gravity="start">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Height:"
+            android:textSize="16sp"
+            android:layout_gravity="center_vertical" />
+
+        <EditText
+            android:id="@+id/etHeight"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:inputType="number"
+            android:gravity="center" />
+
+        <TextView
+            android:id="@+id/tvHeightUnit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="in"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="4dp" />
+    </LinearLayout>
+
+    <!-- BMI display area -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp"
+        android:gravity="start">
+
+        <TextView
+            android:id="@+id/tvBMILabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="BMI:"
+            android:textSize="16sp"
+            android:layout_gravity="center_vertical" />
+
+        <TextView
+            android:id="@+id/tvBMIValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--"
+            android:textSize="16sp"
+            android:layout_marginStart="8dp"
+            android:layout_gravity="center_vertical" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnConfirm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Confirm"
+        android:layout_gravity="center"/>
+
+    <!-- Goal prompt -->
+    <TextView
+        android:id="@+id/tvGoalPrompt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="What is your goal?"
+        android:textSize="18sp"
+        android:layout_marginTop="24dp"
+        android:gravity="start" />
+
+    <!-- Goal buttons stacked vertically -->
+    <Button
+        android:id="@+id/btnLoseWeight"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="To lose weight"
+        android:layout_marginTop="8dp" />
+
+    <Button
+        android:id="@+id/btnGainWeight"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="To gain weight"
+        android:layout_marginTop="8dp" />
+
+    <Button
+        android:id="@+id/btnGainMuscle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="To gain muscle"
+        android:layout_marginTop="8dp" />
+
+</LinearLayout>
+
+
+
