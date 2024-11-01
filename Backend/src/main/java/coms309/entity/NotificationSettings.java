@@ -14,6 +14,9 @@ public class NotificationSettings {
     @Column(name = "systemnotif")
     private boolean systemNotification = true;
 
+    @Column(name = "achievement")
+    private boolean achievementNotification = true;
+
 
     public NotificationSettings(int id) {
         this.userId = id;

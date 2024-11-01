@@ -34,6 +34,9 @@ public class NotificationsController {
         if (newSettings.containsKey("system")) {
             settings.setTimeNotification(newSettings.get("system"));
         }
+        if (newSettings.containsKey("achievement")) {
+            settings.setTimeNotification(newSettings.get("system"));
+        }
         return settings;
     }
 
