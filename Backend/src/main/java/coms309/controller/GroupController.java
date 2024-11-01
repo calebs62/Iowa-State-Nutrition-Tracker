@@ -1,5 +1,6 @@
 package coms309.controller;
 
+import coms309.entity.FoodPlan;
 import coms309.entity.Group;
 import coms309.entity.GroupMember;
 import coms309.entity.User;
@@ -86,6 +87,16 @@ public class GroupController {
             return currGroup.removeMember(groupMember);
         }
         return false;
+    }
+
+    // Change group plan
+    @PutMapping("/group/{id}/changePlan")
+    public Group changePlan(@PathVariable int id, @RequestBody Map<String, Object> map){
+        Group currGroup = groupRepo.findById(id).orElse(null);
+        if (currGroup != null && currGroup.isModLevel((String) map.get("sessionToken"))) {
+            currGroup.setPlan((FoodPlan) map.get("newPlan"));
+        }
+        return currGroup;
     }
 
     // Delete
