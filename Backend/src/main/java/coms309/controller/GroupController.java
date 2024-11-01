@@ -4,6 +4,7 @@ import coms309.entity.FoodPlan;
 import coms309.entity.Group;
 import coms309.entity.GroupMember;
 import coms309.entity.User;
+import coms309.repository.GroupMemberRepository;
 import coms309.repository.GroupRepository;
 import coms309.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,13 +12,16 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 public class GroupController {
     @Autowired
     GroupRepository groupRepo;
     @Autowired
-    UserRepository userRepo;  //TODO - should this be a GroupMemberRepo?
+    UserRepository userRepo;
+    @Autowired
+    GroupMemberRepository memberRepo;
 
     // Create
     @PostMapping("/group")
@@ -64,13 +68,15 @@ public class GroupController {
         return currGroup;
     }
 
-    //TODO - should this create groupMember?
     @PutMapping("/group/{id}/join")
-    public Boolean memberJoin(@PathVariable int id, @RequestBody int uid){
+    public Boolean memberJoin(@PathVariable int id, @RequestBody String sessionToken){
         Group currGroup = groupRepo.findById(id).orElse(null);
+        String[] array = sessionToken.split(":");
+        int uid = Integer.parseInt(array[2]);
         User currUser = userRepo.findById(uid).orElse(null);
         if (currGroup != null && currUser != null) {
             GroupMember groupMember = new GroupMember(currGroup, currUser);
+            memberRepo.save(groupMember);
             return currGroup.addMember(groupMember);
         }
         return false;
@@ -78,12 +84,16 @@ public class GroupController {
 
     //TODO - fix, shouldn't create new groupMember should find current
     @PutMapping("/group/{id}/leave")
-    public Boolean memberLeave(@PathVariable int id, @RequestBody int uid){
+    public Boolean memberLeave(@PathVariable int id, @RequestBody String sessionToken){
         Group currGroup = groupRepo.findById(id).orElse(null);
+        String[] array = sessionToken.split(":");
+        int uid = Integer.parseInt(array[2]);
         User currUser = userRepo.findById(uid).orElse(null);
-        GroupMember currMember;
         if (currGroup != null && currUser != null) {
+            Set<GroupMember> groupMembers = currGroup.getMembers();
+            //TODO
             GroupMember groupMember = new GroupMember(currGroup, currUser);
+            memberRepo.save(groupMember);
             return currGroup.removeMember(groupMember);
         }
         return false;
