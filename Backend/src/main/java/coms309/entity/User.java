@@ -42,6 +42,7 @@ public class User {
 
     @Column(name="sessionToken")
     private String sessionToken = "0:0:0";
+    
 
     public User() {}
     public User(String username, String password, String fname, String lname) {
