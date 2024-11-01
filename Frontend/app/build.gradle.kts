@@ -41,6 +41,7 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.androidx.junit)
     implementation(libs.okhttp)
+    implementation(libs.androidx.work.runtime)
     testImplementation(libs.junit.junit)
     testImplementation(libs.testng)
 }

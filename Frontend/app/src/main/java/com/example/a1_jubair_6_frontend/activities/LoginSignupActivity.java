@@ -20,6 +20,7 @@ import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
 import com.example.a1_jubair_6_frontend.fragments.HomePageFragment;
+import com.example.a1_jubair_6_frontend.managers.EngagementNotificationManager;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
 import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.models.User;
@@ -97,6 +98,14 @@ public class LoginSignupActivity extends AppCompatActivity {
             Intent intent = new Intent(LoginSignupActivity.this, ForgotPasswordActivity.class);
             startActivity(intent);
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        EngagementNotificationManager engagementManager =
+                new EngagementNotificationManager(this);
+        engagementManager.updateLastAccessTime();
     }
 
     public void getCredentialsFromServer(String email, String password) throws JSONException {
