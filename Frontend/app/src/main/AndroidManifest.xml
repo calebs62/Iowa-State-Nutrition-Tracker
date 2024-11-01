@@ -36,6 +36,7 @@
         <activity android:name=".activities.ForgotPasswordActivity"/>
         <activity android:name=".activities.ViewMenusActivity"/>
         <activity android:name=".activities.ViewMenusActivityTesting"/>
+        <activity android:name=".activities.ProfileInitialize"/>
     </application>
 
 </manifest>
