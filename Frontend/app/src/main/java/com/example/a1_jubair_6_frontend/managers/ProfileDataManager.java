@@ -16,7 +16,6 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.Serializable;
 
 public class ProfileDataManager {
     private static final String PREF_NAME = "ProfilePreferences";
@@ -29,7 +28,7 @@ public class ProfileDataManager {
     private static final String KEY_LASTNAME = "lastname";
     private static final String KEY_ACCOUNT = "account";
     private static final String KEY_UID = "uid";
-    private static final String KEY_FIRST_LOGIN = "first_login";
+    private static final String KEY_PHONE_NUMBER = "phone_number";
 
     private static final String uploadDir = "uploads/profile-pictures/";
 
@@ -98,6 +97,12 @@ public class ProfileDataManager {
                 .apply();
     }
 
+    public void setPhoneNumber(String phoneNumber){
+        preferences.edit()
+                .putString(KEY_PHONE_NUMBER, phoneNumber)
+                .apply();
+    }
+
     public String getEmail(){
         return preferences.getString(KEY_EMAIL, "");
     }
@@ -128,6 +133,8 @@ public class ProfileDataManager {
 
     public int getId() {return preferences.getInt(KEY_UID, -1); }
 
+    public String getPhoneNumber() { return preferences.getString(KEY_PHONE_NUMBER, null); }
+
     public User getUser() {
         int id = getId();
         String username = getEmail();
@@ -141,16 +148,6 @@ public class ProfileDataManager {
         return new User(id, username, password, fname, lname, height, weight, accType);
     }
 
-    public boolean isFirstLogin(){
-        return preferences.getBoolean(KEY_FIRST_LOGIN, true);
-    }
-
-    public void setFirstLogin(boolean firstLogin){
-        preferences.edit()
-                .putBoolean(KEY_FIRST_LOGIN, firstLogin)
-                .apply();
-    }
-
     public void clearUserData() {
         preferences.edit()
                 .remove(KEY_FIRSTNAME)
@@ -161,6 +158,7 @@ public class ProfileDataManager {
                 .remove(KEY_HEIGHT)
                 .remove(KEY_ACCOUNT)
                 .remove(KEY_PROFILE_IMAGE_URI)
+                .remove(KEY_PHONE_NUMBER)
                 .apply();
     }
 
