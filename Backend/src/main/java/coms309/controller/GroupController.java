@@ -82,7 +82,6 @@ public class GroupController {
         return false;
     }
 
-    //TODO - fix, shouldn't create new groupMember should find current
     @PutMapping("/group/{id}/leave")
     public Boolean memberLeave(@PathVariable int id, @RequestBody String sessionToken){
         Group currGroup = groupRepo.findById(id).orElse(null);
@@ -90,11 +89,11 @@ public class GroupController {
         int uid = Integer.parseInt(array[2]);
         User currUser = userRepo.findById(uid).orElse(null);
         if (currGroup != null && currUser != null) {
-            Set<GroupMember> groupMembers = currGroup.getMembers();
-            //TODO
-            GroupMember groupMember = new GroupMember(currGroup, currUser);
-            memberRepo.save(groupMember);
-            return currGroup.removeMember(groupMember);
+            GroupMember groupMember = currGroup.findMember(uid);
+            if (groupMember != null) {
+                memberRepo.delete(groupMember);
+                return currGroup.removeMember(groupMember);
+            }
         }
         return false;
     }

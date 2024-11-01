@@ -49,6 +49,16 @@ public class Group {
         return members.remove(mem);
     }
 
+    public GroupMember findMember(int uid){
+        for(GroupMember mem : members){
+            User memUser = mem.getUser();
+            if (memUser.getUid() == uid){
+                return mem;
+            }
+        }
+        return  null;
+    }
+
     //TODO - do authentication
     public Boolean isOwnerLevel(String sessionToken){
         return true;
