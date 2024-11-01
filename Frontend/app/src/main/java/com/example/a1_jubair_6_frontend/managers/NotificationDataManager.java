@@ -8,6 +8,8 @@ public class NotificationDataManager {
     private static final String KEY_SYSTEM_NOTIFICATIONS = "system_notifications";
     private static final String KEY_TIME_NOTIFICATIONS = "time_notifications";
     private static final String KEY_REMINDER_NOTIFICATIONS = "reminder_notifications";
+    private static final String KEY_SMS_NOTIFICATIONS = "sms_notifications";
+    private static final String KEY_EMAIL_NOTIFICATIONS = "email_notifications";
 
     private final SharedPreferences preferences;
     private final Context context;
@@ -43,6 +45,14 @@ public class NotificationDataManager {
         return preferences.getBoolean(KEY_REMINDER_NOTIFICATIONS, true);
     }
 
+    public boolean getSMSNotificationsEnabled() {
+        return preferences.getBoolean(KEY_SMS_NOTIFICATIONS, true);
+    }
+
+    public boolean getEmailNotificationsEnabled() {
+        return preferences.getBoolean(KEY_EMAIL_NOTIFICATIONS, true);
+    }
+
     public void toggleSystemNotifications() {
         boolean current = getSystemNotificationsEnabled();
         preferences.edit()
@@ -75,6 +85,26 @@ public class NotificationDataManager {
             boolean current = getReminderNotificationsEnabled();
             preferences.edit()
                     .putBoolean(KEY_REMINDER_NOTIFICATIONS, !current)
+                    .apply();
+            updateNotificationSettingsToServer();
+        }
+    }
+
+    public void toggleSMSNotifications() {
+        if (getSMSNotificationsEnabled()) {
+            boolean current = getSMSNotificationsEnabled();
+            preferences.edit()
+                    .putBoolean(KEY_REMINDER_NOTIFICATIONS, !current)
+                    .apply();
+            updateNotificationSettingsToServer();
+        }
+    }
+
+    public void toggleEmailNotifications() {
+        if (getEmailNotificationsEnabled()) {
+            boolean current = getEmailNotificationsEnabled();
+            preferences.edit()
+                    .putBoolean(KEY_EMAIL_NOTIFICATIONS, !current)
                     .apply();
             updateNotificationSettingsToServer();
         }

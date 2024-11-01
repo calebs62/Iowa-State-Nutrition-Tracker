@@ -39,6 +39,8 @@ public class NotificationsFragment extends Fragment {
     private SwitchMaterial switchPushNotifications;
     private SwitchMaterial switchReminders;
     private boolean isSystemToggling = false;
+    private SwitchMaterial switchSMSNotifications;
+    private SwitchMaterial switchEmailNotifications;
     private MaterialCardView notificationTesterCard;
     private TextInputEditText notificationTitle;
     private TextInputEditText notificationMessage;
@@ -82,6 +84,9 @@ public class NotificationsFragment extends Fragment {
         switchSystemNotifications = view.findViewById(R.id.switchSystemNotifications);
         switchPushNotifications = view.findViewById(R.id.switchPushNotifications);
         switchReminders = view.findViewById(R.id.switchReminders);
+
+        switchSMSNotifications = view.findViewById(R.id.switchSMSNotifications);
+        switchEmailNotifications = view.findViewById(R.id.switchEmailNotifs);
 
         notificationTesterCard = view.findViewById(R.id.notificationTesterCard);
         notificationTitle = view.findViewById(R.id.notificationTitle);
@@ -145,20 +150,42 @@ public class NotificationsFragment extends Fragment {
                 showToast(isChecked ? "Reminders enabled" : "Reminders disabled");
             }
         });
+
+        // SMS switch
+        switchSMSNotifications.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (switchSMSNotifications.isChecked()) {
+                showToast(isChecked ? "SMS enabled" : "SMS disabled");
+            }
+            notificationManager.toggleSMSNotifications();
+        });
+
+        // Email switch
+        switchEmailNotifications.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (switchEmailNotifications.isChecked()) {
+                showToast(isChecked ? "Email enabled" : "Email disabled");
+            }
+            notificationManager.toggleEmailNotifications();
+        });
     }
 
     private void loadSettings() {
         boolean systemEnabled = notificationManager.getSystemNotificationsEnabled();
         boolean timeEnabled = notificationManager.getTimeNotificationsEnabled();
         boolean reminderEnabled = notificationManager.getReminderNotificationsEnabled();
+        boolean smsEnabled = notificationManager.getSMSNotificationsEnabled();
+        boolean emailEnabled = notificationManager.getEmailNotificationsEnabled();
 
         switchSystemNotifications.setOnCheckedChangeListener(null);
         switchPushNotifications.setOnCheckedChangeListener(null);
         switchReminders.setOnCheckedChangeListener(null);
+        switchSMSNotifications.setOnCheckedChangeListener(null);
+        switchEmailNotifications.setOnCheckedChangeListener(null);
 
         switchSystemNotifications.setChecked(systemEnabled);
         switchPushNotifications.setChecked(timeEnabled);
         switchReminders.setChecked(reminderEnabled);
+        switchSMSNotifications.setChecked(smsEnabled);
+        switchEmailNotifications.setChecked(emailEnabled);
 
         updateDependentSwitches(systemEnabled);
 
