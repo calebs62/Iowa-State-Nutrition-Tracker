@@ -24,9 +24,11 @@ public class NotificationSettings {
 
     public void setTimeNotification(boolean set) {timeNotification = set;}
     public void setSystemNotification(boolean set) {systemNotification = set;}
+    public void setAchievementNotification(boolean set) {achievementNotification = set;}
 
     public int getUser() {return userId;}
     public boolean getTimeNotification() {return timeNotification;}
     public boolean getSystemNotification() {return systemNotification;}
+    public boolean getAchievementNotification() {return achievementNotification;}
 
 }
