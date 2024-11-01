@@ -367,6 +367,18 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Reminder"/>
+
+                        <RadioButton
+                            android:id="@+id/radioSMS"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="SMS Notification"/>
+
+                        <RadioButton
+                            android:id="@+id/radioEmail"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Email Notification"/>
                     </RadioGroup>
 
                     <com.google.android.material.button.MaterialButton

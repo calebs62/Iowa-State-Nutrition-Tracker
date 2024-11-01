@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.telephony.PhoneNumberFormattingTextWatcher;
 import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -42,10 +43,11 @@ public class PersonalInfoFragment extends Fragment {
     ProfileDataManager profileDataManager;
 
     TextView email;
+    TextView phoneNumber;
     TextView weight;
     TextView height;
 
-    Button editEmail;
+    Button editPhoneNumber;
     Button editWeight;
     Button editHeight;
     Button deleteAccount;
@@ -73,9 +75,11 @@ public class PersonalInfoFragment extends Fragment {
         backArrow = view.findViewById(R.id.backArrow);
 
         email = view.findViewById(R.id.emailText);
+        phoneNumber = view.findViewById(R.id.phoneNumberText);
         weight = view.findViewById(R.id.weightText);
         height = view.findViewById(R.id.heightText);
 
+        editPhoneNumber = view.findViewById(R.id.btnEditPhoneNumber);
         editWeight = view.findViewById(R.id.btnEditWeight);
         editHeight = view.findViewById(R.id.btnEditHeight);
         deleteAccount = view.findViewById(R.id.btnDeleteAccount);
@@ -91,6 +95,7 @@ public class PersonalInfoFragment extends Fragment {
     }
 
     private void setupEditButtons(){
+        editPhoneNumber.setOnClickListener(v -> showEditDialog("Phone Number", "Enter phone number", InputType.TYPE_CLASS_PHONE));
         editWeight.setOnClickListener(v -> showEditDialog("Weight", "Enter weight in lbs", InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL));
         editHeight.setOnClickListener(v -> showEditDialog("Height", "Enter height in ft", InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL));
     }
@@ -115,15 +120,21 @@ public class PersonalInfoFragment extends Fragment {
         editTextField.setHint(hint);
         editTextField.setInputType(inputType);
 
+        if (title.equals("Phone Number")) {
+            editTextField.addTextChangedListener(new PhoneNumberFormattingTextWatcher());
+        }
+
         btnCancel.setOnClickListener(v -> dialog.dismiss());
         btnSave.setOnClickListener(v -> {
             String newValue = editTextField.getText().toString();
-            if (!newValue.isEmpty()) {
+            if (newValue.isEmpty()) {
+                editTextField.setError("This field cannot be empty");
+            } else if (title.equals("Phone Number") && !isValidPhoneNumber(newValue)) {
+                editTextField.setError("Please enter a valid phone number");
+            } else {
                 saveNewValue(title, newValue);
                 refreshPersonalInfoValues();
                 dialog.dismiss();
-            } else {
-                editTextField.setError("This field cannot be empty");
             }
         });
 
@@ -131,15 +142,28 @@ public class PersonalInfoFragment extends Fragment {
     }
 
     private void saveNewValue(String field, String value) {
-        int val = Integer.parseInt(value);
         switch (field) {
+            case "Phone Number":
+                profileDataManager.setPhoneNumber(value);
+                // TODO: Update Phone Number to Server
+                break;
             case "Weight":
-                profileDataManager.setWeight(val);
-                updateWeightToServer(val);
+                try {
+                    int weightVal = Integer.parseInt(value);
+                    profileDataManager.setWeight(weightVal);
+                    updateWeightToServer(weightVal);
+                } catch (NumberFormatException e) {
+                    Toast.makeText(getContext(), "Please enter a valid number for weight", Toast.LENGTH_SHORT).show();
+                }
                 break;
             case "Height":
-                profileDataManager.setHeight(val);
-                updateHeightToServer(val);
+                try {
+                    int heightVal = Integer.parseInt(value);
+                    profileDataManager.setHeight(heightVal);
+                    updateHeightToServer(heightVal);
+                } catch (NumberFormatException e) {
+                    Toast.makeText(getContext(), "Please enter a valid number for height", Toast.LENGTH_SHORT).show();
+                }
                 break;
         }
     }
@@ -148,16 +172,21 @@ public class PersonalInfoFragment extends Fragment {
         int weightVal = profileDataManager.getWeight();
         int heightVal = profileDataManager.getHeight();
 
-        email.setText(String.format("Email: %s", profileDataManager.getEmail()));
+        email.setText(String.format("%s", profileDataManager.getEmail()));
+
+        if (profileDataManager.getPhoneNumber() != null)
+            phoneNumber.setText(String.format("%s", profileDataManager.getPhoneNumber()));
+        else
+            phoneNumber.setText(" -- ");
 
         if ((weightVal != -1)) {
-            weight.setText(String.format("Weight  %d lbs", weightVal));
+            weight.setText(String.format("%d lbs", weightVal));
         } else {
             weight.setText(R.string.weight_lbs);
         }
 
         if ((heightVal != -1)) {
-            height.setText(String.format("Height  %d ft", heightVal));
+            height.setText(String.format("%d ft", heightVal));
         } else {
             height.setText(R.string.height_ft);
         }
@@ -284,6 +313,12 @@ public class PersonalInfoFragment extends Fragment {
             Log.e(TAG, "Error preparing upload: " + e.getMessage());
             Toast.makeText(getContext(), "Error preparing height upload", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private boolean isValidPhoneNumber(String phoneNumber) {
+        String digits = phoneNumber.replaceAll("[^0-9]", "");
+
+        return digits.length() == 10;
     }
 
     public void goBack(){

@@ -42,8 +42,8 @@
     <string name="passwords_do_not_match">Passwords do not match!</string>
     <string name="personal_info">Personal Info</string>
     <string name="delete_account">Delete Account</string>
-    <string name="height_ft">Height: -- ft</string>
-    <string name="weight_lbs">Weight: -- lbs</string>
+    <string name="height_ft">-- ft</string>
+    <string name="weight_lbs">-- lbs</string>
     <string name="cancel">Cancel</string>
     <string name="food">Food</string>
     <string name="cal">Cal</string>
@@ -60,4 +60,8 @@
     <string name="sets_reminders_of_calorie_intakes_or_meals">Sets reminders of calorie intakes or meals</string>
     <string name="get_news_and_updates_sent_to_your_phone_via_text_message">Get news and updates sent to your phone via text message</string>
     <string name="get_news_and_updates_delivered_to_your_inbox">Get news and updates delivered to your inbox</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="phone_number_no_phone_number_associated_with_account">Phone Number: No phone number associated with account</string>
+    <string name="emulator_mode_sms_will_be_sent_to_this_device">Emulator Mode: SMS will be sent to this device</string>
+    <string name="sms_notification_emulator_self_test">SMS Notification (Emulator Self-Test)</string>
 </resources>

@@ -28,6 +28,7 @@ public class ProfileDataManager {
     private static final String KEY_LASTNAME = "lastname";
     private static final String KEY_ACCOUNT = "account";
     private static final String KEY_UID = "uid";
+    private static final String KEY_PHONE_NUMBER = "phone_number";
 
     private static final String uploadDir = "uploads/profile-pictures/";
 
@@ -96,6 +97,12 @@ public class ProfileDataManager {
                 .apply();
     }
 
+    public void setPhoneNumber(String phoneNumber){
+        preferences.edit()
+                .putString(KEY_PHONE_NUMBER, phoneNumber)
+                .apply();
+    }
+
     public String getEmail(){
         return preferences.getString(KEY_EMAIL, "");
     }
@@ -126,6 +133,8 @@ public class ProfileDataManager {
 
     public int getId() {return preferences.getInt(KEY_UID, -1); }
 
+    public String getPhoneNumber() { return preferences.getString(KEY_PHONE_NUMBER, null); }
+
     public User getUser() {
         int id = getId();
         String username = getEmail();
@@ -149,6 +158,7 @@ public class ProfileDataManager {
                 .remove(KEY_HEIGHT)
                 .remove(KEY_ACCOUNT)
                 .remove(KEY_PROFILE_IMAGE_URI)
+                .remove(KEY_PHONE_NUMBER)
                 .apply();
     }
 
