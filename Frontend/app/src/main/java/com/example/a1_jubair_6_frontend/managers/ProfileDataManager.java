@@ -16,6 +16,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.Serializable;
 
 public class ProfileDataManager {
     private static final String PREF_NAME = "ProfilePreferences";
@@ -28,6 +29,7 @@ public class ProfileDataManager {
     private static final String KEY_LASTNAME = "lastname";
     private static final String KEY_ACCOUNT = "account";
     private static final String KEY_UID = "uid";
+    private static final String KEY_FIRST_LOGIN = "first_login";
 
     private static final String uploadDir = "uploads/profile-pictures/";
 
@@ -137,6 +139,16 @@ public class ProfileDataManager {
         User.Account accType = User.Account.valueOf(getAccountType());
 
         return new User(id, username, password, fname, lname, height, weight, accType);
+    }
+
+    public boolean isFirstLogin(){
+        return preferences.getBoolean(KEY_FIRST_LOGIN, true);
+    }
+
+    public void setFirstLogin(boolean firstLogin){
+        preferences.edit()
+                .putBoolean(KEY_FIRST_LOGIN, firstLogin)
+                .apply();
     }
 
     public void clearUserData() {
