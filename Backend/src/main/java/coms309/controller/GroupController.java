@@ -34,7 +34,7 @@ public class GroupController {
     @PutMapping("/group/update/{id}")
     public Group updateGroup(@PathVariable int id, @RequestBody Map<String, Object> newGroup){
         Group currGroup = groupRepo.findById(id).orElse(null);
-        if (currGroup != null  && currGroup.isModLevel((int) newGroup.get("userId"))){
+        if (currGroup != null  && currGroup.isModLevel((String) newGroup.get("sessionToken"))){
             if (newGroup.containsKey("groupName")){
                 currGroup.setName((String) newGroup.get("groupName"));
             }
@@ -48,7 +48,7 @@ public class GroupController {
     @PutMapping("/group/{id}/addMember")
     public Group addMember(@PathVariable int id, @RequestBody Map<String, Object> newMembers){
         Group currGroup = groupRepo.findById(id).orElse(null);
-        if (currGroup != null && currGroup.isModLevel((int) newMembers.get("userId"))){
+        if (currGroup != null && currGroup.isModLevel((String) newMembers.get("sessionToken"))){
             currGroup.addMember((GroupMember) newMembers.get("member"));
         }
         return currGroup;
@@ -57,7 +57,7 @@ public class GroupController {
     @PutMapping("/group/{id}/removeMember")
     public Group removeMember(@PathVariable int id, @RequestBody Map<String, Object> newMembers){
         Group currGroup = groupRepo.findById(id).orElse(null);
-        if (currGroup != null && currGroup.isModLevel((int) newMembers.get("userId"))){
+        if (currGroup != null && currGroup.isModLevel((String) newMembers.get("sessionToken"))){
             currGroup.removeMember((GroupMember) newMembers.get("member"));
         }
         return currGroup;
@@ -89,12 +89,11 @@ public class GroupController {
     }
 
     // Delete
-    //TODO - let only owner / admin delete group
     @DeleteMapping("/group/{id}")
-    public Group delete(@PathVariable int id){
+    public Group delete(@PathVariable int id, @RequestBody String sessionToken){
         Group group = groupRepo.findById(id).orElse(null);
-        if (groupRepo.existsById(id)){
-            groupRepo.deleteById(id);
+        if (group != null && group.isOwnerLevel(sessionToken)){
+            groupRepo.delete(group);
         }
         return group;
     }
