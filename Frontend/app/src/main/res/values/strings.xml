@@ -58,4 +58,6 @@
     <string name="configures_notifications_to_be_sent_as_push_notifications">Configures notifications to be sent as push notifications</string>
     <string name="reminders">Reminders</string>
     <string name="sets_reminders_of_calorie_intakes_or_meals">Sets reminders of calorie intakes or meals</string>
+    <string name="get_news_and_updates_sent_to_your_phone_via_text_message">Get news and updates sent to your phone via text message</string>
+    <string name="get_news_and_updates_delivered_to_your_inbox">Get news and updates delivered to your inbox</string>
 </resources>
