@@ -35,6 +35,16 @@ public class GroupController {
         return groupRepo.findById(id).orElse(null);
     }
 
+    // Get Owner
+    @GetMapping("/group/{id}/getOwner")
+    public User getOwner(@PathVariable int id) {
+        Group currGroup = groupRepo.findById(id).orElse(null);
+        if (currGroup != null) {
+            return userRepo.findById(currGroup.getOwnerId()).orElse(null);
+        }
+        return null;
+    }
+
     // Update
     @PutMapping("/group/update/{id}")
     public Group updateGroup(@PathVariable int id, @RequestBody Map<String, Object> newGroup){
