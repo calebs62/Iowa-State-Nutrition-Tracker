@@ -59,13 +59,31 @@ public class Group {
         return  null;
     }
 
-    //TODO - do authentication
     public Boolean isOwnerLevel(String sessionToken){
-        return true;
+        String[] array = sessionToken.split(":", 3);
+        int accType = Integer.parseInt(array[1].trim());
+        int uid = Integer.parseInt(array[2].trim());
+        if (accType == 2) {
+            return true;
+        }
+        GroupMember mem = findMember(uid);
+        if (mem != null && mem.getPermissionLvl() == 2){
+            return true;
+        }
+        return false;
     }
 
-    //TODO - do authentication
     public Boolean isModLevel(String sessionToken){
-        return true;
+        String[] array = sessionToken.split(":", 3);
+        int accType = Integer.parseInt(array[1].trim());
+        int uid = Integer.parseInt(array[2].trim());
+        if (accType == 2) {
+            return true;
+        }
+        GroupMember mem = findMember(uid);
+        if (mem != null && mem.getPermissionLvl() >= 1){
+            return true;
+        }
+        return false;
     }
 }
