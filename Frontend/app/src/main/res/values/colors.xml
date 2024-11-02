@@ -10,5 +10,10 @@
     <color name="dark_grey">#707372</color>
     <color name="red">#FF0000</color>
     <color name="divider">#1F000000</color>
-    <color name="background">#FAFAFA</color>
+    <color name="activity_food">#E3F2FD</color>
+    <color name="activity_group">#F3E5F5</color>
+    <color name="activity_achievement">#E8F5E9</color>
+    <color name="activity_goal">#FFF3E0</color>
+    <color name="activity_default">#FFFFFF</color>
+    <color name="background">#F5F5F5</color>
 </resources>
