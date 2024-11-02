@@ -50,6 +50,7 @@ public class GroupController {
         return currGroup;
     }
 
+    // Mod add member by id
     @PutMapping("/group/{id}/addMember")
     public Group addMember(@PathVariable int id, @RequestBody Map<String, Object> newMembers){
         Group currGroup = groupRepo.findById(id).orElse(null);
@@ -59,6 +60,7 @@ public class GroupController {
         return currGroup;
     }
 
+    // Mod remove member by id
     @PutMapping("/group/{id}/removeMember")
     public Group removeMember(@PathVariable int id, @RequestBody Map<String, Object> newMembers){
         Group currGroup = groupRepo.findById(id).orElse(null);
@@ -68,6 +70,7 @@ public class GroupController {
         return currGroup;
     }
 
+    // User join
     @PutMapping("/group/{id}/join")
     public Boolean memberJoin(@PathVariable int id, @RequestBody String sessionToken){
         Group currGroup = groupRepo.findById(id).orElse(null);
@@ -82,6 +85,7 @@ public class GroupController {
         return false;
     }
 
+    // User leave
     @PutMapping("/group/{id}/leave")
     public Boolean memberLeave(@PathVariable int id, @RequestBody String sessionToken){
         Group currGroup = groupRepo.findById(id).orElse(null);
@@ -107,6 +111,12 @@ public class GroupController {
         }
         return currGroup;
     }
+
+    // Owner make user mod
+
+    // Owner demote mod to user
+
+    // Owner give user owner
 
     // Delete
     @DeleteMapping("/group/{id}")
