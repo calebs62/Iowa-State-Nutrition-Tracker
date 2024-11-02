@@ -15,6 +15,9 @@ public class Group {
     @Column(name="groupName")
     private String groupName;
 
+    @Column(name = "groupOwner")
+    private int ownerId;
+
     @OneToMany
     @JoinColumn(name="groupMembers")
     private Set<GroupMember> members;
@@ -27,16 +30,42 @@ public class Group {
 
     public int getId() {return id;}
     public String getGroupName() {return groupName;}
+    public int getOwnerId() {
+        return ownerId;
+    }
     public Set<GroupMember> getMembers() {return members;}
     public FoodPlan getPlan() {return plan;}
 
     public void setName(String name) {this.groupName = name;}
+    public void setOwnerId(int id){ownerId = id;}
     public void setMembers(Set<GroupMember> members) {this.members = members;}
     public void setPlan(FoodPlan plan) {this.plan = plan;}
 
-    public Set<GroupMember> addMember(GroupMember mem) {
-        members.add(mem);
-        return this.members;
+    public Boolean addMember(GroupMember mem) {
+        return members.add(mem);
     }
 
+    public Boolean removeMember(GroupMember mem){
+        return members.remove(mem);
+    }
+
+    public GroupMember findMember(int uid){
+        for(GroupMember mem : members){
+            User memUser = mem.getUser();
+            if (memUser.getUid() == uid){
+                return mem;
+            }
+        }
+        return  null;
+    }
+
+    //TODO - do authentication
+    public Boolean isOwnerLevel(String sessionToken){
+        return true;
+    }
+
+    //TODO - do authentication
+    public Boolean isModLevel(String sessionToken){
+        return true;
+    }
 }

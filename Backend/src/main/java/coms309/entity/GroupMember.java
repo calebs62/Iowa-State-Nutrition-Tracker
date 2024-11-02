@@ -2,17 +2,24 @@ package coms309.entity;
 
 import jakarta.persistence.*;
 
-import java.sql.Timestamp;
+import java.util.Date;
 
 
 @Entity
 @Table(name="group_members")
 public class GroupMember {
+    protected enum Permission_Level{
+        User,
+        Moderator,
+        Owner
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="groupmemberid")
     private int id;
 
+    //TODO - connections aren't correct
     @ManyToOne
     @JoinColumn(name = "group_id")
     private Group group;
@@ -21,19 +28,32 @@ public class GroupMember {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(name = "permission")
+    private Permission_Level permissionLvl;
+
+    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "joinDate")
-    private Timestamp joinDate;
+    private Date joinDate = new Date();
 
 
     public GroupMember() {}
 
+    public GroupMember(Group group, User user) {
+        this.group = group;
+        this.user = user;
+        this.permissionLvl = Permission_Level.User;
+    }
+
     public Group getGroup() {return group;}
     public User getUser() {return user;}
     public int getId() {return id;}
-
-    public Timestamp getJoinDate() {return joinDate;}
+    public int getPermissionLvl(){return permissionLvl.ordinal();}
+    public Date getJoinDate() {return joinDate;}
 
     public void setGroup(Group group) {this.group = group;}
     public void setUser(User user) {this.user = user;}
-    public void setJoinDate(Timestamp time) {this.joinDate = time;}
+    public void setJoinDate(Date time) {this.joinDate = time;}
+    public void setPermissionUser(){this.permissionLvl = Permission_Level.User;}
+    public void setPermissionMod(){this.permissionLvl = Permission_Level.Moderator;}
+    public void setPermissionOwner(){this.permissionLvl = Permission_Level.Owner;}
 }
