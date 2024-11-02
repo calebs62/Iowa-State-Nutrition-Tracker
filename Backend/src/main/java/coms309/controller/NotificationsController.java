@@ -32,14 +32,20 @@ public class NotificationsController {
     @PutMapping("/notifications/settings/{id}")
     public NotificationSettings setNotificationSettings(@PathVariable int userId, @RequestBody Map<String, Boolean> newSettings) {
         NotificationSettings settings = findSetting(userId);
-        if (newSettings.containsKey("time")) {
-            settings.setTimeNotification(newSettings.get("time"));
-        }
         if (newSettings.containsKey("system")) {
-            settings.setSystemNotification(newSettings.get("system"));
+            settings.setSystem(newSettings.get("system"));
         }
-        if (newSettings.containsKey("achievement")) {
-            settings.setAchievementNotification(newSettings.get("achievement"));
+        if (newSettings.containsKey("push")) {
+            settings.setPush(newSettings.get("push"));
+        }
+        if (newSettings.containsKey("reminder")) {
+            settings.setReminder(newSettings.get("reminder"));
+        }
+        if (newSettings.containsKey("sms")) {
+            settings.setSMS(newSettings.get("sms"));
+        }
+        if (newSettings.containsKey("email")) {
+            settings.setEmail(newSettings.get("email"));
         }
         return settings;
     }
@@ -50,14 +56,20 @@ public class NotificationsController {
      */
     private boolean checkSetting(int userId, String type) {
         NotificationSettings settings = findSetting(userId);
-        if (type.equals("time")) {
-            return settings.getTimeNotification();
+        if (type.equals("system")) {
+            return settings.getSystem();
         }
-        else if (type.equals("system")) {
-            return settings.getSystemNotification();
+        else if (type.equals("push")) {
+            return settings.getPush();
         }
-        else if (type.equals("achievement")) {
-            return settings.getAchievementNotification();
+        else if (type.equals("reminder")) {
+            return settings.getReminder();
+        }
+        else if (type.equals("sms")) {
+            return settings.getSMS();
+        }
+        else if (type.equals("email")) {
+            return settings.getEmail();
         }
         else {
             return false;
