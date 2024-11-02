@@ -19,7 +19,6 @@ public class GroupMember {
     @Column(name="groupmemberid")
     private int id;
 
-    //TODO - connections aren't correct
     @ManyToOne
     @JoinColumn(name = "group_id")
     private Group group;
