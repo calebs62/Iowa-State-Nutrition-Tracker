@@ -6,7 +6,10 @@ import coms309.entity.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.Timestamp;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 public class NotificationsController {
@@ -16,6 +19,8 @@ public class NotificationsController {
     NotificationSettingsRepository notiSettingRepo;
     @Autowired
     UserRepository userRepo;
+    @Autowired
+    SystemNotificationQueueRepository sysNotRepo;
 
     @GetMapping("/notifications/settings/{id}")
     public NotificationSettings getPreferences(@PathVariable int userId) {
@@ -50,6 +55,54 @@ public class NotificationsController {
         return settings;
     }
 
+    @PostMapping("/notifications/system")
+    private SystemNotificationQueue queue(@RequestBody Map<String, Object> data) {
+        SystemNotificationQueue newNot;
+        if (data.containsKey("time")) {
+            newNot =  new SystemNotificationQueue((String)data.get("header"), (String)data.get("body"), (Timestamp)data.get("time"));
+        }
+        else {
+            newNot =  new SystemNotificationQueue((String)data.get("header"), (String)data.get("body"));
+        }
+        sysNotRepo.save(newNot);
+        return newNot;
+    }
+
+    @DeleteMapping("/notifications/system/{id}")
+    private SystemNotificationQueue removeId(@PathVariable int id) {
+        SystemNotificationQueue queue = sysNotRepo.findById(id).orElse(null);
+        if (sysNotRepo.existsById(id)) {
+            sysNotRepo.deleteById(id);
+        }
+        return queue;
+    }
+    @DeleteMapping("/notifications/system/before")
+    private Set<SystemNotificationQueue> removeBefore(@RequestBody Timestamp time) {
+        Set<SystemNotificationQueue> queue = new HashSet<SystemNotificationQueue>();
+        queue.addAll(sysNotRepo.findAll());
+        Set<SystemNotificationQueue> ret = new HashSet<SystemNotificationQueue>();
+        for (SystemNotificationQueue i : queue) {
+            if (i.getTime().before(time)) {
+                ret.add(i);
+                queue.remove(i);
+                sysNotRepo.deleteById(i.getId());
+            }
+        }
+        return ret;
+    }
+
+    @GetMapping("/notifications/system/user/{user}")
+    private Set<SystemNotificationQueue> userNewNotifs(@RequestBody int user) {
+        Set<SystemNotificationQueue> queue = new HashSet<SystemNotificationQueue>();
+        queue.addAll(sysNotRepo.findAll());
+        Set<SystemNotificationQueue> ret = new HashSet<SystemNotificationQueue>();
+        for (SystemNotificationQueue i : queue) {
+            if (i.getTime().after(userRepo.getReferenceById(user).getLastLogin())) {
+                ret.add(i);
+            }
+        }
+        return ret;
+    }
 
     /*
     Checks if user has setting
