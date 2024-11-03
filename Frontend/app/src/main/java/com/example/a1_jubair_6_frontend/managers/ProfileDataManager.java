@@ -9,6 +9,7 @@ import android.util.Log;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.models.PrivacySettings;
 import com.example.a1_jubair_6_frontend.models.User;
 import com.example.a1_jubair_6_frontend.network.VolleySingleton;
 
@@ -29,6 +30,9 @@ public class ProfileDataManager {
     private static final String KEY_ACCOUNT = "account";
     private static final String KEY_UID = "uid";
     private static final String KEY_PHONE_NUMBER = "phone_number";
+    private static final String PREF_SHARE_FOOD = "share_food";
+    private static final String PREF_SHARE_GOALS = "share_goals";
+    private static final String PREF_SHARE_ACHIEVEMENTS = "share_achievements";
 
     private static final String uploadDir = "uploads/profile-pictures/";
 
@@ -103,6 +107,18 @@ public class ProfileDataManager {
                 .apply();
     }
 
+    public void setFoodSharingEnabled(boolean enabled) {
+        preferences.edit().putBoolean(PREF_SHARE_FOOD, enabled).apply();
+    }
+
+    public void setGoalSharingEnabled(boolean enabled) {
+        preferences.edit().putBoolean(PREF_SHARE_GOALS, enabled).apply();
+    }
+
+    public void setAchievementSharingEnabled(boolean enabled) {
+        preferences.edit().putBoolean(PREF_SHARE_ACHIEVEMENTS, enabled).apply();
+    }
+
     public String getEmail(){
         return preferences.getString(KEY_EMAIL, "");
     }
@@ -135,6 +151,19 @@ public class ProfileDataManager {
 
     public String getPhoneNumber() { return preferences.getString(KEY_PHONE_NUMBER, null); }
 
+    public boolean getFoodSharingEnabled() {
+        return preferences.getBoolean(PREF_SHARE_FOOD, true);
+    }
+
+    public boolean getGoalSharingEnabled() {
+        return preferences.getBoolean(PREF_SHARE_GOALS, true);
+    }
+
+    public boolean getAchievementSharingEnabled() {
+        return preferences.getBoolean(PREF_SHARE_ACHIEVEMENTS, true);
+    }
+
+
     public User getUser() {
         int id = getId();
         String username = getEmail();
@@ -160,6 +189,15 @@ public class ProfileDataManager {
                 .remove(KEY_PROFILE_IMAGE_URI)
                 .remove(KEY_PHONE_NUMBER)
                 .apply();
+    }
+
+    public void updatePrivacySettings(PrivacySettings settings, UpdateCallback callback) {
+        // TODO: Implement API call to update privacy settings on server
+        // For now, just save locally
+        setFoodSharingEnabled(settings.isFoodSharingEnabled());
+        setGoalSharingEnabled(settings.isGoalSharingEnabled());
+        setAchievementSharingEnabled(settings.isAchievementSharingEnabled());
+        callback.onSuccess();
     }
 
     public void updateUserToServer(){
@@ -229,5 +267,10 @@ public class ProfileDataManager {
         catch (Exception e){
             throw new RuntimeException("Failed to save image", e);
         }
+    }
+
+    public interface UpdateCallback {
+        void onSuccess();
+        void onError(String error);
     }
 }
