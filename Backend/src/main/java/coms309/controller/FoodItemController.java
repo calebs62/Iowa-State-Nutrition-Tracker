@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 
 @RestController
@@ -75,20 +76,62 @@ public class FoodItemController {
 
     // List all items
     @GetMapping("/item")
-    public List<FoodItem> getAllFoodItems(@RequestParam(defaultValue="") String keyword) {
+    public List<FoodItem> getAllFoodItems(@RequestBody(required = false) Map<String, Object> searchTerms) {
+        /*
+            Map will contain search terms if values have been entered
+            Keys : info
+            name : String that contains search term, will check if that term is present anywhere in an item's name
+            description: String that contains search term, will check if that term is present anywhere in an item's description
+
+            THESE REPEAT FOR EACH COLUMN IF THE TABLE (calories, carbohydrate, protein, sodium, totalfat)
+            calories : Integer value as a String
+            caloriecomp : one of {<, <=, ==, >=, >} as a String value, < would search for terms less than the value of calories
+
+
+
+         */
+
         List<FoodItem> items = foodRepo.findAll();
-        if (keyword.equals("")) {
-            return items;
-        }
-        for (int i = 0; i < items.size(); i++) {
-            FoodItem item = items.get(i);
-            String name = item.getName().toLowerCase();
-            String key = keyword.toLowerCase();
-            if (!(name.contains(key))) {
-                items.remove(item);
-                i--;
+        if (searchTerms != null) {
+            for (FoodItem item : items) {
+                if (searchTerms.containsKey("name") && !(item.getName().toLowerCase().contains(((String)searchTerms.get("search")).toLowerCase()))) {
+                    items.remove(item);
+                }
+                if (searchTerms.containsKey("description") && !(item.getDescription().toLowerCase().contains(((String)searchTerms.get("description")).toLowerCase()))) {
+                    items.remove(item);
+                }
+                if (searchTerms.containsKey("calories") && !(compareVals(item.getCalories(), (Integer)searchTerms.get("calories"), (String)searchTerms.get("caloriescomp")))) {
+                    items.remove(item);
+                }
+                if (searchTerms.containsKey("carbohydrate") && !(compareVals(item.getCarbohydrate(), (Integer)searchTerms.get("carbohydrate"), (String)searchTerms.get("carbohydratecomp")))) {
+                    items.remove(item);
+                }
+                if (searchTerms.containsKey("protein") && !(compareVals(item.getProtein(), (Integer)searchTerms.get("protein"), (String)searchTerms.get("proteincomp")))) {
+                    items.remove(item);
+                }
+                if (searchTerms.containsKey("sodium") && !(compareVals(item.getSodium(), (Integer)searchTerms.get("sodium"), (String)searchTerms.get("sodiumcomp")))) {
+                    items.remove(item);
+                }
+                if (searchTerms.containsKey("totalfat") && !(compareVals(item.getTotalFat(), (Integer)searchTerms.get("totalfat"), (String)searchTerms.get("totalfatcomp")))) {
+                    items.remove(item);
+                }
             }
+
         }
         return items;
     }
+
+    private boolean compareVals(int foodNumber, int otherNumber, String comparison) {
+        if ((Objects.equals(comparison, "<") || Objects.equals(comparison, "<=")) && foodNumber < otherNumber) {
+            return true;
+        }
+        else if ((Objects.equals(comparison, ">") || Objects.equals(comparison, ">=")) && foodNumber > otherNumber) {
+            return true;
+        }
+        else if ((Objects.equals(comparison, "<=") || Objects.equals(comparison, ">=") || Objects.equals(comparison, "==")) && foodNumber == otherNumber) {
+            return true;
+        }
+        return false;
+    }
+
 }
