@@ -88,6 +88,7 @@ public class User {
         String[] tmp = sessionToken.split(":", 3);
         tmp[0] = "1";
         sessionToken = tmp[0] + ":" + accounttype.ordinal() + ":" + uid;
+        setLoginNow();
     }
     public void logoutSession(){
         String[] tmp = sessionToken.split(":", 3);
