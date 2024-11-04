@@ -42,6 +42,7 @@ dependencies {
     implementation(libs.androidx.junit)
     implementation(libs.okhttp)
     implementation(libs.androidx.work.runtime)
+    implementation(libs.androidx.swiperefreshlayout)
     testImplementation(libs.junit.junit)
     testImplementation(libs.testng)
 }

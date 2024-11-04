@@ -10,6 +10,7 @@ material = "1.10.0"
 activity = "1.8.0"
 constraintlayout = "2.1.4"
 okhttp = "4.10.0"
+swiperefreshlayout = "1.1.0"
 volley = "1.2.1"
 junitJunit = "4.12"
 testng = "6.9.6"
@@ -17,6 +18,7 @@ androidxJunit = "1.2.1"
 workRuntime = "2.8.1"
 
 [libraries]
+androidx-swiperefreshlayout = { module = "androidx.swiperefreshlayout:swiperefreshlayout", version.ref = "swiperefreshlayout" }
 androidx-work-runtime = { module = "androidx.work:work-runtime", version.ref = "workRuntime" }
 compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glide" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }

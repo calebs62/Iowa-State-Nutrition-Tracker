@@ -1,0 +1,20 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="all">
+        <item
+            android:id="@+id/filter_food"
+            android:checked="true"
+            android:title="Food Activities" />
+        <item
+            android:id="@+id/filter_groups"
+            android:checked="true"
+            android:title="Group Updates" />
+        <item
+            android:id="@+id/filter_achievements"
+            android:checked="true"
+            android:title="Achievements" />
+        <item
+            android:id="@+id/filter_goals"
+            android:checked="true"
+            android:title="Goals" />
+    </group>
+</menu>
