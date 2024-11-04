@@ -4,18 +4,13 @@ import static android.text.TextUtils.isEmpty;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
-import android.util.Patterns;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -23,35 +18,33 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
-import com.example.a1_jubair_6_frontend.models.User;
 import com.example.a1_jubair_6_frontend.network.VolleySingleton;
 import com.example.a1_jubair_6_frontend.network.WebSocketClient;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 
-public class ProfileInitialize extends AppCompatActivity {
+public class ProfileInitializeActivity extends AppCompatActivity {
 
     private ProfileDataManager profileDataManager;
     private EditText userWeight, userHeight;
     private Button loseWeight, gainWeight, gainMuscle;
     private Button confirm;
     private WebSocketClient webSocketClient;
+    private int id;
 
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         profileDataManager = new ProfileDataManager(this);
+        id = getIntent().getIntExtra("id", -1);
 
         setContentView(R.layout.activity_profile_initialize);
 
@@ -63,6 +56,31 @@ public class ProfileInitialize extends AppCompatActivity {
         confirm.setOnClickListener(v -> {
             calculateBMI();
         });
+
+        loseWeight = findViewById(R.id.btnLoseWeight);
+        gainWeight = findViewById(R.id.btnGainWeight);
+        gainMuscle = findViewById(R.id.btnGainMuscle);
+
+        loseWeight.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ChatActivity.class);
+            intent.putExtra("username", profileDataManager.getFirstname());
+            intent.putExtra("groupChatId", "1");
+            startActivity(intent);
+        });
+
+        gainWeight.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ChatActivity.class);
+            intent.putExtra("username", profileDataManager.getFirstname());
+            intent.putExtra("groupChatId", "2");
+            startActivity(intent);
+        });
+
+        gainMuscle.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ChatActivity.class);
+            intent.putExtra("username", profileDataManager.getFirstname());
+            intent.putExtra("groupChatId", "3");
+            startActivity(intent);
+        });
     }
 
     private void saveNewValue(String weight, String height) {
@@ -70,16 +88,16 @@ public class ProfileInitialize extends AppCompatActivity {
         int usrHeight = Integer.parseInt(height);
         profileDataManager.setWeight(usrWeight);
         profileDataManager.setHeight(usrHeight);
-        updateWeightToServer(usrWeight);
-        updateHeightToServer(usrHeight);
+        updateWeightToServer(usrWeight, id);
+        updateHeightToServer(usrHeight, id);
     }
 
-    public void updateWeightToServer(int weight){
+    public void updateWeightToServer(int weight, int id){
         try {
             JSONObject requestBody = new JSONObject();
             requestBody.put("weight", weight);
 
-            String url = AppConstants.SERVER_URL + "/user/update/13";
+            String url = AppConstants.SERVER_URL + "/user/update/" + id;
 
             JsonObjectRequest request = new JsonObjectRequest(
                     Request.Method.PUT,
@@ -106,12 +124,12 @@ public class ProfileInitialize extends AppCompatActivity {
         }
     }
 
-    public void updateHeightToServer(int height){
+    public void updateHeightToServer(int height, int id){
         try {
             JSONObject requestBody = new JSONObject();
             requestBody.put("height", height);
 
-            String url = AppConstants.SERVER_URL + "/user/update/13";
+            String url = AppConstants.SERVER_URL + "/user/update/" + id;
 
             JsonObjectRequest request = new JsonObjectRequest(
                     Request.Method.PUT,

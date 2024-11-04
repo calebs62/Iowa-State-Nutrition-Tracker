@@ -142,15 +142,22 @@ public class LoginSignupActivity extends AppCompatActivity {
                     }
 
                     User user = new User(id, username, userPass, fname, lname, height, weight, User.Account.valueOf(accountType));
-
                     profileDataManager.saveUserData(user);
 
-                    Toast.makeText(this, "Login Successful", Toast.LENGTH_SHORT).show();
-                    Intent exploreIntent = new Intent(LoginSignupActivity.this, BaseActivity.class);
-                    exploreIntent.putExtra(BaseActivity.EXTRA_INITIAL_FRAGMENT, HomePageFragment.class.getName());
-                    startActivity(exploreIntent);
-                    finish();
-
+                    if(profileDataManager.getWeight() == -1 || profileDataManager.getHeight() == -1){
+                        Toast.makeText(this, "Login Successful", Toast.LENGTH_SHORT).show();
+                        Intent exploreIntent = new Intent(LoginSignupActivity.this, ProfileInitializeActivity.class);
+                        exploreIntent.putExtra("id", profileDataManager.getId());
+                        startActivity(exploreIntent);
+                        finish();
+                    }
+                    else {
+                        Toast.makeText(this, "Login Successful", Toast.LENGTH_SHORT).show();
+                        Intent exploreIntent = new Intent(LoginSignupActivity.this, BaseActivity.class);
+                        exploreIntent.putExtra(BaseActivity.EXTRA_INITIAL_FRAGMENT, HomePageFragment.class.getName());
+                        startActivity(exploreIntent);
+                        finish();
+                    }
                 } catch (JSONException e) {
                     Log.e("JSONException", e.getMessage());
                     loginError.setText(R.string.unexpected_error_occurred);
