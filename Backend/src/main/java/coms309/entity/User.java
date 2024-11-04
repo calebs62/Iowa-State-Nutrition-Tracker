@@ -2,6 +2,7 @@ package coms309.entity;
 
 import jakarta.persistence.*;
 
+import java.sql.Timestamp;
 import java.util.Set;
 
 @Entity
@@ -42,7 +43,8 @@ public class User {
 
     @Column(name="sessionToken")
     private String sessionToken = "0:0:0";
-    
+    @Column(name="lastLogin")
+    private Timestamp lastLogin = new Timestamp(System.currentTimeMillis());
 
     public User() {}
     public User(String username, String password, String fname, String lname) {
@@ -62,6 +64,7 @@ public class User {
     public String getAccountType() {return accounttype.toString();}
     public String getSessionToken() {return sessionToken;}
     public String getImg(){return img;}
+    public Timestamp getLastLogin() {return lastLogin;}
 
     public void setId(int uid) {this.uid = uid;}
     public void setPassword(String password) {this.password = password;}
@@ -72,6 +75,10 @@ public class User {
     public void setAccountType(Account accounttype) {this.accounttype = accounttype;}
     public void setSessionToken(String sessionToken) {this.sessionToken = sessionToken;}
     public void setImg(String img){this.img = img;}
+
+    public void setLoginNow() {
+        lastLogin = new Timestamp(System.currentTimeMillis());
+    }
 
     public void updateSessionToken(){
         String[] tmp = sessionToken.split(":", 3);
