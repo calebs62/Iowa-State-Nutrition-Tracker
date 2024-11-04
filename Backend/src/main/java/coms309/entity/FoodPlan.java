@@ -14,15 +14,15 @@ public class FoodPlan {
     private String name;
 
     @Column(name = "calories")
-    private int calories = -1;
+    private int calories;
     @Column(name = "totalFat")
-    private int totalFat = -1;
+    private int totalFat;
     @Column(name = "sodium")
-    private int sodium = -1;
+    private int sodium;
     @Column(name = "carbohydrate")
-    private int carbohydrate = -1;
+    private int carbohydrate;
     @Column(name = "protein")
-    private int protein = -1;
+    private int protein;
 
 
     public FoodPlan() {}
@@ -39,6 +39,6 @@ public class FoodPlan {
     public void setCalories(int val) {this.calories = val;}
     public void setTotalFat(int val) {this.totalFat = val;}
     public void setSodium(int val) {this.sodium = val;}
-    public void setCarbohydrate(int val) {this.sodium = val;}
+    public void setCarbohydrate(int val) {this.carbohydrate = val;}
     public void setProtein(int val) {this.protein = val;}
 }
