@@ -46,7 +46,7 @@ public class GroupMember {
 
     public Group getGroup() {return group;}
     public User getUser() {return user;}
-    public int getId() {return id;}
+    public GroupMemberKey getId() {return id;}
     public int getPermissionLvl(){return permissionLvl.ordinal();}
     public Date getJoinDate() {return joinDate;}
 

@@ -2,7 +2,8 @@ package coms309.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import java.util.Set;
+
+import java.util.*;
 
 @Entity
 @Table(name="groups")
@@ -25,7 +26,14 @@ public class Group {
     @JoinColumn(name="foodPlan")
     private FoodPlan plan;
 
-    public Group() {};
+    public Group() {}
+
+    public Group(String name, int oId, FoodPlan plan) {
+        groupName = name;
+        ownerId = oId;
+        members = new HashSet<>();
+        this.plan = plan;
+    }
 
     public int getId() {return id;}
     public String getGroupName() {return groupName;}

@@ -4,12 +4,15 @@ import coms309.entity.FoodPlan;
 import coms309.entity.Group;
 import coms309.entity.GroupMember;
 import coms309.entity.User;
+import coms309.repository.FoodPlanRepository;
 import coms309.repository.GroupMemberRepository;
 import coms309.repository.GroupRepository;
 import coms309.repository.UserRepository;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,11 +25,21 @@ public class GroupController {
     UserRepository userRepo;
     @Autowired
     GroupMemberRepository memberRepo;
+    @Autowired
+    FoodPlanRepository planRepo;
 
     // Create
     @PostMapping("/group")
-    public Group createGroup(@RequestBody Group group){
-        return groupRepo.save(group);
+    public Group createGroup(@RequestBody Map<String, Object> map){
+        String name = (String) map.get("groupName");
+        Integer ownerId = (Integer) map.get("ownerId");
+        Integer planId = (Integer) map.get("planId");
+
+        if (name == null || ownerId == null || planId == null) {
+            return null;
+        }
+        FoodPlan plan = planRepo.findById(planId).orElse(null);
+        return groupRepo.save(new Group(name, ownerId, plan));
     }
 
     // Read
@@ -85,7 +98,7 @@ public class GroupController {
     public Boolean memberJoin(@PathVariable int id, @RequestBody String sessionToken){
         Group currGroup = groupRepo.findById(id).orElse(null);
         String[] array = sessionToken.split(":");
-        int uid = Integer.parseInt(array[2]);
+        int uid = Integer.parseInt(array[2].trim());
         User currUser = userRepo.findById(uid).orElse(null);
         if (currGroup != null && currUser != null) {
             GroupMember groupMember = new GroupMember(currGroup, currUser);
@@ -172,7 +185,7 @@ public class GroupController {
                 memberRepo.save(owner);
             }
             member.setPermissionOwner();
-            currGroup.setOwnerId(member.getId());
+            currGroup.setOwnerId(member.getUser().getUid());
             memberRepo.save(member);
             groupRepo.save(currGroup);
             return member;
