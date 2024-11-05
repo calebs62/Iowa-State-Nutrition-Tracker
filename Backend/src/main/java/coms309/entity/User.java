@@ -32,7 +32,9 @@ public class User {
     @Column(name="weight") //in lbs
     private int weight = -1;
 
-    //TODO - do we want public?
+    @OneToMany(mappedBy = "user")
+    private Set<GroupMember> members;
+
     public enum Account {
         USER,
         CONTRIBUTOR,

@@ -18,8 +18,7 @@ public class Group {
     @Column(name = "groupOwner")
     private int ownerId;
 
-    @OneToMany
-    @JoinColumn(name="groupMembers")
+    @OneToMany(mappedBy = "group")
     private Set<GroupMember> members;
 
     @ManyToOne

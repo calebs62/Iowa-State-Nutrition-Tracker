@@ -14,16 +14,17 @@ public class GroupMember {
         Owner
     }
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EmbeddedId
     @Column(name="groupmemberid")
-    private int id;
+    private GroupMemberKey id;
 
     @ManyToOne
+    @MapsId("groupId")
     @JoinColumn(name = "group_id")
     private Group group;
 
     @ManyToOne
+    @MapsId("userId")
     @JoinColumn(name = "user_id")
     private User user;
 

@@ -2,6 +2,8 @@ package coms309.entity;
 
 import jakarta.persistence.*;
 
+import java.util.Set;
+
 @Entity
 @Table(name="food_plan")
 public class FoodPlan {
@@ -24,6 +26,8 @@ public class FoodPlan {
     @Column(name = "protein")
     private int protein;
 
+    @OneToMany(mappedBy = "plan")
+    private Set<Group> groups;
 
     public FoodPlan() {}
 
