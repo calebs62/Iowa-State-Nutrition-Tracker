@@ -12,6 +12,8 @@ import okhttp3.WebSocketListener;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.net.URI;
+
 public class WebSocketClient extends WebSocketListener {
     private static final String TAG = "WebSocketClient";
     private WebSocket webSocket;

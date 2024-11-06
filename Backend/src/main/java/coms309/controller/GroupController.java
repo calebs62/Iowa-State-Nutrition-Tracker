@@ -35,6 +35,16 @@ public class GroupController {
         return groupRepo.findById(id).orElse(null);
     }
 
+    // Get Owner
+    @GetMapping("/group/{id}/getOwner")
+    public User getOwner(@PathVariable int id) {
+        Group currGroup = groupRepo.findById(id).orElse(null);
+        if (currGroup != null) {
+            return userRepo.findById(currGroup.getOwnerId()).orElse(null);
+        }
+        return null;
+    }
+
     // Update
     @PutMapping("/group/update/{id}")
     public Group updateGroup(@PathVariable int id, @RequestBody Map<String, Object> newGroup){
@@ -50,6 +60,7 @@ public class GroupController {
         return currGroup;
     }
 
+    // Mod add member by id
     @PutMapping("/group/{id}/addMember")
     public Group addMember(@PathVariable int id, @RequestBody Map<String, Object> newMembers){
         Group currGroup = groupRepo.findById(id).orElse(null);
@@ -59,6 +70,7 @@ public class GroupController {
         return currGroup;
     }
 
+    // Mod remove member by id
     @PutMapping("/group/{id}/removeMember")
     public Group removeMember(@PathVariable int id, @RequestBody Map<String, Object> newMembers){
         Group currGroup = groupRepo.findById(id).orElse(null);
@@ -68,6 +80,7 @@ public class GroupController {
         return currGroup;
     }
 
+    // User join
     @PutMapping("/group/{id}/join")
     public Boolean memberJoin(@PathVariable int id, @RequestBody String sessionToken){
         Group currGroup = groupRepo.findById(id).orElse(null);
@@ -82,6 +95,7 @@ public class GroupController {
         return false;
     }
 
+    // User leave
     @PutMapping("/group/{id}/leave")
     public Boolean memberLeave(@PathVariable int id, @RequestBody String sessionToken){
         Group currGroup = groupRepo.findById(id).orElse(null);
@@ -106,6 +120,64 @@ public class GroupController {
             currGroup.setPlan((FoodPlan) map.get("newPlan"));
         }
         return currGroup;
+    }
+
+    // Owner make user mod
+    @PutMapping("/group/{id}/promoteMod")
+    public GroupMember promoteUser(@PathVariable int id, @RequestBody Map<String, Object> map){
+        Group currGroup = groupRepo.findById(id).orElse(null);
+        if (currGroup != null && currGroup.isOwnerLevel((String) map.get("sessionToken"))) {
+            GroupMember member = currGroup.findMember((int) map.get("uid"));
+            if (member == null || member.getPermissionLvl() >= 1) {
+                return null;
+            }
+            member.setPermissionMod();
+            memberRepo.save(member);
+            groupRepo.save(currGroup);
+            return member;
+        }
+        return null;
+    }
+
+    // Owner demote mod to user
+    @PutMapping("/group/{id}/demoteMod")
+    public GroupMember demoteUser(@PathVariable int id, @RequestBody Map<String, Object> map){
+        Group currGroup = groupRepo.findById(id).orElse(null);
+        if (currGroup != null && currGroup.isOwnerLevel((String) map.get("sessionToken"))) {
+            GroupMember member = currGroup.findMember((int) map.get("uid"));
+            if (member == null || member.getPermissionLvl() == 2) {
+                return null;
+            }
+            member.setPermissionUser();
+            memberRepo.save(member);
+            groupRepo.save(currGroup);
+            return member;
+        }
+        return null;
+    }
+
+    // Owner give user owner
+    @PutMapping("/group/{id}/makeOwner")
+    public GroupMember makeOwner(@PathVariable int id, @RequestBody Map<String, Object> map){
+        Group currGroup = groupRepo.findById(id).orElse(null);
+        if (currGroup != null && currGroup.isOwnerLevel((String) map.get("sessionToken"))) {
+            GroupMember member = currGroup.findMember((int) map.get("uid"));
+            if (member == null || member.getPermissionLvl() == 2) {
+                return null;
+            }
+            int ownerId = currGroup.getOwnerId();
+            GroupMember owner = currGroup.findMember(ownerId);
+            if (owner != null) {
+                owner.setPermissionMod();
+                memberRepo.save(owner);
+            }
+            member.setPermissionOwner();
+            currGroup.setOwnerId(member.getId());
+            memberRepo.save(member);
+            groupRepo.save(currGroup);
+            return member;
+        }
+        return null;
     }
 
     // Delete

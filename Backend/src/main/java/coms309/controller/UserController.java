@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.sql.Timestamp;
 
 @RestController
 public class UserController {
@@ -162,6 +163,19 @@ public class UserController {
         currUser.setAccountType(User.Account.ADMINISTRATOR);
         userRepo.save(currUser);
         return ResponseEntity.ok().body("User now a Administrator");
+    }
+
+    @GetMapping("/{uid}/time")
+    public Timestamp getLastLogin(@PathVariable int id) {
+        return userRepo.findById(id).orElse(null).getLastLogin();
+    }
+
+    @PutMapping("/{uid}/time")
+    public Timestamp setLastLogin(@PathVariable int id) {
+        User temp = userRepo.findById(id).orElse(null);
+        temp.setLoginNow();
+        userRepo.save(temp);
+        return temp.getLastLogin();
     }
 
 }
