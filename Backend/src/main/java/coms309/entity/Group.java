@@ -1,8 +1,9 @@
 package coms309.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import java.util.Set;
+
+import java.util.*;
 
 @Entity
 @Table(name="groups")
@@ -18,15 +19,23 @@ public class Group {
     @Column(name = "groupOwner")
     private int ownerId;
 
-    @OneToMany
-    @JoinColumn(name="groupMembers")
+    @OneToMany(mappedBy = "group")
+    @JsonManagedReference
     private Set<GroupMember> members;
 
     @ManyToOne
     @JoinColumn(name="foodPlan")
+    @JsonManagedReference
     private FoodPlan plan;
 
-    public Group() {};
+    public Group() {}
+
+    public Group(String name, int oId, FoodPlan plan) {
+        groupName = name;
+        ownerId = oId;
+        members = new HashSet<>();
+        this.plan = plan;
+    }
 
     public int getId() {return id;}
     public String getGroupName() {return groupName;}
@@ -59,13 +68,42 @@ public class Group {
         return  null;
     }
 
-    //TODO - do authentication
     public Boolean isOwnerLevel(String sessionToken){
-        return true;
+        String[] array = sessionToken.split(":", 3);
+        int accType = Integer.parseInt(array[1].trim());
+        int uid = Integer.parseInt(array[2].trim());
+        if (accType == 2) {
+            return true;
+        }
+        GroupMember mem = findMember(uid);
+        if (mem != null && mem.getPermissionLvl() == 2){
+            return true;
+        }
+        return false;
     }
 
-    //TODO - do authentication
     public Boolean isModLevel(String sessionToken){
-        return true;
+        String[] array = sessionToken.split(":", 3);
+        int accType = Integer.parseInt(array[1].trim());
+        int uid = Integer.parseInt(array[2].trim());
+        if (accType == 2) {
+            return true;
+        }
+        GroupMember mem = findMember(uid);
+        if (mem != null && mem.getPermissionLvl() >= 1){
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return "Group{" +
+                "id=" + id +
+                ", groupName='" + groupName + '\'' +
+                ", ownerId=" + ownerId +
+                ", members=" + members.toString() +
+                ", plan=" + plan +
+                '}';
     }
 }

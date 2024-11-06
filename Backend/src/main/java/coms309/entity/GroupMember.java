@@ -1,5 +1,6 @@
 package coms309.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 import java.util.Date;
@@ -14,18 +15,20 @@ public class GroupMember {
         Owner
     }
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EmbeddedId
     @Column(name="groupmemberid")
-    private int id;
+    private GroupMemberKey id;
 
-    //TODO - connections aren't correct
     @ManyToOne
+    @MapsId("groupId")
     @JoinColumn(name = "group_id")
+    @JsonBackReference
     private Group group;
 
     @ManyToOne
+    @MapsId("userId")
     @JoinColumn(name = "user_id")
+    @JsonBackReference
     private User user;
 
     @Column(name = "permission")
@@ -39,6 +42,7 @@ public class GroupMember {
     public GroupMember() {}
 
     public GroupMember(Group group, User user) {
+        this.id = new GroupMemberKey(group.getId(), user.getUid());
         this.group = group;
         this.user = user;
         this.permissionLvl = Permission_Level.User;
@@ -46,7 +50,7 @@ public class GroupMember {
 
     public Group getGroup() {return group;}
     public User getUser() {return user;}
-    public int getId() {return id;}
+    public GroupMemberKey getId() {return id;}
     public int getPermissionLvl(){return permissionLvl.ordinal();}
     public Date getJoinDate() {return joinDate;}
 
@@ -56,4 +60,15 @@ public class GroupMember {
     public void setPermissionUser(){this.permissionLvl = Permission_Level.User;}
     public void setPermissionMod(){this.permissionLvl = Permission_Level.Moderator;}
     public void setPermissionOwner(){this.permissionLvl = Permission_Level.Owner;}
+
+    @Override
+    public String toString() {
+        return "GroupMember{" +
+                "id=" + id +
+                ", groupName=" + group.getGroupName() +
+                ", userName=" + user.getFName() + " "  + user.getLName()+
+                ", permissionLvl=" + permissionLvl +
+                ", joinDate=" + joinDate +
+                '}';
+    }
 }

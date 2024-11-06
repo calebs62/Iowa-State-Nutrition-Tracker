@@ -39,20 +39,188 @@
             android:layout_marginEnd="8dp"/>
     </LinearLayout>
 
-    <EditText
-        android:id="@+id/searchBar"
-        android:layout_width="0dp"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/searchSection"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
         android:layout_marginTop="16dp"
-        android:background="@drawable/search_background"
-        android:drawableEnd="@android:drawable/ic_menu_close_clear_cancel"
-        android:hint="Search"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/titleMenus" />
+        app:cardElevation="4dp"
+        app:cardCornerRadius="8dp"
+        app:layout_constraintTop_toBottomOf="@id/titleMenus">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@color/background"
+            android:padding="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <EditText
+                    android:id="@+id/searchBar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/search_background"
+                    android:drawableStart="@drawable/ic_search"
+                    android:drawableEnd="@drawable/ic_clear"
+                    android:hint="Search food items..."
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="8dp"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text" />
+
+                <ImageButton
+                    android:id="@+id/btnShowFilters"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@android:drawable/ic_menu_sort_by_size"
+                    android:contentDescription="Show Filters" />
+            </LinearLayout>
+
+            <HorizontalScrollView
+                android:id="@+id/recentSearchesScroll"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:scrollbars="none">
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/recentSearchesChipGroup"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:singleLine="true" />
+            </HorizontalScrollView>
+
+            <LinearLayout
+                android:id="@+id/advancedFiltersSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <com.google.android.material.button.MaterialButtonToggleGroup
+                    android:id="@+id/sortToggleGroup"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    app:singleSelection="true">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSortName"
+                        style="?attr/materialButtonOutlinedStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Name" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSortCalories"
+                        style="?attr/materialButtonOutlinedStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Calories" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSortProtein"
+                        style="?attr/materialButtonOutlinedStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Protein" />
+                </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Calories"
+                    android:layout_marginTop="16dp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.slider.RangeSlider
+                    android:id="@+id/caloriesRangeSlider"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:valueFrom="0"
+                    android:valueTo="1000"
+                    android:stepSize="50"
+                    app:labelBehavior="withinBounds"
+                    app:thumbColor="@color/Iowa_State_Red"
+                    app:trackColorActive="@color/Iowa_State_Red"
+                    app:trackColorInactive="#DDDDDD"
+                    app:tickVisible="false" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Protein (g)"
+                    android:layout_marginTop="16dp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.slider.RangeSlider
+                    android:id="@+id/proteinRangeSlider"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:valueFrom="0"
+                    android:valueTo="50"
+                    android:stepSize="5"
+                    app:labelBehavior="withinBounds"
+                    app:thumbColor="@color/Iowa_State_Red"
+                    app:trackColorActive="@color/Iowa_State_Red"
+                    app:trackColorInactive="#DDDDDD"
+                    app:tickVisible="false" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nutritional Content"
+                    android:layout_marginTop="16dp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/nutritionalFiltersChipGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipLowFat"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Low Fat"
+                        style="@style/Widget.MaterialComponents.Chip.Filter" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipLowCarb"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Low Carb"
+                        style="@style/Widget.MaterialComponents.Chip.Filter" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipLowSodium"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Low Sodium"
+                        style="@style/Widget.MaterialComponents.Chip.Filter" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipHighProtein"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="High Protein"
+                        style="@style/Widget.MaterialComponents.Chip.Filter" />
+                </com.google.android.material.chip.ChipGroup>
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/mealTypeTabs"
@@ -62,7 +230,7 @@
         app:tabTextColor="@android:color/darker_gray"
         app:tabSelectedTextColor="@color/Iowa_State_Red"
         app:tabIndicatorColor="@color/Iowa_State_Red"
-        app:layout_constraintTop_toBottomOf="@id/searchBar">
+        app:layout_constraintTop_toBottomOf="@id/searchSection">
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
