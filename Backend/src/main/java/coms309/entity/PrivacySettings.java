@@ -6,7 +6,6 @@ import jakarta.persistence.*;
 @Table(name="privacy_settings")
 public class PrivacySettings {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="privid")
     private int id;
 
@@ -16,24 +15,25 @@ public class PrivacySettings {
     private User userId;
 
     @Column(name = "food")
-    private boolean system = true;
+    private boolean food = true;
     @Column(name = "goal")
-    private boolean push = true;
+    private boolean goal = true;
     @Column(name = "achievement")
-    private boolean reminder = true;
+    private boolean achievement = true;
 
-    public PrivacySettings(User us) {
+    public PrivacySettings(int id, User us) {
+        this.id = id;
         this.userId = us;
     }
 
     public User getUserId() {return userId;}
 
-    public boolean getSystem() {return system;}
-    public boolean getPush() {return push;}
-    public boolean getReminder() {return reminder;}
+    public boolean getFood() {return food;}
+    public boolean getGoal() {return goal;}
+    public boolean getAchievement() {return achievement;}
 
-    public void setSystem(boolean sys) {system = sys;}
-    public void setPush(boolean pu) {push = pu;}
-    public void setReminder(boolean rem) {reminder = rem;}
+    public void setFood(boolean f) {food = f;}
+    public void setGoal(boolean g) {goal = g;}
+    public void setAchievement(boolean a) {achievement = a;}
 
 }
