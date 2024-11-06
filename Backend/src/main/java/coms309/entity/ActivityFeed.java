@@ -81,6 +81,9 @@ public class ActivityFeed implements Comparable<ActivityFeed>{
             type = ActivityType.GOAL_UPDATE;
         }
     }
+    public void setType(ActivityType t) {
+        this.type = t;
+    }
     public void setUser(User u) {user = u;}
     public void setMessage(String m) {message = m;}
     public void setTimestamp(Timestamp t) {timestamp = t;}

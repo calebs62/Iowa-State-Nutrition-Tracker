@@ -68,9 +68,12 @@ public class ActivityFeedWebsocket {
 
     /*
     Type will be a string that is :  "food eaten" "group update" "achievement" "goal update"
+    Format is :
      */
     @OnMessage
-    public void onMessage(Session session, String message, String type) {
+    public void onMessage(Session session, String message) {
+        String type = message.split("=")[0];
+        message = message.split("=")[1];
         ActivityFeed feedItem = new ActivityFeed();
         feedItem.setMessage(message);
         User u = sessionUserMap.get(session);
