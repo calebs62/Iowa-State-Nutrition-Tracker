@@ -42,7 +42,9 @@ public class GroupController {
         Group group = groupRepo.save(new Group(name, ownerId, plan));
         User owner = userRepo.findById(ownerId).orElse(null);
         if (owner != null) {
-            GroupMember ownerMem = memberRepo.save(new GroupMember(group, owner));
+            GroupMember ownerMem = new GroupMember(group, owner);
+            ownerMem.setPermissionOwner();
+            memberRepo.save(ownerMem);
             owner.addMembered(ownerMem);
             userRepo.save(owner);
         }
