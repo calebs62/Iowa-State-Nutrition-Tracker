@@ -17,7 +17,7 @@ public class ActivityFeed {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private int id;
     @Enumerated(EnumType.STRING)
     private ActivityType type;
     @Column(nullable = false)
@@ -32,6 +32,34 @@ public class ActivityFeed {
     @ManyToOne
     @JoinColumn(name = "group_id")
     private Group group;
+
+    public int getId() {return id;}
+    public ActivityType getType() {return type;}
+    public String getMessage() {return message;}
+    public User getUser() {return user;}
+    public Timestamp getTimestamp() {return timestamp;}
+    public String getAdditionalData() {return additionalData;}
+    public Group getGroup() {return group;}
+
+    public void setType(String t) {
+        if (t.equals("food eaten")) {
+            type = ActivityType.FOOD_EATEN;
+        }
+        else if (t.equals("group update")) {
+            type = ActivityType.GROUP_UPDATE;
+        }
+        else if (t.equals("achievement")) {
+            type = ActivityType.ACHIEVEMENT;
+        }
+        else if (t.equals("goal update")) {
+            type = ActivityType.GOAL_UPDATE;
+        }
+    }
+
+    public void setMessage(String m) {message = m;}
+    public void setTimestamp(Timestamp t) {timestamp = t;}
+    public void setAdditionalData(String a) {additionalData = a;}
+    public void setGroup(Group g) {group = g;}
 
 
 }
