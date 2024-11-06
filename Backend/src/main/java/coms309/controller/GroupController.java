@@ -8,14 +8,11 @@ import coms309.repository.FoodPlanRepository;
 import coms309.repository.GroupMemberRepository;
 import coms309.repository.GroupRepository;
 import coms309.repository.UserRepository;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @RestController
 public class GroupController {
