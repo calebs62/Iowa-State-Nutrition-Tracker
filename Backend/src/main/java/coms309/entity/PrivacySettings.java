@@ -28,6 +28,8 @@ public class PrivacySettings {
 
     public User getUserId() {return userId;}
 
+    public User getUser() {return userId;}
+
     public boolean getFood() {return food;}
     public boolean getGoal() {return goal;}
     public boolean getAchievement() {return achievement;}
