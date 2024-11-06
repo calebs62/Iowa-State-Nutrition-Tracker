@@ -87,6 +87,30 @@ public class ActivityFeedWebsocket {
         }
     }
 
+    @OnClose
+    public void onClose(Session session) throws IOException {
+        logger.info("Entered into Close");
+        User u = sessionUserMap.get(session);
+        sessionUserMap.remove(session);
+        userSessionMap.remove(u);
+
+        broadcastActivity(new ActivityFeed(u.getFName() + "is offline.",
+                "group update",
+                u,
+                null,
+                null,
+                null));
+
+    }
+
+    @OnError
+    public void onError(Session session, Throwable throwable) {
+        // Do error handling here
+        logger.info("Entered into Error");
+        throwable.printStackTrace();
+    }
+
+
     private boolean checkSetting(User u, String setting) {
         PrivacySettings set = privRepo.getReferenceById(u.getUid());
         if (setting.equals("food eaten")) {
