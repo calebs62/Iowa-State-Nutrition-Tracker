@@ -98,6 +98,10 @@ public class User {
         this.membered.add(membered);
     }
 
+    public void removeMembered(GroupMember membered){
+        this.membered.remove(membered);
+    }
+
     public void updateSessionToken(){
         String[] tmp = sessionToken.split(":", 3);
         sessionToken = tmp[0] + ":" + accounttype.ordinal() + ":" + uid;
