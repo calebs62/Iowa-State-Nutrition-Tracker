@@ -17,6 +17,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -62,6 +64,10 @@ public class MenuFragment extends Fragment {
 
     MaterialButton addButton;
 
+    private LinearLayout advancedFiltersSection;
+    private ImageButton btnShowFilters;
+    private boolean isFilterSectionVisible = false;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,7 +86,19 @@ public class MenuFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_menu, container, false);
+        View view = inflater.inflate(R.layout.fragment_menu, container, false);
+
+        advancedFiltersSection = view.findViewById(R.id.advancedFiltersSection);
+        btnShowFilters = view.findViewById(R.id.btnShowFilters);
+
+        btnShowFilters.setOnClickListener(v -> {
+            isFilterSectionVisible = !isFilterSectionVisible;
+            advancedFiltersSection.setVisibility(isFilterSectionVisible ? View.VISIBLE : View.GONE);
+
+            btnShowFilters.setRotation(isFilterSectionVisible ? 180 : 0);
+        });
+
+        return view;
     }
 
     @Override
