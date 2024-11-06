@@ -1,8 +1,9 @@
 package coms309.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import java.util.Set;
+
+import java.util.*;
 
 @Entity
 @Table(name="groups")
@@ -18,15 +19,23 @@ public class Group {
     @Column(name = "groupOwner")
     private int ownerId;
 
-    @OneToMany
-    @JoinColumn(name="groupMembers")
+    @OneToMany(mappedBy = "group")
+    @JsonManagedReference
     private Set<GroupMember> members;
 
     @ManyToOne
     @JoinColumn(name="foodPlan")
+    @JsonManagedReference
     private FoodPlan plan;
 
-    public Group() {};
+    public Group() {}
+
+    public Group(String name, int oId, FoodPlan plan) {
+        groupName = name;
+        ownerId = oId;
+        members = new HashSet<>();
+        this.plan = plan;
+    }
 
     public int getId() {return id;}
     public String getGroupName() {return groupName;}
@@ -85,5 +94,16 @@ public class Group {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return "Group{" +
+                "id=" + id +
+                ", groupName='" + groupName + '\'' +
+                ", ownerId=" + ownerId +
+                ", members=" + members.toString() +
+                ", plan=" + plan +
+                '}';
     }
 }

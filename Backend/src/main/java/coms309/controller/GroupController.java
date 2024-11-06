@@ -4,6 +4,7 @@ import coms309.entity.FoodPlan;
 import coms309.entity.Group;
 import coms309.entity.GroupMember;
 import coms309.entity.User;
+import coms309.repository.FoodPlanRepository;
 import coms309.repository.GroupMemberRepository;
 import coms309.repository.GroupRepository;
 import coms309.repository.UserRepository;
@@ -12,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @RestController
 public class GroupController {
@@ -22,10 +22,32 @@ public class GroupController {
     UserRepository userRepo;
     @Autowired
     GroupMemberRepository memberRepo;
+    @Autowired
+    FoodPlanRepository planRepo;
 
     // Create
     @PostMapping("/group")
-    public Group createGroup(@RequestBody Group group){
+    public Group createGroup(@RequestBody Map<String, Object> map){
+        String name = (String) map.get("groupName");
+        Integer ownerId = (Integer) map.get("ownerId");
+        Integer planId = (Integer) map.get("planId");
+
+        if (name == null || ownerId == null || planId == null) {
+            return null;
+        }
+        FoodPlan plan = planRepo.findById(planId).orElse(null);
+        Group group = new Group(name, ownerId, plan);
+        User owner = userRepo.findById(ownerId).orElse(null);
+        if (plan != null) {
+            plan.addGroup(group);
+        }
+        if (owner != null) {
+            GroupMember ownerMem = new GroupMember(group, owner);
+            ownerMem.setPermissionOwner();
+            memberRepo.save(ownerMem);
+            owner.addMembered(ownerMem);
+            userRepo.save(owner);
+        }
         return groupRepo.save(group);
     }
 
@@ -62,20 +84,38 @@ public class GroupController {
 
     // Mod add member by id
     @PutMapping("/group/{id}/addMember")
-    public Group addMember(@PathVariable int id, @RequestBody Map<String, Object> newMembers){
+    public Group addMember(@PathVariable int id, @RequestBody Map<String, Object> map){
         Group currGroup = groupRepo.findById(id).orElse(null);
-        if (currGroup != null && currGroup.isModLevel((String) newMembers.get("sessionToken"))){
-            currGroup.addMember((GroupMember) newMembers.get("member"));
+        if (currGroup != null && currGroup.isModLevel((String) map.get("sessionToken"))){
+            User user = userRepo.findById((int) map.get("uid")).orElse(null);
+            if (user == null || currGroup.findMember((int) map.get("uid")) != null) {
+                return currGroup;
+            }
+            GroupMember member = new GroupMember(currGroup, user);
+            currGroup.addMember(member);
+            user.addMembered(member);
+            userRepo.save(user);
+            groupRepo.save(currGroup);
+            memberRepo.save(member);
         }
         return currGroup;
     }
 
     // Mod remove member by id
     @PutMapping("/group/{id}/removeMember")
-    public Group removeMember(@PathVariable int id, @RequestBody Map<String, Object> newMembers){
+    public Group removeMember(@PathVariable int id, @RequestBody Map<String, Object> map){
         Group currGroup = groupRepo.findById(id).orElse(null);
-        if (currGroup != null && currGroup.isModLevel((String) newMembers.get("sessionToken"))){
-            currGroup.removeMember((GroupMember) newMembers.get("member"));
+        if (currGroup != null && currGroup.isModLevel((String) map.get("sessionToken"))){
+            GroupMember member = currGroup.findMember((int) map.get("uid"));
+            if (member == null){
+                return currGroup;
+            }
+            User user = member.getUser();
+            user.removeMembered(member);
+            currGroup.removeMember(member);
+            userRepo.save(user);
+            groupRepo.save(currGroup);
+            memberRepo.delete(member);
         }
         return currGroup;
     }
@@ -85,12 +125,16 @@ public class GroupController {
     public Boolean memberJoin(@PathVariable int id, @RequestBody String sessionToken){
         Group currGroup = groupRepo.findById(id).orElse(null);
         String[] array = sessionToken.split(":");
-        int uid = Integer.parseInt(array[2]);
+        int uid = Integer.parseInt(array[2].trim());
         User currUser = userRepo.findById(uid).orElse(null);
         if (currGroup != null && currUser != null) {
             GroupMember groupMember = new GroupMember(currGroup, currUser);
+            currUser.addMembered(groupMember);
+            currGroup.addMember(groupMember);
+            userRepo.save(currUser);
+            groupRepo.save(currGroup);
             memberRepo.save(groupMember);
-            return currGroup.addMember(groupMember);
+            return true;
         }
         return false;
     }
@@ -105,8 +149,13 @@ public class GroupController {
         if (currGroup != null && currUser != null) {
             GroupMember groupMember = currGroup.findMember(uid);
             if (groupMember != null) {
+                User user = groupMember.getUser();
+                user.removeMembered(groupMember);
+                currGroup.removeMember(groupMember);
+                userRepo.save(user);
+                groupRepo.save(currGroup);
                 memberRepo.delete(groupMember);
-                return currGroup.removeMember(groupMember);
+                return true;
             }
         }
         return false;
@@ -117,7 +166,16 @@ public class GroupController {
     public Group changePlan(@PathVariable int id, @RequestBody Map<String, Object> map){
         Group currGroup = groupRepo.findById(id).orElse(null);
         if (currGroup != null && currGroup.isModLevel((String) map.get("sessionToken"))) {
-            currGroup.setPlan((FoodPlan) map.get("newPlan"));
+            FoodPlan plan = planRepo.findById((int) map.get("planId")).orElse(null);
+            if (plan != null) {
+                FoodPlan oldPlan = currGroup.getPlan();
+                oldPlan.removeGroup(currGroup);
+                plan.addGroup(currGroup);
+                currGroup.setPlan(plan);
+                planRepo.save(oldPlan);
+                planRepo.save(plan);
+                groupRepo.save(currGroup);
+            }
         }
         return currGroup;
     }
@@ -133,7 +191,6 @@ public class GroupController {
             }
             member.setPermissionMod();
             memberRepo.save(member);
-            groupRepo.save(currGroup);
             return member;
         }
         return null;
@@ -150,7 +207,6 @@ public class GroupController {
             }
             member.setPermissionUser();
             memberRepo.save(member);
-            groupRepo.save(currGroup);
             return member;
         }
         return null;
@@ -172,7 +228,7 @@ public class GroupController {
                 memberRepo.save(owner);
             }
             member.setPermissionOwner();
-            currGroup.setOwnerId(member.getId());
+            currGroup.setOwnerId(member.getUser().getUid());
             memberRepo.save(member);
             groupRepo.save(currGroup);
             return member;
