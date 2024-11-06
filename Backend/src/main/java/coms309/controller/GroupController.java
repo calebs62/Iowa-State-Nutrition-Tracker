@@ -36,8 +36,11 @@ public class GroupController {
             return null;
         }
         FoodPlan plan = planRepo.findById(planId).orElse(null);
-        Group group = groupRepo.save(new Group(name, ownerId, plan));
+        Group group = new Group(name, ownerId, plan);
         User owner = userRepo.findById(ownerId).orElse(null);
+        if (plan != null) {
+            plan.addGroup(group);
+        }
         if (owner != null) {
             GroupMember ownerMem = new GroupMember(group, owner);
             ownerMem.setPermissionOwner();
@@ -45,7 +48,7 @@ public class GroupController {
             owner.addMembered(ownerMem);
             userRepo.save(owner);
         }
-        return group;
+        return groupRepo.save(group);
     }
 
     // Read
@@ -165,7 +168,12 @@ public class GroupController {
         if (currGroup != null && currGroup.isModLevel((String) map.get("sessionToken"))) {
             FoodPlan plan = planRepo.findById((int) map.get("planId")).orElse(null);
             if (plan != null) {
+                FoodPlan oldPlan = currGroup.getPlan();
+                oldPlan.removeGroup(currGroup);
+                plan.addGroup(currGroup);
                 currGroup.setPlan(plan);
+                planRepo.save(oldPlan);
+                planRepo.save(plan);
                 groupRepo.save(currGroup);
             }
         }

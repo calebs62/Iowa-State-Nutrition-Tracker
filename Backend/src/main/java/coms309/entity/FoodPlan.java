@@ -1,5 +1,6 @@
 package coms309.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 import java.util.Set;
@@ -27,6 +28,7 @@ public class FoodPlan {
     private int protein;
 
     @OneToMany(mappedBy = "plan")
+    @JsonBackReference
     private Set<Group> groups;
 
     public FoodPlan() {}
@@ -39,10 +41,16 @@ public class FoodPlan {
     public int getCarbohydrate() {return carbohydrate;}
     public int getProtein() {return protein;}
 
+    public Set<Group> getGroups(){return groups;}
+
     public void setName(String name) {this.name = name;}
     public void setCalories(int val) {this.calories = val;}
     public void setTotalFat(int val) {this.totalFat = val;}
     public void setSodium(int val) {this.sodium = val;}
     public void setCarbohydrate(int val) {this.carbohydrate = val;}
     public void setProtein(int val) {this.protein = val;}
+
+    public void setGroups(Set<Group> groups){this.groups = groups;}
+    public void addGroup(Group group){groups.add(group);}
+    public void removeGroup(Group group){groups.remove(group);}
 }

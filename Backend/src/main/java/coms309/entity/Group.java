@@ -25,6 +25,7 @@ public class Group {
 
     @ManyToOne
     @JoinColumn(name="foodPlan")
+    @JsonManagedReference
     private FoodPlan plan;
 
     public Group() {}
