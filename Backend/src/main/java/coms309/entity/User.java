@@ -72,7 +72,7 @@ public class User {
     public String getImg(){return img;}
     public Timestamp getLastLogin() {return lastLogin;}
 
-    public Set<GroupMember> getMembers() {
+    public Set<GroupMember> getMembered() {
         return membered;
     }
 

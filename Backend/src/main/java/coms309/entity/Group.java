@@ -1,6 +1,7 @@
 package coms309.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import java.util.*;
@@ -20,6 +21,7 @@ public class Group {
     private int ownerId;
 
     @OneToMany(mappedBy = "group")
+    @JsonManagedReference
     private Set<GroupMember> members;
 
     @ManyToOne
@@ -92,5 +94,16 @@ public class Group {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return "Group{" +
+                "id=" + id +
+                ", groupName='" + groupName + '\'' +
+                ", ownerId=" + ownerId +
+                ", members=" + members.toString() +
+                ", plan=" + plan +
+                '}';
     }
 }
