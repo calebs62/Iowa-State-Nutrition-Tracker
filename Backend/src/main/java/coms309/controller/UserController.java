@@ -178,4 +178,13 @@ public class UserController {
         return temp.getLastLogin();
     }
 
+    @GetMapping("/{uid}/sessionToken")
+    public String getSessionToken(@PathVariable int uid){
+        User u = userRepo.findById(uid).orElse(null);
+        if (u == null) {
+            return null;
+        }
+        return u.getSessionToken();
+    }
+
 }
