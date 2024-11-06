@@ -39,7 +39,14 @@ public class GroupController {
             return null;
         }
         FoodPlan plan = planRepo.findById(planId).orElse(null);
-        return groupRepo.save(new Group(name, ownerId, plan));
+        Group group = groupRepo.save(new Group(name, ownerId, plan));
+        User owner = userRepo.findById(ownerId).orElse(null);
+        if (owner != null) {
+            GroupMember ownerMem = memberRepo.save(new GroupMember(group, owner));
+            owner.addMembered(ownerMem);
+            userRepo.save(owner);
+        }
+        return group;
     }
 
     // Read
