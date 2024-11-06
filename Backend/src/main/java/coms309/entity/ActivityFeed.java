@@ -33,6 +33,30 @@ public class ActivityFeed {
     @JoinColumn(name = "group_id")
     private Group group;
 
+    public ActivityFeed() {
+        type = null;
+        message = "test";
+        user = null;
+        timestamp = new Timestamp(System.currentTimeMillis());
+        additionalData = "";
+        group = null;
+    }
+
+    public ActivityFeed(String m, String ty, User u, Timestamp time, String ad, Group g) {
+        setType(ty);
+        message = m;
+        user = u;
+        if (timestamp == null) {
+            timestamp = new Timestamp(System.currentTimeMillis());
+        }
+        else {
+            timestamp = time;
+        }
+        additionalData = ad;
+        group = g;
+    }
+
+
     public int getId() {return id;}
     public ActivityType getType() {return type;}
     public String getMessage() {return message;}

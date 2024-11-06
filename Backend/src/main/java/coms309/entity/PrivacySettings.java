@@ -5,6 +5,11 @@ import jakarta.persistence.*;
 @Entity
 @Table(name="privacy_settings")
 public class PrivacySettings {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="privid")
+    private int id;
+
     @OneToOne
     @MapsId
     @JoinColumn(name= "user_id")
