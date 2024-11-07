@@ -22,175 +22,138 @@ import org.springframework.stereotype.Controller;
 @Controller
 @ServerEndpoint(value = "/activity/{uid}")
 public class ActivityFeedWebsocket {
-
     private static ActivityFeedRepository feedRepo;
-    private static PrivacySettingRepository privRepo;
     private static UserRepository userRepo;
     private static GroupRepository groupRepo;
-    private static GroupMemberRepository gmRepo;
+    private static GroupMemberRepository memberRepo;
+    private static PrivacySettingRepository privacyRepo;
 
     @Autowired
-    public void setRepository(ActivityFeedRepository afrepo,
-                              UserRepository urepo,
-                              GroupRepository gr,
-                              GroupMemberRepository gm,
-                              PrivacySettingRepository pr) {
-        userRepo = urepo;
+    public void setRepositories(ActivityFeedRepository afrepo, UserRepository urepo,
+                                GroupRepository grepo, GroupMemberRepository memRepo,
+                                PrivacySettingRepository privRepo) {
         feedRepo = afrepo;
-        groupRepo = gr;
-        gmRepo = gm;
-        privRepo = pr;
+        userRepo = urepo;
+        groupRepo = grepo;
+        memberRepo = memRepo;
+        privacyRepo = privRepo;
     }
 
-    private static Map<Session, User> sessionUserMap = new Hashtable<>();
-    private static Map<User, Session> userSessionMap = new Hashtable<>();
+    private static Map<Session, Integer> sessionUserMap = new Hashtable<>();
+    private static Map<Integer, Session> userSessionMap = new Hashtable<>();
     private final Logger logger = LoggerFactory.getLogger(ActivityFeedWebsocket.class);
 
     @OnOpen
-    public void onOpen(Session session, @PathParam("uid") Integer uid)
-        throws IOException {
-        logger.info("LoggerI");
+    public void onOpen(Session session, @PathParam("uid") Integer uid) throws IOException {
+        logger.info("New activity feed connection: User " + uid);
 
-        User userLogin = userRepo.findById(uid).orElse(null);
-        if  (userLogin != null) {
-            sessionUserMap.put(session, userLogin);
-            userSessionMap.put(userLogin, session);
+        sessionUserMap.put(session, uid);
+        userSessionMap.put(uid, session);
+        logger.info("Session mappings updated for user: " + uid);
+
+        // Send activity history
+        List<ActivityFeed> history = retrieveHistory(uid);
+        logger.info("Retrieved " + history.size() + " history items for user: " + uid);
+
+        for (ActivityFeed activity : history) {
+            sendActivityToUser(activity, session);
+            logger.info("Sent activity to user: " + activity.getMessage());
         }
-        retrieveHistory(userLogin);
-
-        broadcastActivity(new ActivityFeed(userLogin.getFName() + "is online.",
-                "group update",
-                userLogin,
-                null,
-                null,
-                null));
     }
 
-    /*
-    Type will be a string that is :  "food eaten" "group update" "achievement" "goal update"
-    Format is :
-     */
     @OnMessage
     public void onMessage(Session session, String message) {
-        String type = message.split("=")[0];
-        message = message.split("=")[1];
-        ActivityFeed feedItem = new ActivityFeed();
-        feedItem.setMessage(message);
-        User u = sessionUserMap.get(session);
-        feedItem.setUser(u);
-        if (type.equals("food eaten") ||
-                type.equals("group update") ||
-                type.equals("achievement") ||
-                type.equals("goal update")) {
-            feedItem.setType(type);
-        }
-        if (checkSetting(u, type)) {
-            broadcastActivity(feedItem);
-            feedRepo.save(feedItem);
-        }
+        logger.info("Received message from user " + sessionUserMap.get(session) + ": " + message);
     }
 
     @OnClose
-    public void onClose(Session session) throws IOException {
-        logger.info("Entered into Close");
-        User u = sessionUserMap.get(session);
+    public void onClose(Session session) {
+        Integer uid = sessionUserMap.get(session);
+        logger.info("Connection closed: User " + uid);
+
         sessionUserMap.remove(session);
-        userSessionMap.remove(u);
-
-        broadcastActivity(new ActivityFeed(u.getFName() + "is offline.",
-                "group update",
-                u,
-                null,
-                null,
-                null));
-
+        userSessionMap.remove(uid);
     }
 
     @OnError
     public void onError(Session session, Throwable throwable) {
-        // Do error handling here
-        logger.info("Entered into Error");
-        throwable.printStackTrace();
+        logger.error("WebSocket error for user " + sessionUserMap.get(session), throwable);
     }
 
+    private List<ActivityFeed> retrieveHistory(Integer uid) {
+        User user = fetchUserFromId(uid);
+        if (user == null) return new ArrayList<>();
 
-    private boolean checkSetting(User u, String setting) {
-        PrivacySettings set = privRepo.getReferenceById(u.getUid());
-        if (setting.equals("food eaten")) {
-            return set.getFood();
-        }
-        else if (setting.equals("group update")) {
-            return true;
-        }
-        else if (setting.equals("achievement")) {
-            return set.getAchievement();
-        }
-        else if (setting.equals("goal update")) {
-            return set.getGoal();
-        }
-        else {
-            return false;
-        }
-    }
-    private List<ActivityFeed> retrieveHistory(User u) {
-        List<ActivityFeed> history = new ArrayList<ActivityFeed>();
-        for (GroupMember gm : u.getMembered()) {
-            history.addAll(feedRepo.findByGroup(gm.getGroup()));
-        }
-        Collections.sort(history);
-        for (ActivityFeed f : history) {
-            feedUpdate(f, u);
-        }
-        return history;
+        Set<GroupMember> memberships = user.getMembered();
+        List<Integer> groupIds = memberships.stream()
+                .map(member -> member.getGroup().getId())
+                .toList();
+
+        Timestamp oneWeekAgo = new Timestamp(System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000);
+        return feedRepo.findRecentActivitiesForGroups(groupIds, oneWeekAgo);
     }
 
     private User fetchUserFromId(Integer id) {
-        return userRepo.findById(id).orElse(null);
+        return userRepo.findByIdWithMemberships(id);
     }
 
-    private void broadcastActivity(ActivityFeed activity) {
-        Set<Group> groups = getActivityGroups(activity);
+    public void broadcastActivity(ActivityFeed activity) {
+        User activityUser = activity.getUser();
+        Group group = activity.getGroup();
+
+        if (group == null || activityUser == null) return;
+
+        // Check privacy settings
+        PrivacySettings privacy = privacyRepo.findById(activityUser.getUid()).orElse(null);
+        if (privacy != null) {
+            boolean canShare = switch (activity.getType()) {
+                case FOOD_EATEN -> privacy.getFood();
+                case GOAL_UPDATE -> privacy.getGoal();
+                case ACHIEVEMENT -> privacy.getAchievement();
+                default -> true;
+            };
+            if (!canShare) return;
+        }
+
+        // Broadcast to all group members
+        for (GroupMember member : group.getMembers()) {
+            Session userSession = userSessionMap.get(member.getUser().getUid());
+            if (userSession != null && userSession.isOpen()) {
+                sendActivityToUser(activity, userSession);
+            }
+        }
     }
 
-    private void feedUpdate(ActivityFeed item, User user) {
+    private void sendActivityToUser(ActivityFeed activity, Session session) {
         try {
-            userSessionMap.get(user).getBasicRemote().sendText(item.toString());
-        }
-        catch (IOException e) {
-            logger.info("Exception: " + e.getMessage().toString());
-            e.printStackTrace();
+            String json = String.format(
+                    "{\"type\":\"%s\",\"message\":\"%s\",\"timestamp\":\"%s\",\"userId\":%d,\"userName\":\"%s\",\"additionalData\":\"%s\"}",
+                    activity.getType(),
+                    activity.getMessage(),
+                    activity.getTimestamp(),
+                    activity.getUser().getUid(),
+                    activity.getUser().getFName() + " " + activity.getUser().getLName(),
+                    activity.getAdditionalData()
+            );
+            logger.info("Sending message: " + json);
+            session.getBasicRemote().sendText(json);
+        } catch (IOException e) {
+            logger.error("Error sending activity to user", e);
         }
     }
 
-
-    private ActivityFeed createFeedItem(String m, String t, User u, Timestamp time,String ad, Group g) {
-        ActivityFeed create = new ActivityFeed(m, t, u, time, ad, g);
-        feedRepo.save(create);
-        return create;
+    public ActivityFeed createAndBroadcastActivity(String message, String type, User user,
+                                                   String additionalData, Group group) {
+        ActivityFeed activity = new ActivityFeed(
+                message,
+                type,
+                user,
+                new Timestamp(System.currentTimeMillis()),
+                additionalData,
+                group
+        );
+        feedRepo.save(activity);
+        broadcastActivity(activity);
+        return activity;
     }
-
-    private boolean userInGroup(User u, Group g) {
-        for(GroupMember m : u.getMembered()) {
-            if (m.getGroup().equals(g)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private Set<Group> getActivityGroups (ActivityFeed act) {
-        Set<Group> groups = new HashSet<Group>();
-        if (act.getUser() != null) {
-            for (GroupMember m : act.getUser().getMembered()) {
-                groups.add(m.getGroup());
-            }
-        }
-        if (act.getGroup() != null) {
-            groups.add(act.getGroup());
-        }
-        return groups;
-    }
-
-
-
 }
