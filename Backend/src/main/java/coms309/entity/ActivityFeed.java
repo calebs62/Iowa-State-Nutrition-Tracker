@@ -6,7 +6,9 @@ import java.sql.Timestamp;
 
 @Entity
 @Table(name = "activity_feed")
-public class ActivityFeed {
+public class ActivityFeed implements Comparable<ActivityFeed>{
+
+
 
     public enum ActivityType {
         FOOD_EATEN,
@@ -79,11 +81,34 @@ public class ActivityFeed {
             type = ActivityType.GOAL_UPDATE;
         }
     }
-
+    public void setType(ActivityType t) {
+        this.type = t;
+    }
+    public void setUser(User u) {user = u;}
     public void setMessage(String m) {message = m;}
     public void setTimestamp(Timestamp t) {timestamp = t;}
     public void setAdditionalData(String a) {additionalData = a;}
     public void setGroup(Group g) {group = g;}
 
+    @Override
+    public int compareTo(ActivityFeed o) {
+        if (this.timestamp.before(o.getTimestamp())) {
+            return 1;
+        }
+        else if(this.timestamp.after(o.getTimestamp())) {
+            return -1;
+        }
+        else {
+            return 0;
+        }
+    }
+
+    public String toString() {
+        String ret = "";
+        ret += "[" + timestamp.toLocalDateTime().toString() + "]";
+        ret += "[" + type.toString() + "]";
+        ret += " " + message;
+        return ret;
+    }
 
 }
