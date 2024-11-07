@@ -152,7 +152,7 @@ public class GroupController {
                 oldPlan.removeGroup(currGroup);
                 plan.addGroup(currGroup);
                 currGroup.setPlan(plan);
-                planRepo.save(oldPlan); //TODO don't know if need
+                planRepo.save(oldPlan);
                 planRepo.save(plan);
                 groupRepo.save(currGroup);
             }
