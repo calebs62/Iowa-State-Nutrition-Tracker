@@ -1,8 +1,7 @@
 package coms309.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerator;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
@@ -34,7 +33,6 @@ public class FoodPlan {
     private int protein;
 
     @OneToMany(mappedBy = "plan")
-//    @JsonBackReference
     private Set<Group> groups;
 
     public FoodPlan() {}
