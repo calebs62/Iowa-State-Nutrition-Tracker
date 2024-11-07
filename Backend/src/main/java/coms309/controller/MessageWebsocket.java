@@ -41,7 +41,7 @@ public class MessageWebsocket {
     private final Logger logger = LoggerFactory.getLogger(MessageWebsocket.class);
 
     @OnOpen
-    public void onOpen(Session session, @PathParam("memeberKey") GroupMemberKey memberKey)
+    public void onOpen(Session session, @PathParam("memberKey") GroupMemberKey memberKey)
             throws IOException {
         logger.info("Entered into Open");
         GroupMember member = memberRepo.findById(memberKey).orElse(null);
