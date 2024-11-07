@@ -6,10 +6,7 @@ import coms309.entity.GroupMemberKey;
 import coms309.repository.GroupMemberRepository;
 import coms309.repository.MessageRepository;
 
-import jakarta.websocket.OnClose;
-import jakarta.websocket.OnMessage;
-import jakarta.websocket.OnOpen;
-import jakarta.websocket.Session;
+import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,15 +22,18 @@ import java.util.Map;
 import java.util.Set;
 
 @Controller
-@ServerEndpoint(value = "/chat/{username}")
+@ServerEndpoint(value = "/chat/{username}/{uid}/{gid}")
 public class MessageWebsocket {
+    private static GroupMemberRepository memberRepo;
     private static MessageRepository msgRepo;
     @Autowired
     public void setMsgRepo(MessageRepository repo){
         msgRepo = repo;
     }
     @Autowired
-    GroupMemberRepository memberRepo;
+    public void setMemberRepo(GroupMemberRepository repo){
+        memberRepo = repo;
+    }
 
     private static Map<Session, GroupMemberKey> sessionMemberKeyMap = new Hashtable<>();
     private static Map<GroupMemberKey, Session> memberKeySessionMap = new Hashtable<>();
@@ -46,6 +46,7 @@ public class MessageWebsocket {
         GroupMemberKey memberKey = new GroupMemberKey(gid, uid);
         GroupMember member = memberRepo.findById(memberKey).orElse(null);
         if (member == null){
+            logger.info("member not found: " + uid + ", " + gid);
             return;
         }
 
@@ -62,6 +63,9 @@ public class MessageWebsocket {
 
         GroupMemberKey key = sessionMemberKeyMap.get(session);
         sessionMemberKeyMap.remove(session);
+        if (key == null){
+            return;
+        }
         memberKeySessionMap.remove(key);
 
         GroupMember member = memberRepo.findById(key).orElse(null);
@@ -70,6 +74,27 @@ public class MessageWebsocket {
             String message = member.getUser().getFName() + " disconnected";
             sendMessageToGroup(member.getGroup(), message);
         }
+    }
+
+    @OnMessage
+    public void onMessage(Session session, String message) throws IOException{
+        logger.info("Entered into Message: Got Message: " + message);
+        GroupMemberKey memberKey= sessionMemberKeyMap.get(session);
+        GroupMember member = memberRepo.findById(memberKey).orElse(null);
+        if (member == null){
+            return;
+        }
+        if (message.startsWith("@")){
+            //TODO
+        } else {
+          sendMessageToGroup(member.getGroup(), member.getUser().getFName() + ": " + message);
+        }
+    }
+
+    @OnError
+    public void onError(Session session, Throwable throwable){
+        logger.info("Entered into Error");
+        throwable.printStackTrace();
     }
 
     private void sendMessageToUser(){}
