@@ -32,7 +32,7 @@ import org.json.JSONObject;
 public class GroupFragment extends Fragment {
 
     private ProfileDataManager profileDataManager;
-    Button enter;
+    private Button enter;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
