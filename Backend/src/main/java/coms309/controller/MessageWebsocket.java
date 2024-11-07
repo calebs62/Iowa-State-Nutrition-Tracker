@@ -36,7 +36,7 @@ public class MessageWebsocket {
     @Autowired
     GroupMemberRepository memberRepo;
 
-    private static Map<Session, GroupMemberKey> sessionMemberKeyMap = new Hashtable<>(); //TODO - should I make string->groupmemberkey?
+    private static Map<Session, GroupMemberKey> sessionMemberKeyMap = new Hashtable<>();
     private static Map<GroupMemberKey, Session> memberKeySessionMap = new Hashtable<>();
     private final Logger logger = LoggerFactory.getLogger(MessageWebsocket.class);
 
