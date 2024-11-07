@@ -160,11 +160,11 @@ public class TrackerFragment extends Fragment {
     private boolean shouldShowActivity(ActivityFeedItem.ActivityType type) {
         switch (type) {
             case FOOD_EATEN:
-                return profileDataManager.getFoodSharingEnabled();
+                return profileDataManager.getShowFood();
             case GOAL_UPDATE:
-                return profileDataManager.getGoalSharingEnabled();
+                return profileDataManager.getShowGoals();
             case ACHIEVEMENT:
-                return profileDataManager.getAchievementSharingEnabled();
+                return profileDataManager.getShowAchievements();
             case GROUP_UPDATE:
                 return true;
             default:
@@ -228,6 +228,10 @@ public class TrackerFragment extends Fragment {
         boolean showGroups = menu.findItem(R.id.filter_groups).isChecked();
         boolean showAchievements = menu.findItem(R.id.filter_achievements).isChecked();
         boolean showGoals = menu.findItem(R.id.filter_goals).isChecked();
+
+        profileDataManager.setShowFood(showFood);
+        profileDataManager.setShowGoals(showGoals);
+        profileDataManager.setShowAchievements(showAchievements);
 
         adapter.applyFilters(showFood, showGroups, showAchievements, showGoals);
     }

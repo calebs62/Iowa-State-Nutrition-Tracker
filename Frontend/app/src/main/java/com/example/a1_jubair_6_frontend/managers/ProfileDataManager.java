@@ -34,6 +34,9 @@ public class ProfileDataManager {
     private static final String PREF_SHARE_FOOD = "share_food";
     private static final String PREF_SHARE_GOALS = "share_goals";
     private static final String PREF_SHARE_ACHIEVEMENTS = "share_achievements";
+    private static final String PREF_SHOW_FOOD = "show_food";
+    private static final String PREF_SHOW_GOALS = "show_goals";
+    private static final String PREF_SHOW_ACHIEVEMENTS = "show_achievements";
 
     private static final String uploadDir = "uploads/profile-pictures/";
 
@@ -339,5 +342,29 @@ public class ProfileDataManager {
     public interface UpdateCallback {
         void onSuccess();
         void onError(String error);
+    }
+
+    public boolean getShowGoals() {
+        return preferences.getBoolean(PREF_SHOW_GOALS, true);
+    }
+
+    public boolean getShowFood() {
+        return preferences.getBoolean(PREF_SHOW_FOOD, true);
+    }
+
+    public boolean getShowAchievements() {
+        return preferences.getBoolean(PREF_SHOW_ACHIEVEMENTS, true);
+    }
+
+    public void setShowFood(boolean enabled) {
+        preferences.edit().putBoolean(PREF_SHOW_FOOD, enabled).apply();
+    }
+
+    public void setShowGoals(boolean enabled) {
+        preferences.edit().putBoolean(PREF_SHOW_GOALS, enabled).apply();
+    }
+
+    public void setShowAchievements(boolean enabled) {
+        preferences.edit().putBoolean(PREF_SHOW_ACHIEVEMENTS, enabled).apply();
     }
 }
