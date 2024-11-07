@@ -112,12 +112,11 @@ public class ActivityFeedAdapter extends RecyclerView.Adapter<ActivityFeedAdapte
         }
 
         void bind(ActivityFeedItem item) {
-            // Set icon based on activity type
             int iconRes;
             String typeLabel;
             switch (item.getType()) {
                 case FOOD_EATEN:
-                    iconRes = R.drawable.ic_food; // You'll need to create these icons
+                    iconRes = R.drawable.ic_food;
                     typeLabel = "Food Activity";
                     break;
                 case GROUP_UPDATE:

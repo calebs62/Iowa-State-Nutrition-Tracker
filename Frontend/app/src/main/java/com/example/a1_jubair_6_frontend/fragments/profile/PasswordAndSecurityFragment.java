@@ -120,23 +120,20 @@ public class PasswordAndSecurityFragment extends Fragment {
     }
 
     private void updatePrivacySettings() {
-        // Create privacy settings object
         PrivacySettings settings = new PrivacySettings(
                 switchShareFood.isChecked(),
                 switchShareGoals.isChecked(),
                 switchShareAchievements.isChecked()
         );
 
-        // Update on server
         profileDataManager.updatePrivacySettings(settings, new ProfileDataManager.UpdateCallback() {
             @Override
             public void onSuccess() {
-                // Optional: Show success message
+
             }
 
             @Override
             public void onError(String error) {
-                // Show error message and revert switch if needed
                 Log.e("Privacy", "Failed to update privacy settings: " + error);
                 loadPrivacySettings(); // Reload original settings
             }
