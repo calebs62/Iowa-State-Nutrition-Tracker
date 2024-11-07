@@ -4,6 +4,7 @@ package coms309.controller;
 import coms309.repository.*;
 import coms309.entity.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.Timestamp;
@@ -22,37 +23,59 @@ public class NotificationsController {
     @Autowired
     SystemNotificationQueueRepository sysNotRepo;
 
-    @GetMapping("/notifications/settings/{id}")
-    public NotificationSettings getPreferences(@PathVariable int userId) {
-        User user = userRepo.findById(userId).orElse(null);
-        if (user == null) {return null;}
-        NotificationSettings settings = findSetting(userId);
-        return settings;
+    @GetMapping("/notifications/settings/{userId}")
+    public ResponseEntity<?> getPreferences(@PathVariable int userId) {
+        try {
+            User user = userRepo.findById(userId).orElse(null);
+            if (user == null) {
+                return ResponseEntity.notFound().build();
+            }
+            NotificationSettings settings = findSetting(userId);
+            return ResponseEntity.ok(settings);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError()
+                    .body("Error retrieving settings: " + e.getMessage());
+        }
     }
-    @GetMapping("/notifications/settings/{id}/{type}")
+
+    @GetMapping("/notifications/settings/{userId}/{type}")
     public boolean savePreferences(@PathVariable int userId, @PathVariable String type) {
         return checkSetting(userId, type);
     }
 
-    @PutMapping("/notifications/settings/{id}")
-    public NotificationSettings setNotificationSettings(@PathVariable int userId, @RequestBody Map<String, Boolean> newSettings) {
-        NotificationSettings settings = findSetting(userId);
-        if (newSettings.containsKey("system")) {
-            settings.setSystem(newSettings.get("system"));
+    @PutMapping("/notifications/settings/{userId}")
+    public ResponseEntity<?> setNotificationSettings(@PathVariable int userId,
+                                                     @RequestBody Map<String, Boolean> newSettings) {
+        try {
+            NotificationSettings settings = findSetting(userId);
+            if (settings == null) {
+                settings = new NotificationSettings(userId);
+            }
+
+            if (newSettings.containsKey("system")) {
+                settings.setSystem(newSettings.get("system"));
+            }
+            if (newSettings.containsKey("push")) {
+                settings.setPush(newSettings.get("push"));
+            }
+            if (newSettings.containsKey("reminder")) {
+                settings.setReminder(newSettings.get("reminder"));
+            }
+            if (newSettings.containsKey("sms")) {
+                settings.setSMS(newSettings.get("sms"));
+            }
+            if (newSettings.containsKey("email")) {
+                settings.setEmail(newSettings.get("email"));
+            }
+
+            settings = notiSettingRepo.save(settings);
+            return ResponseEntity.ok(settings);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError()
+                    .body("Error updating settings: " + e.getMessage());
         }
-        if (newSettings.containsKey("push")) {
-            settings.setPush(newSettings.get("push"));
-        }
-        if (newSettings.containsKey("reminder")) {
-            settings.setReminder(newSettings.get("reminder"));
-        }
-        if (newSettings.containsKey("sms")) {
-            settings.setSMS(newSettings.get("sms"));
-        }
-        if (newSettings.containsKey("email")) {
-            settings.setEmail(newSettings.get("email"));
-        }
-        return settings;
     }
 
     @PostMapping("/notifications/system")
@@ -91,17 +114,31 @@ public class NotificationsController {
         return ret;
     }
 
-    @GetMapping("/notifications/system/user/{user}")
-    private Set<SystemNotificationQueue> userNewNotifs(@RequestBody int user) {
-        Set<SystemNotificationQueue> queue = new HashSet<SystemNotificationQueue>();
-        queue.addAll(sysNotRepo.findAll());
-        Set<SystemNotificationQueue> ret = new HashSet<SystemNotificationQueue>();
-        for (SystemNotificationQueue i : queue) {
-            if (i.getTime().after(userRepo.getReferenceById(user).getLastLogin())) {
-                ret.add(i);
+    @GetMapping("/notifications/system/user/{userId}")
+    public ResponseEntity<?> userNewNotifs(@PathVariable int userId) {
+        try {
+            User user = userRepo.findById(userId).orElse(null);
+            if (user == null) {
+                return ResponseEntity.notFound().build();
             }
+
+            Set<SystemNotificationQueue> queue = new HashSet<>(sysNotRepo.findAll());
+            Set<SystemNotificationQueue> ret = new HashSet<>();
+
+            for (SystemNotificationQueue notification : queue) {
+                if (notification.getTime() != null &&
+                        user.getLastLogin() != null &&
+                        notification.getTime().after(user.getLastLogin())) {
+                    ret.add(notification);
+                }
+            }
+
+            return ResponseEntity.ok(ret);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError()
+                    .body("Error fetching notifications: " + e.getMessage());
         }
-        return ret;
     }
 
     /*
@@ -131,9 +168,20 @@ public class NotificationsController {
 
     private NotificationSettings findSetting(int userId) {
         NotificationSettings settings = notiSettingRepo.findById(userId).orElse(null);
-        if(settings == null) {
+        if (settings == null) {
             settings = new NotificationSettings(userId);
-            notiSettingRepo.save(settings);
+            try {
+                settings = notiSettingRepo.save(settings);
+            } catch (Exception e) {
+                e.printStackTrace();
+                // Try finding by other fields if save fails
+                settings = notiSettingRepo.findByUserUidOrUserOrUserId(userId, userId, userId).orElse(null);
+                if (settings == null) {
+                    // If still not found, create new with generated ID
+                    settings = new NotificationSettings(userId);
+                    settings = notiSettingRepo.save(settings);
+                }
+            }
         }
         return settings;
     }
