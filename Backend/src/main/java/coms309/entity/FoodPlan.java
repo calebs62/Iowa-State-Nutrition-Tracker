@@ -1,38 +1,42 @@
 package coms309.entity;
 
-
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 
 import java.util.Set;
 
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id")
+
 @Entity
 @Table(name="food_plan")
 public class FoodPlan {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "idfoodplan")
+    @JsonView(value = {Views.Public.class})
     private int id;
 
     @Column(name = "name")
+    @JsonView(value = {Views.Public.class})
     private String name;
 
     @Column(name = "calories")
+    @JsonView(value = {Views.Public.class})
     private int calories;
     @Column(name = "totalFat")
+    @JsonView(value = {Views.Public.class})
     private int totalFat;
     @Column(name = "sodium")
+    @JsonView(value = {Views.Public.class})
     private int sodium;
     @Column(name = "carbohydrate")
+    @JsonView(value = {Views.Public.class})
     private int carbohydrate;
     @Column(name = "protein")
+    @JsonView(value = {Views.Public.class})
     private int protein;
 
     @OneToMany(mappedBy = "plan")
+    @JsonView(value = {Views.FoodPlan.class})
     private Set<Group> groups;
 
     public FoodPlan() {}

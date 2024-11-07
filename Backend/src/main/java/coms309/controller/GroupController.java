@@ -1,9 +1,7 @@
 package coms309.controller;
 
-import coms309.entity.FoodPlan;
-import coms309.entity.Group;
-import coms309.entity.GroupMember;
-import coms309.entity.User;
+import com.fasterxml.jackson.annotation.JsonView;
+import coms309.entity.*;
 import coms309.repository.FoodPlanRepository;
 import coms309.repository.GroupMemberRepository;
 import coms309.repository.GroupRepository;
@@ -27,6 +25,7 @@ public class GroupController {
 
     // Create
     @PostMapping("/group")
+    @JsonView(value = {Views.Group.class})
     public Group createGroup(@RequestBody Map<String, Object> map){
         String name = (String) map.get("groupName");
         Integer ownerId = (Integer) map.get("ownerId");
@@ -52,12 +51,14 @@ public class GroupController {
 
     // Read
     @GetMapping("/group/{id}")
+    @JsonView(value = {Views.Group.class})
     public Group getGroupById(@PathVariable int id){
         return groupRepo.findById(id).orElse(null);
     }
 
     // Get Owner
     @GetMapping("/group/{id}/getOwner")
+    @JsonView(value = {Views.User.class})
     public User getOwner(@PathVariable int id) {
         Group currGroup = groupRepo.findById(id).orElse(null);
         if (currGroup != null) {
@@ -68,6 +69,7 @@ public class GroupController {
 
     // Update
     @PutMapping("/group/update/{id}")
+    @JsonView(value = {Views.Group.class})
     public Group updateGroup(@PathVariable int id, @RequestBody Map<String, Object> newGroup){
         Group currGroup = groupRepo.findById(id).orElse(null);
         if (currGroup != null  && currGroup.isModLevel((String) newGroup.get("sessionToken"))){
@@ -83,6 +85,7 @@ public class GroupController {
 
     // Mod add member by id
     @PutMapping("/group/{id}/addMember")
+    @JsonView(value = {Views.Group.class})
     public Group addMember(@PathVariable int id, @RequestBody Map<String, Object> map){
         Group currGroup = groupRepo.findById(id).orElse(null);
         if (currGroup != null && currGroup.isModLevel((String) map.get("sessionToken"))){
@@ -98,6 +101,7 @@ public class GroupController {
 
     // Mod remove member by id
     @PutMapping("/group/{id}/removeMember")
+    @JsonView(value = {Views.Group.class})
     public Group removeMember(@PathVariable int id, @RequestBody Map<String, Object> map){
         Group currGroup = groupRepo.findById(id).orElse(null);
         if (currGroup != null && currGroup.isModLevel((String) map.get("sessionToken"))){
@@ -112,6 +116,7 @@ public class GroupController {
 
     // User join
     @PutMapping("/group/{id}/join")
+    @JsonView(value = {Views.Group.class})
     public Boolean memberJoin(@PathVariable int id, @RequestBody String sessionToken){
         Group currGroup = groupRepo.findById(id).orElse(null);
         String[] array = sessionToken.split(":");
@@ -127,6 +132,7 @@ public class GroupController {
 
     // User leave
     @PutMapping("/group/{id}/leave")
+    @JsonView(value = {Views.Group.class})
     public Boolean memberLeave(@PathVariable int id, @RequestBody String sessionToken){
         Group currGroup = groupRepo.findById(id).orElse(null);
         String[] array = sessionToken.split(":");
@@ -144,6 +150,7 @@ public class GroupController {
 
     // Change group plan
     @PutMapping("/group/{id}/changePlan")
+    @JsonView(value = {Views.Group.class})
     public Group changePlan(@PathVariable int id, @RequestBody Map<String, Object> map){
         Group currGroup = groupRepo.findById(id).orElse(null);
         if (currGroup != null && currGroup.isModLevel((String) map.get("sessionToken"))) {
@@ -163,6 +170,7 @@ public class GroupController {
 
     // Owner make user mod
     @PutMapping("/group/{id}/promoteMod")
+    @JsonView(value = {Views.GroupMember.class})
     public GroupMember promoteUser(@PathVariable int id, @RequestBody Map<String, Object> map){
         Group currGroup = groupRepo.findById(id).orElse(null);
         if (currGroup != null && currGroup.isOwnerLevel((String) map.get("sessionToken"))) {
@@ -179,6 +187,7 @@ public class GroupController {
 
     // Owner demote mod to user
     @PutMapping("/group/{id}/demoteMod")
+    @JsonView(value = {Views.GroupMember.class})
     public GroupMember demoteUser(@PathVariable int id, @RequestBody Map<String, Object> map){
         Group currGroup = groupRepo.findById(id).orElse(null);
         if (currGroup != null && currGroup.isOwnerLevel((String) map.get("sessionToken"))) {
@@ -195,6 +204,7 @@ public class GroupController {
 
     // Owner give user owner
     @PutMapping("/group/{id}/makeOwner")
+    @JsonView(value = {Views.GroupMember.class})
     public GroupMember makeOwner(@PathVariable int id, @RequestBody Map<String, Object> map){
         Group currGroup = groupRepo.findById(id).orElse(null);
         if (currGroup != null && currGroup.isOwnerLevel((String) map.get("sessionToken"))) {
@@ -219,6 +229,7 @@ public class GroupController {
 
     // Delete
     @DeleteMapping("/group/{id}")
+    @JsonView(value = {Views.Group.class})
     public Group delete(@PathVariable int id, @RequestBody String sessionToken){
         Group group = groupRepo.findById(id).orElse(null);
         if (group != null && group.isOwnerLevel(sessionToken)){
@@ -229,11 +240,13 @@ public class GroupController {
 
     // List
     @GetMapping("/allGroups")
+    @JsonView(value = {Views.Group.class})
     public List<Group> getAllGroups(){
         return groupRepo.findAll();
     }
 
     @GetMapping("/searchGroups")
+    @JsonView(value = {Views.Group.class})
     public List<Group> searchGroups(@RequestParam(defaultValue = "") String keyword){
         List<Group> groups = groupRepo.findAll();
         if (keyword.isEmpty()){
@@ -250,6 +263,7 @@ public class GroupController {
     }
 
     @GetMapping("group/{id}/getPlan")
+    @JsonView(value = {Views.FoodPlan.class})
     public FoodPlan getFoodplan(@PathVariable int id){
         Group group = groupRepo.findById(id).orElse(null);
         if (group == null) {

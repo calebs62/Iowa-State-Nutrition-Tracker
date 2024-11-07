@@ -1,14 +1,10 @@
 package coms309.entity;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 
 import java.util.Date;
 
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id")
 @Entity
 @Table(name="group_members")
 public class GroupMember {
@@ -20,23 +16,28 @@ public class GroupMember {
 
     @EmbeddedId
     @Column(name="groupmemberid")
+    @JsonView(value = {Views.Public.class})
     private GroupMemberKey id;
 
     @ManyToOne
     @MapsId("groupId")
     @JoinColumn(name = "group_id")
+    @JsonView(value = {Views.GroupMember.class})
     private Group group;
 
     @ManyToOne
     @MapsId("userId")
     @JoinColumn(name = "user_id")
+    @JsonView(value = {Views.GroupMember.class})
     private User user;
 
     @Column(name = "permission")
+    @JsonView(value = {Views.Public.class})
     private Permission_Level permissionLvl;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "joinDate")
+    @JsonView(value = {Views.Public.class})
     private Date joinDate = new Date();
 
 
