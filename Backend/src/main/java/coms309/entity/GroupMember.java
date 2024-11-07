@@ -1,11 +1,14 @@
 package coms309.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
 import java.util.Date;
 
-
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id")
 @Entity
 @Table(name="group_members")
 public class GroupMember {
@@ -22,13 +25,11 @@ public class GroupMember {
     @ManyToOne
     @MapsId("groupId")
     @JoinColumn(name = "group_id")
-    @JsonBackReference
     private Group group;
 
     @ManyToOne
     @MapsId("userId")
     @JoinColumn(name = "user_id")
-    @JsonBackReference
     private User user;
 
     @Column(name = "permission")
