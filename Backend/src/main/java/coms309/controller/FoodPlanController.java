@@ -1,6 +1,8 @@
 package coms309.controller;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import coms309.entity.FoodPlan;
+import coms309.entity.Views;
 import coms309.repository.FoodPlanRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -15,18 +17,21 @@ public class FoodPlanController {
 
     // Create
     @PostMapping("/plan")
+    @JsonView(Views.FoodPlan.class)
     public FoodPlan savePlan(@RequestBody FoodPlan plan){
         return planRepo.save(plan);
     }
 
     // Read
     @GetMapping("/plan/{id}")
+    @JsonView(Views.FoodPlan.class)
     public FoodPlan getPlanById(@PathVariable int id){
         return planRepo.findById(id).orElse(null);
     }
 
     // Update
     @PutMapping("/plan/update/{id}")
+    @JsonView(Views.FoodPlan.class)
     public FoodPlan updatePlan(@PathVariable int id, @RequestBody Map<String, Object> newPlan){
         FoodPlan currPlan = planRepo.findById(id).orElse(null);
         if (currPlan != null){
@@ -55,6 +60,7 @@ public class FoodPlanController {
 
     // Delete
     @DeleteMapping("/plan/{id}")
+    @JsonView(Views.FoodPlan.class)
     public FoodPlan delete(@PathVariable int id){
         FoodPlan plan = planRepo.findById(id).orElse(null);
         if (planRepo.existsById(id)){
@@ -65,6 +71,7 @@ public class FoodPlanController {
 
     //List all plans
     @GetMapping("/allPlans")
+    @JsonView(Views.FoodPlan.class)
     public List<FoodPlan> getAllPlans(@RequestParam(defaultValue = "") String keyword){
         List<FoodPlan> plans = planRepo.findAll();
         if (keyword.equals("")){

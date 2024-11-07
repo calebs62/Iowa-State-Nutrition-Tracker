@@ -1,5 +1,6 @@
 package coms309.entity;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 
@@ -8,9 +9,11 @@ import java.io.Serializable;
 @Embeddable
 public class GroupMemberKey implements Serializable {
     @Column(name = "userId")
+    @JsonView(value = {Views.Public.class})
     private int userId;
 
     @Column(name = "groupId")
+    @JsonView(value = {Views.Public.class})
     private int groupId;
 
     public GroupMemberKey(){}

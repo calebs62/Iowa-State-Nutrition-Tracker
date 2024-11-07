@@ -1,33 +1,34 @@
 package coms309.entity;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 
 import java.util.*;
 
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id")
 @Entity
 @Table(name="groups")
 public class Group {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="idgroup")
+    @JsonView(value = {Views.Public.class})
     private int id;
 
     @Column(name="groupName")
+    @JsonView(value = {Views.Public.class})
     private String groupName;
 
     @Column(name = "groupOwner")
+    @JsonView(value = {Views.Public.class})
     private int ownerId;
 
     @OneToMany(mappedBy = "group")
+    @JsonView(value = {Views.Group.class})
     private Set<GroupMember> members = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name="foodPlan")
+    @JsonView(value = {Views.Group.class})
     private FoodPlan plan;
 
     public Group() {}

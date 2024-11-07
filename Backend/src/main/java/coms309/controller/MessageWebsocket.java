@@ -4,7 +4,6 @@ import coms309.entity.Group;
 import coms309.entity.GroupMember;
 import coms309.entity.GroupMemberKey;
 import coms309.repository.GroupMemberRepository;
-import coms309.repository.GroupRepository;
 import coms309.repository.MessageRepository;
 
 import jakarta.websocket.OnClose;
@@ -41,9 +40,10 @@ public class MessageWebsocket {
     private final Logger logger = LoggerFactory.getLogger(MessageWebsocket.class);
 
     @OnOpen
-    public void onOpen(Session session, @PathParam("memberKey") GroupMemberKey memberKey)
+    public void onOpen(Session session, @PathParam("uid") int uid, @PathParam("gid") int gid)
             throws IOException {
         logger.info("Entered into Open");
+        GroupMemberKey memberKey = new GroupMemberKey(gid, uid);
         GroupMember member = memberRepo.findById(memberKey).orElse(null);
         if (member == null){
             return;

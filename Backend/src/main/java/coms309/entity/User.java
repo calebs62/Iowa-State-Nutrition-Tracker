@@ -1,6 +1,7 @@
 package coms309.entity;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
@@ -8,36 +9,45 @@ import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
 
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "uid")
+//@JsonIdentityInfo(
+//        generator = ObjectIdGenerators.PropertyGenerator.class,
+//        property = "uid")
 @Entity
 @Table(name="user")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="UID")
+    @JsonView(value = {Views.Public.class})
     private int uid;
 
     @Column(name="username", unique = true)
+    @JsonView(value = {Views.Public.class})
     private String username; //unique
 
     @Column(name="password")
+    @JsonView(value = {Views.User.class})
     private String password; //will have to figure out how to hash it
 
     @Column(name="profilepicture",
             columnDefinition="LONGTEXT")
+    @JsonView(value = {Views.Public.class})
     private String img;
     @Column(name="fname")
+    @JsonView(value = {Views.Public.class})
     private String fname;
     @Column(name="lname")
+    @JsonView(value = {Views.Public.class})
     private String lname;
     @Column(name="height") //in inches
+    @JsonView(value = {Views.Public.class})
     private int height = -1;
     @Column(name="weight") //in lbs
+    @JsonView(value = {Views.Public.class})
     private int weight = -1;
 
     @OneToMany(mappedBy = "user")
+    @JsonView(Views.User.class)
     private Set<GroupMember> membered = new HashSet<>();
 
     public enum Account {
@@ -46,11 +56,14 @@ public class User {
         ADMINISTRATOR
     }
     @Column(name="accounttype")
+    @JsonView(value = {Views.User.class, Views.GroupMember.class})
     private Account accounttype = Account.USER;
 
     @Column(name="sessionToken")
+    @JsonView(value = {Views.User.class, Views.GroupMember.class})
     private String sessionToken = "0:0:0";
     @Column(name="lastLogin")
+    @JsonView(value = {Views.User.class})
     private Timestamp lastLogin = new Timestamp(System.currentTimeMillis());
 
     public User() {}
