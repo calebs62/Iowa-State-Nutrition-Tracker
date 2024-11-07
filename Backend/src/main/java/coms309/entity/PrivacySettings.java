@@ -1,18 +1,19 @@
 package coms309.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name="privacy_settings")
 public class PrivacySettings {
     @Id
-    @Column(name="privid")
-    private int id;
+    @Column(name="user_id")
+    private int userId;
 
-    @OneToOne
-    @MapsId
-    @JoinColumn(name= "user_id")
-    private User userId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="user_id", referencedColumnName = "UID", insertable = false, updatable = false)
+    @JsonIgnore
+    private User user;
 
     @Column(name = "food")
     private boolean food = true;
@@ -21,21 +22,37 @@ public class PrivacySettings {
     @Column(name = "achievement")
     private boolean achievement = true;
 
-    public PrivacySettings(int id, User us) {
-        this.id = id;
-        this.userId = us;
+    public PrivacySettings() {
+        this.food = true;
+        this.goal = true;
+        this.achievement = true;
     }
 
-    public User getUserId() {return userId;}
+    public PrivacySettings(int userId) {
+        this.userId = userId;
+        this.food = true;
+        this.goal = true;
+        this.achievement = true;
+    }
 
-    public User getUser() {return userId;}
+    public int getUserId() { return userId; }
+    public void setUserId(int userId) { this.userId = userId; }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+    public boolean getFood() { return food; }
+    public void setFood(boolean food) { this.food = food; }
+    public boolean getGoal() { return goal; }
+    public void setGoal(boolean goal) { this.goal = goal; }
+    public boolean getAchievement() { return achievement; }
+    public void setAchievement(boolean achievement) { this.achievement = achievement; }
 
-    public boolean getFood() {return food;}
-    public boolean getGoal() {return goal;}
-    public boolean getAchievement() {return achievement;}
-
-    public void setFood(boolean f) {food = f;}
-    public void setGoal(boolean g) {goal = g;}
-    public void setAchievement(boolean a) {achievement = a;}
-
+    @Override
+    public String toString() {
+        return "PrivacySettings{" +
+                "userId=" + userId +
+                ", food=" + food +
+                ", goal=" + goal +
+                ", achievement=" + achievement +
+                '}';
+    }
 }
