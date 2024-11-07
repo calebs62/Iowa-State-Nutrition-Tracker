@@ -207,9 +207,6 @@ public class TrackerFragment extends Fragment {
         adapter = new ActivityFeedAdapter(requireContext());
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-
-//        List<ActivityFeedItem> mockData = createMockData();
-//        adapter.setItems(mockData);
     }
 
     private void refreshActivityFeed() {
@@ -225,65 +222,4 @@ public class TrackerFragment extends Fragment {
 
         adapter.applyFilters(showFood, showGroups, showAchievements, showGoals);
     }
-
-//    private List<ActivityFeedItem> createMockData() {
-//        List<ActivityFeedItem> mockItems = new ArrayList<>();
-//
-//        // Food activities
-//        ActivityFeedItem foodItem1 = new ActivityFeedItem();
-//        foodItem1.setType(ActivityFeedItem.ActivityType.FOOD_EATEN);
-//        foodItem1.setMessage("John ate Chicken Caesar Salad");
-//        foodItem1.setTimestamp(new Timestamp(System.currentTimeMillis() - 3600000)); // 1 hour ago
-//        foodItem1.setAdditionalData("Calories: 550 • Protein: 35g • Carbs: 20g");
-//        mockItems.add(foodItem1);
-//
-//        ActivityFeedItem foodItem2 = new ActivityFeedItem();
-//        foodItem2.setType(ActivityFeedItem.ActivityType.FOOD_EATEN);
-//        foodItem2.setMessage("Sarah had Grilled Salmon with vegetables");
-//        foodItem2.setTimestamp(new Timestamp(System.currentTimeMillis() - 7200000)); // 2 hours ago
-//        foodItem2.setAdditionalData("Calories: 450 • Protein: 42g • Fat: 28g");
-//        mockItems.add(foodItem2);
-//
-//        // Group updates
-//        ActivityFeedItem groupItem1 = new ActivityFeedItem();
-//        groupItem1.setType(ActivityFeedItem.ActivityType.GROUP_UPDATE);
-//        groupItem1.setMessage("Fitness Warriors group plan updated");
-//        groupItem1.setTimestamp(new Timestamp(System.currentTimeMillis() - 10800000)); // 3 hours ago
-//        groupItem1.setAdditionalData("New meal plan for next week is now available");
-//        mockItems.add(groupItem1);
-//
-//        // Achievement (placeholder for future feature)
-//        ActivityFeedItem achievementItem = new ActivityFeedItem();
-//        achievementItem.setType(ActivityFeedItem.ActivityType.ACHIEVEMENT);
-//        achievementItem.setMessage("Mike earned the 'Weekly Goal Crusher' badge!");
-//        achievementItem.setTimestamp(new Timestamp(System.currentTimeMillis() - 14400000)); // 4 hours ago
-//        achievementItem.setAdditionalData("Completed all daily goals for 7 days straight");
-//        mockItems.add(achievementItem);
-//
-//        // Goal updates
-//        ActivityFeedItem goalItem = new ActivityFeedItem();
-//        goalItem.setType(ActivityFeedItem.ActivityType.GOAL_UPDATE);
-//        goalItem.setMessage("Emma updated her weekly calorie goal");
-//        goalItem.setTimestamp(new Timestamp(System.currentTimeMillis() - 18000000)); // 5 hours ago
-//        goalItem.setAdditionalData("New target: 2200 calories per day");
-//        mockItems.add(goalItem);
-//
-//        // More food activities
-//        ActivityFeedItem foodItem3 = new ActivityFeedItem();
-//        foodItem3.setType(ActivityFeedItem.ActivityType.FOOD_EATEN);
-//        foodItem3.setMessage("Alex logged breakfast");
-//        foodItem3.setTimestamp(new Timestamp(System.currentTimeMillis() - 21600000)); // 6 hours ago
-//        foodItem3.setAdditionalData("Oatmeal with berries • Calories: 320");
-//        mockItems.add(foodItem3);
-//
-//        // Another group update
-//        ActivityFeedItem groupItem2 = new ActivityFeedItem();
-//        groupItem2.setType(ActivityFeedItem.ActivityType.GROUP_UPDATE);
-//        groupItem2.setMessage("New member joined Healthy Living group");
-//        groupItem2.setTimestamp(new Timestamp(System.currentTimeMillis() - 25200000)); // 7 hours ago
-//        groupItem2.setAdditionalData("Welcome David to the group!");
-//        mockItems.add(groupItem2);
-//
-//        return mockItems;
-//    }
 }
