@@ -317,6 +317,11 @@ public class ProfileDataManager {
         VolleySingleton.getInstance(context).addToRequestQueue(jsonObjectRequest);
     }
 
+    public boolean isAdminOrContributor() {
+        String role = getAccountType();
+        return "ADMINISTRATOR".equals(role) || "CONTRIBUTOR".equals(role);
+    }
+
     public void saveBase64Image(String base64Image) {
         try{
             String[] parts = base64Image.split(",");
