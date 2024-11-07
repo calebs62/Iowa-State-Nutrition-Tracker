@@ -12,6 +12,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupMenu;
@@ -30,6 +31,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.sql.Timestamp;
+import java.util.Objects;
 
 import okhttp3.Response;
 import okhttp3.WebSocket;
@@ -42,7 +44,7 @@ public class TrackerFragment extends Fragment {
     private ActivityFeedAdapter adapter;
     private WebSocketClient webSocketClient;
     private ProfileDataManager profileDataManager;
-
+    private MaterialButton testFeedButton;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -58,14 +60,17 @@ public class TrackerFragment extends Fragment {
         // Initialize views
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
         filterButton = view.findViewById(R.id.filterButton);
+        testFeedButton = view.findViewById(R.id.testFeedButton);
 
         setupSwipeRefresh();
         setupFilterMenu();
         setupRecyclerView(view);
         setupWebSocket();
+        setupTestButton();
 
         return view;
     }
+
 
     private void setupWebSocket() {
         int userId = profileDataManager.getId();
@@ -230,5 +235,19 @@ public class TrackerFragment extends Fragment {
         boolean showGoals = menu.findItem(R.id.filter_goals).isChecked();
 
         adapter.applyFilters(showFood, showGroups, showAchievements, showGoals);
+    }
+
+    private void setupTestButton() {
+        if (profileDataManager.isAdminOrContributor()) {
+            testFeedButton.setVisibility(View.VISIBLE);
+            testFeedButton.setOnClickListener(v -> showTestDialog());
+        } else {
+            testFeedButton.setVisibility(View.GONE);
+        }
+    }
+
+    private void showTestDialog() {
+        ActivityFeedTestDialog dialog = new ActivityFeedTestDialog();
+        dialog.show(getChildFragmentManager(), "activity_test_dialog");
     }
 }

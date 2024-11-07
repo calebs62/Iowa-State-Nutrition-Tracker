@@ -1,10 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
     <style name="Base.Theme._1_jubair_6_Frontend" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
         <item name="colorPrimary">@color/Iowa_State_Red</item>
+        <item name="colorPrimaryVariant">@color/Iowa_State_Red</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        <item name="colorSecondary">@color/Iowa_State_Red</item>
+        <item name="colorSecondaryVariant">@color/Iowa_State_Red</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+        <item name="colorOutline">@color/Iowa_State_Red</item>
+        <item name="colorOnSurface">@color/black</item>
+        <item name="colorPrimaryContainer">@color/Iowa_State_Red</item>
+        <item name="colorOnPrimaryContainer">@color/white</item>
+        <item name="colorOnSurfaceVariant">@color/Iowa_State_Red</item>
+        <item name="colorTertiary">@color/Iowa_State_Red</item>
+        <item name="colorOnTertiary">@color/white</item>
+
+        <item name="textInputStyle">@style/Widget.App.TextInputLayout</item>
+        <item name="radioButtonStyle">@style/Widget.App.RadioButton</item>
     </style>
 
     <style name="Theme._1_jubair_6_Frontend" parent="Base.Theme._1_jubair_6_Frontend" />
+
+    <style name="Widget.App.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/Iowa_State_Red</item>
+        <item name="hintTextColor">@color/Iowa_State_Red</item>
+        <item name="android:textColorHint">@color/dark_grey</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+    </style>
+
+    <style name="Widget.App.RadioButton" parent="Widget.Material3.CompoundButton.RadioButton">
+        <item name="android:buttonTint">@color/Iowa_State_Red</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
 </resources>
