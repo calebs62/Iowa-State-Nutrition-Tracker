@@ -1,15 +1,18 @@
 package coms309.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
 import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
 
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "uid")
 @Entity
 @Table(name="user")
-
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,8 +38,7 @@ public class User {
     private int weight = -1;
 
     @OneToMany(mappedBy = "user")
-    @JsonManagedReference
-    private Set<GroupMember> membered;
+    private Set<GroupMember> membered = new HashSet<>();
 
     public enum Account {
         USER,
@@ -57,7 +59,6 @@ public class User {
         this.password = password;
         this.fname = fname;
         this.lname = lname;
-        membered = new HashSet<>();
     }
 
     public int getUid(){return uid;}
@@ -117,4 +118,6 @@ public class User {
         tmp[0] = "0";
         sessionToken = tmp[0] + ":" + accounttype.ordinal() + ":" + uid;
     }
+
+
 }

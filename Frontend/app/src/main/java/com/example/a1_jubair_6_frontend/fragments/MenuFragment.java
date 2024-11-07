@@ -14,13 +14,16 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
@@ -33,17 +36,25 @@ import com.example.a1_jubair_6_frontend.models.FoodItem;
 import com.example.a1_jubair_6_frontend.models.Menu;
 import com.example.a1_jubair_6_frontend.network.VolleySingleton;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.button.MaterialButtonToggleGroup;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.slider.RangeSlider;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.gson.Gson;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class MenuFragment extends Fragment {
@@ -67,6 +78,11 @@ public class MenuFragment extends Fragment {
     private LinearLayout advancedFiltersSection;
     private ImageButton btnShowFilters;
     private boolean isFilterSectionVisible = false;
+    private String currentComparisonType = "==";
+    View view;
+    private String currentSearchQuery = "";
+    private boolean useServerFilter = false;
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -86,7 +102,7 @@ public class MenuFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_menu, container, false);
+        view = inflater.inflate(R.layout.fragment_menu, container, false);
 
         advancedFiltersSection = view.findViewById(R.id.advancedFiltersSection);
         btnShowFilters = view.findViewById(R.id.btnShowFilters);
@@ -160,6 +176,7 @@ public class MenuFragment extends Fragment {
             }
         });
 
+        setupSearchAndFilters();
     }
 
     // <editor-fold desc="HTTP Requests">
@@ -306,6 +323,52 @@ public class MenuFragment extends Fragment {
         VolleySingleton.getInstance(getContext()).addToRequestQueue(request);
     }
 
+    private void performSearch(String query) {
+        if (query.isEmpty()) {
+            int currentTab = mealTypeTabs.getSelectedTabPosition();
+            foodItemList.clear();
+            switch (currentTab) {
+                case 0:
+                    foodItemList.addAll(breakfastMenus.get(currentBreakfastMenuIndex).getFoodItems());
+                    break;
+                case 1:
+                    foodItemList.addAll(lunchMenus.get(currentLunchMenuIndex).getFoodItems());
+                    break;
+                case 2:
+                    foodItemList.addAll(dinnerMenus.get(currentDinnerMenuIndex).getFoodItems());
+                    break;
+            }
+            foodAdapter.notifyDataSetChanged();
+            return;
+        }
+
+        Set<FoodItem> currentItems;
+        int currentTab = mealTypeTabs.getSelectedTabPosition();
+        switch (currentTab) {
+            case 1:
+                currentItems = lunchMenus.get(currentLunchMenuIndex).getFoodItems();
+                break;
+            case 2:
+                currentItems = dinnerMenus.get(currentDinnerMenuIndex).getFoodItems();
+                break;
+            default:
+                currentItems = breakfastMenus.get(currentBreakfastMenuIndex).getFoodItems();
+                break;
+        }
+
+        List<FoodItem> searchResults = new ArrayList<>();
+        String lowercaseQuery = query.toLowerCase();
+
+        for (FoodItem item : currentItems) {
+            if (item.getName().toLowerCase().contains(lowercaseQuery) ||
+                    (item.getDescription() != null && item.getDescription().toLowerCase().contains(lowercaseQuery))) {
+                searchResults.add(item);
+            }
+        }
+
+        updateFoodList(searchResults);
+    }
+
     // </editor-fold>
 
     // <editor-fold desc="Helper Methods">
@@ -416,23 +479,29 @@ public class MenuFragment extends Fragment {
         mealTypeTabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
+                EditText searchBar = view.findViewById(R.id.searchBar);
+                String currentSearch = searchBar.getText().toString();
+
                 int position = tab.getPosition();
                 switch (position) {
-                    case 0: // Breakfast tab
+                    case 0:
                         foodItemList.clear();
                         foodItemList.addAll(breakfastMenus.get(currentBreakfastMenuIndex).getFoodItems());
-                        foodAdapter.notifyDataSetChanged();
                         break;
-                    case 1: // Lunch tab
+                    case 1:
                         foodItemList.clear();
                         foodItemList.addAll(lunchMenus.get(currentLunchMenuIndex).getFoodItems());
-                        foodAdapter.notifyDataSetChanged();
                         break;
-                    case 2: // Dinner tab
+                    case 2:
                         foodItemList.clear();
                         foodItemList.addAll(dinnerMenus.get(currentDinnerMenuIndex).getFoodItems());
-                        foodAdapter.notifyDataSetChanged();
                         break;
+                }
+
+                if (!currentSearch.isEmpty()) {
+                    performSearch(currentSearch);
+                } else {
+                    foodAdapter.notifyDataSetChanged();
                 }
             }
 
@@ -443,6 +512,445 @@ public class MenuFragment extends Fragment {
             public void onTabReselected(TabLayout.Tab tab) {}
         });
     }
+
+    private void setupSearchAndFilters() {
+        EditText searchBar = view.findViewById(R.id.searchBar);
+        MaterialButtonToggleGroup sortToggleGroup = view.findViewById(R.id.sortToggleGroup);
+        RangeSlider caloriesRangeSlider = view.findViewById(R.id.caloriesRangeSlider);
+        RangeSlider proteinRangeSlider = view.findViewById(R.id.proteinRangeSlider);
+
+        View clientFilterSection = view.findViewById(R.id.clientFilterSection);
+        View serverFilterSection = view.findViewById(R.id.serverFilterSection);
+        SwitchMaterial filterSwitch = view.findViewById(R.id.switchServerFilter);
+
+        filterSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            useServerFilter = isChecked;
+            clientFilterSection.setVisibility(isChecked ? View.GONE : View.VISIBLE);
+            serverFilterSection.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            resetAllFilters();
+        });
+
+        caloriesRangeSlider.setValueFrom(0f);
+        caloriesRangeSlider.setValueTo(1000f);
+        caloriesRangeSlider.setStepSize(50f);
+        caloriesRangeSlider.setValues(Collections.singletonList(0f));
+
+        proteinRangeSlider.setValueFrom(0f);
+        proteinRangeSlider.setValueTo(50f);
+        proteinRangeSlider.setStepSize(5f);
+        proteinRangeSlider.setValues(Collections.singletonList(0f));
+
+        searchBar.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                searchBar.setCompoundDrawablesWithIntrinsicBounds(
+                        R.drawable.ic_search,
+                        0,
+                        s.length() > 0 ? R.drawable.ic_clear : 0,
+                        0
+                );
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                performSearch(s.toString());
+            }
+        });
+
+        searchBar.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                EditText editText = (EditText) v;
+                if (editText.getCompoundDrawables()[2] != null) {
+                    if (event.getRawX() >= (editText.getRight() - editText.getCompoundDrawables()[2].getBounds().width() - editText.getPaddingEnd())) {
+                        editText.setText("");
+                        return true;
+                    }
+                }
+            }
+            return false;
+        });
+
+        setupClientFilters();
+        setupServerFilters();
+    }
+
+    private void setupClientFilters() {
+        RangeSlider caloriesSlider = view.findViewById(R.id.caloriesRangeSlider);
+        RangeSlider proteinSlider = view.findViewById(R.id.proteinRangeSlider);
+        MaterialButtonToggleGroup sortToggleGroup = view.findViewById(R.id.sortToggleGroup);
+
+        caloriesSlider.addOnChangeListener((slider, value, fromUser) -> {
+            if (fromUser && !useServerFilter) {
+                filterByNutritionClient();
+            }
+        });
+
+        proteinSlider.addOnChangeListener((slider, value, fromUser) -> {
+            if (fromUser && !useServerFilter) {
+                filterByNutritionClient();
+            }
+        });
+
+        sortToggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (isChecked && !useServerFilter) {
+                if (checkedId == R.id.btnSortName) {
+                    sortFoodItems("name");
+                } else if (checkedId == R.id.btnSortCalories) {
+                    sortFoodItems("calories");
+                } else if (checkedId == R.id.btnSortProtein) {
+                    sortFoodItems("protein");
+                }
+            }
+        });
+
+        Chip lowFatChip = view.findViewById(R.id.chipLowFat);
+        Chip lowCarbChip = view.findViewById(R.id.chipLowCarb);
+        Chip lowSodiumChip = view.findViewById(R.id.chipLowSodium);
+        Chip highProteinChip = view.findViewById(R.id.chipHighProtein);
+
+        View.OnClickListener chipListener = v -> {
+            if (!useServerFilter) {
+                filterByNutritionClient();
+            }
+        };
+
+        lowFatChip.setOnClickListener(chipListener);
+        lowCarbChip.setOnClickListener(chipListener);
+        lowSodiumChip.setOnClickListener(chipListener);
+        highProteinChip.setOnClickListener(chipListener);
+    }
+
+    private void setupServerFilters() {
+        RangeSlider serverCaloriesSlider = view.findViewById(R.id.serverCaloriesSlider);
+        RangeSlider serverProteinSlider = view.findViewById(R.id.serverProteinSlider);
+        MaterialButtonToggleGroup endpointFilterGroup = view.findViewById(R.id.endpointFilterGroup);
+
+        // Initialize sliders
+        serverCaloriesSlider.setValueFrom(0f);
+        serverCaloriesSlider.setValueTo(1000f);
+        serverCaloriesSlider.setStepSize(50f);
+        serverCaloriesSlider.setValues(Collections.singletonList(0f));
+
+        serverProteinSlider.setValueFrom(0f);
+        serverProteinSlider.setValueTo(50f);
+        serverProteinSlider.setStepSize(5f);
+        serverProteinSlider.setValues(Collections.singletonList(0f));
+
+        // Setup comparison type buttons
+        endpointFilterGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (isChecked && useServerFilter) {
+                if (checkedId == R.id.btnFilterEqual) {
+                    currentComparisonType = "==";
+                } else if (checkedId == R.id.btnFilterGreater) {
+                    currentComparisonType = ">=";
+                } else if (checkedId == R.id.btnFilterLess) {
+                    currentComparisonType = "<=";
+                }
+                filterByNutritionServer();
+            }
+        });
+
+        // Setup slider listeners
+        serverCaloriesSlider.addOnChangeListener((slider, value, fromUser) -> {
+            if (fromUser && useServerFilter) {
+                filterByNutritionServer();
+            }
+        });
+
+        serverProteinSlider.addOnChangeListener((slider, value, fromUser) -> {
+            if (fromUser && useServerFilter) {
+                filterByNutritionServer();
+            }
+        });
+    }
+
+    private void filterByNutritionClient() {
+        if (!useServerFilter) {
+            RangeSlider caloriesSlider = view.findViewById(R.id.caloriesRangeSlider);
+            RangeSlider proteinSlider = view.findViewById(R.id.proteinRangeSlider);
+            Chip lowFatChip = view.findViewById(R.id.chipLowFat);
+            Chip lowCarbChip = view.findViewById(R.id.chipLowCarb);
+            Chip lowSodiumChip = view.findViewById(R.id.chipLowSodium);
+            Chip highProteinChip = view.findViewById(R.id.chipHighProtein);
+
+            // Get current menu items
+            Set<FoodItem> currentItems;
+            int currentTab = mealTypeTabs.getSelectedTabPosition();
+            switch (currentTab) {
+                case 1:
+                    currentItems = lunchMenus.get(currentLunchMenuIndex).getFoodItems();
+                    break;
+                case 2:
+                    currentItems = dinnerMenus.get(currentDinnerMenuIndex).getFoodItems();
+                    break;
+                default:
+                    currentItems = breakfastMenus.get(currentBreakfastMenuIndex).getFoodItems();
+                    break;
+            }
+
+            List<FoodItem> filteredList = new ArrayList<>(currentItems);
+
+            // Apply slider filters
+            float calorieThreshold = caloriesSlider.getValues().get(0);
+            float proteinThreshold = proteinSlider.getValues().get(0);
+
+            filteredList.removeIf(item ->
+                    item.getCalories() < calorieThreshold ||
+                            item.getProtein() < proteinThreshold
+            );
+
+            if (!filteredList.isEmpty()) {
+                if (highProteinChip.isChecked()) {
+                    Collections.sort(filteredList, (a, b) -> Integer.compare(b.getProtein(), a.getProtein()));
+                }
+                if (lowFatChip.isChecked()) {
+                    Collections.sort(filteredList, (a, b) -> Integer.compare(a.getTotalFat(), b.getTotalFat()));
+                }
+                if (lowCarbChip.isChecked()) {
+                    Collections.sort(filteredList, (a, b) -> Integer.compare(a.getCarbohydrate(), b.getCarbohydrate()));
+                }
+                if (lowSodiumChip.isChecked()) {
+                    Collections.sort(filteredList, (a, b) -> Integer.compare(a.getSodium(), b.getSodium()));
+                }
+            }
+
+            updateFoodList(filteredList);
+        }
+    }
+
+    private void filterByNutritionServer() {
+        if (useServerFilter) {
+            RangeSlider caloriesSlider = view.findViewById(R.id.serverCaloriesSlider);
+            RangeSlider proteinSlider = view.findViewById(R.id.serverProteinSlider);
+
+            Map<String, Object> searchTerms = new HashMap<>();
+
+            float calorieValue = caloriesSlider.getValues().get(0);
+            if (calorieValue > 0) {
+                searchTerms.put("calories", (int)calorieValue);
+                searchTerms.put("caloriescomp", currentComparisonType);
+            }
+
+            float proteinValue = proteinSlider.getValues().get(0);
+            if (proteinValue > 0) {
+                searchTerms.put("protein", (int)proteinValue);
+                searchTerms.put("proteincomp", currentComparisonType);
+            }
+
+            String url = AppConstants.SERVER_URL + "/item";
+
+            JsonObjectRequest request = new JsonObjectRequest(
+                    Request.Method.GET,
+                    url,
+                    new JSONObject(searchTerms),
+                    response -> {
+                        try {
+                            JSONArray foodItemsArray = response.optJSONArray("items");
+                            List<FoodItem> filteredResults = new ArrayList<>();
+
+                            if (foodItemsArray != null) {
+                                for (int i = 0; i < foodItemsArray.length(); i++) {
+                                    JSONObject itemJson = foodItemsArray.getJSONObject(i);
+                                    FoodItem item = gson.fromJson(itemJson.toString(), FoodItem.class);
+                                    filteredResults.add(item);
+                                }
+                            }
+
+                            updateFoodList(filteredResults);
+                            Log.d("Server Filter", "Received " + filteredResults.size() +
+                                    " items for query: " + searchTerms.toString());
+                        } catch (Exception e) {
+                            Log.e("Filter Error", "Error parsing response: " + e.getMessage());
+                        }
+                    },
+                    error -> {
+                        Log.e("Filter Error", "Request failed: " + error.toString());
+                        if (error.networkResponse != null) {
+                            Log.e("Filter Error", "Status Code: " + error.networkResponse.statusCode);
+                        }
+                    }
+            );
+
+            request.setRetryPolicy(new DefaultRetryPolicy(
+                    30000,
+                    DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                    DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+            ));
+
+            VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
+        }
+    }
+
+    private void filterByNutrition() {
+        RangeSlider caloriesSlider = view.findViewById(R.id.caloriesRangeSlider);
+        RangeSlider proteinSlider = view.findViewById(R.id.proteinRangeSlider);
+        Chip lowFatChip = view.findViewById(R.id.chipLowFat);
+        Chip lowCarbChip = view.findViewById(R.id.chipLowCarb);
+        Chip lowSodiumChip = view.findViewById(R.id.chipLowSodium);
+        Chip highProteinChip = view.findViewById(R.id.chipHighProtein);
+
+        Map<String, Object> searchTerms = new HashMap<>();
+
+        float calorieValue = caloriesSlider.getValues().get(0);
+        if (calorieValue > 0) {
+            searchTerms.put("calories", (int)calorieValue);
+            searchTerms.put("caloriescomp", currentComparisonType);
+        }
+
+        float proteinValue = proteinSlider.getValues().get(0);
+        if (proteinValue > 0) {
+            searchTerms.put("protein", (int)proteinValue);
+            searchTerms.put("proteincomp", currentComparisonType);
+        }
+
+        if (lowFatChip.isChecked()) {
+            searchTerms.put("totalfat", 3);
+            searchTerms.put("totalfatcomp", "<=");
+        }
+        if (lowCarbChip.isChecked()) {
+            searchTerms.put("carbohydrate", 15);
+            searchTerms.put("carbohydratecomp", "<=");
+        }
+        if (lowSodiumChip.isChecked()) {
+            searchTerms.put("sodium", 140);
+            searchTerms.put("sodiumcomp", "<=");
+        }
+        if (highProteinChip.isChecked()) {
+            searchTerms.put("protein", 20);
+            searchTerms.put("proteincomp", ">=");
+        }
+
+        String url = AppConstants.SERVER_URL + "/item";
+        JSONObject jsonBody = new JSONObject(searchTerms);
+
+        JsonArrayRequest request = new JsonArrayRequest(
+                Request.Method.GET,
+                url,
+                jsonBody.names(),
+                response -> {
+                    List<FoodItem> filteredResults = new ArrayList<>();
+                    for (int i = 0; i < response.length(); i++) {
+                        try {
+                            FoodItem item = gson.fromJson(response.getJSONObject(i).toString(), FoodItem.class);
+                            Log.i("MenuFragment", "Updated search with search terms [" + searchTerms.toString() + "] from server");
+                            filteredResults.add(item);
+                        } catch (Exception e) {
+                            Log.e("Filter Error", e.getMessage());
+                        }
+                    }
+                    updateFoodList(filteredResults);
+                },
+                error -> Log.e("Filter Error", error.toString())
+        );
+
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
+    }
+
+    private void applyFilters(Map<String, Object> filters) {
+        String url = AppConstants.SERVER_URL + "/item";
+
+        JsonArrayRequest request = new JsonArrayRequest(
+                Request.Method.GET,
+                url,
+                new JSONObject(filters).names(),
+                response -> {
+                    List<FoodItem> filteredResults = new ArrayList<>();
+                    for (int i = 0; i < response.length(); i++) {
+                        try {
+                            FoodItem item = gson.fromJson(response.getJSONObject(i).toString(), FoodItem.class);
+                            filteredResults.add(item);
+                        } catch (Exception e) {
+                            Log.e("Filter Error", e.getMessage());
+                        }
+                    }
+                    updateFoodList(filteredResults);
+                },
+                error -> Log.e("Filter Error", error.toString())
+        );
+
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
+    }
+
+    private void sortFoodItems(String sortBy) {
+        List<FoodItem> sortedList = new ArrayList<>(foodItemList);
+        switch (sortBy) {
+            case "name":
+                Collections.sort(sortedList, (a, b) -> a.getName().compareTo(b.getName()));
+                break;
+            case "calories":
+                Collections.sort(sortedList, (a, b) -> Integer.compare(b.getCalories(), a.getCalories()));
+                break;
+            case "protein":
+                Collections.sort(sortedList, (a, b) -> Integer.compare(b.getProtein(), a.getProtein()));
+                break;
+        }
+        updateFoodList(sortedList);
+    }
+
+    private void updateFoodList(List<FoodItem> newList) {
+        foodItemList.clear();
+        foodItemList.addAll(newList);
+        foodAdapter.notifyDataSetChanged();
+    }
+
+    private void setupNutritionalFilterChips() {
+        Chip lowFatChip = view.findViewById(R.id.chipLowFat);
+        Chip lowCarbChip = view.findViewById(R.id.chipLowCarb);
+        Chip lowSodiumChip = view.findViewById(R.id.chipLowSodium);
+        Chip highProteinChip = view.findViewById(R.id.chipHighProtein);
+
+        View.OnClickListener chipListener = v -> filterByNutrition();
+
+        lowFatChip.setOnClickListener(chipListener);
+        lowCarbChip.setOnClickListener(chipListener);
+        lowSodiumChip.setOnClickListener(chipListener);
+        highProteinChip.setOnClickListener(chipListener);
+    }
+
+    private void resetAllFilters() {
+        RangeSlider caloriesRangeSlider = view.findViewById(R.id.caloriesRangeSlider);
+        RangeSlider proteinRangeSlider = view.findViewById(R.id.proteinRangeSlider);
+
+        caloriesRangeSlider.setValues(Collections.singletonList(0f));
+        proteinRangeSlider.setValues(Collections.singletonList(0f));
+
+        Chip lowFatChip = view.findViewById(R.id.chipLowFat);
+        Chip lowCarbChip = view.findViewById(R.id.chipLowCarb);
+        Chip lowSodiumChip = view.findViewById(R.id.chipLowSodium);
+        Chip highProteinChip = view.findViewById(R.id.chipHighProtein);
+
+        MaterialButtonToggleGroup endpointFilterGroup = view.findViewById(R.id.endpointFilterGroup);
+        endpointFilterGroup.clearChecked();
+        currentComparisonType = "==";
+
+        lowFatChip.setChecked(false);
+        lowCarbChip.setChecked(false);
+        lowSodiumChip.setChecked(false);
+        highProteinChip.setChecked(false);
+
+        MaterialButtonToggleGroup sortToggleGroup = view.findViewById(R.id.sortToggleGroup);
+        sortToggleGroup.clearChecked();
+
+        int currentTab = mealTypeTabs.getSelectedTabPosition();
+        foodItemList.clear();
+        switch (currentTab) {
+            case 0:
+                foodItemList.addAll(breakfastMenus.get(currentBreakfastMenuIndex).getFoodItems());
+                break;
+            case 1:
+                foodItemList.addAll(lunchMenus.get(currentLunchMenuIndex).getFoodItems());
+                break;
+            case 2:
+                foodItemList.addAll(dinnerMenus.get(currentDinnerMenuIndex).getFoodItems());
+                break;
+        }
+        foodAdapter.notifyDataSetChanged();
+    }
+
     //</editor-fold>
 
     public static Menu createMockBreakfastMenu() {

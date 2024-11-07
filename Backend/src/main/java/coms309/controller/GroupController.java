@@ -41,14 +41,13 @@ public class GroupController {
         if (plan != null) {
             plan.addGroup(group);
         }
+        groupRepo.save(group);
         if (owner != null) {
             GroupMember ownerMem = new GroupMember(group, owner);
             ownerMem.setPermissionOwner();
             memberRepo.save(ownerMem);
-            owner.addMembered(ownerMem);
-            userRepo.save(owner);
         }
-        return groupRepo.save(group);
+        return group;
     }
 
     // Read
@@ -92,10 +91,6 @@ public class GroupController {
                 return currGroup;
             }
             GroupMember member = new GroupMember(currGroup, user);
-            currGroup.addMember(member);
-            user.addMembered(member);
-            userRepo.save(user);
-            groupRepo.save(currGroup);
             memberRepo.save(member);
         }
         return currGroup;
@@ -110,11 +105,6 @@ public class GroupController {
             if (member == null){
                 return currGroup;
             }
-            User user = member.getUser();
-            user.removeMembered(member);
-            currGroup.removeMember(member);
-            userRepo.save(user);
-            groupRepo.save(currGroup);
             memberRepo.delete(member);
         }
         return currGroup;
@@ -129,10 +119,6 @@ public class GroupController {
         User currUser = userRepo.findById(uid).orElse(null);
         if (currGroup != null && currUser != null) {
             GroupMember groupMember = new GroupMember(currGroup, currUser);
-            currUser.addMembered(groupMember);
-            currGroup.addMember(groupMember);
-            userRepo.save(currUser);
-            groupRepo.save(currGroup);
             memberRepo.save(groupMember);
             return true;
         }
@@ -149,11 +135,6 @@ public class GroupController {
         if (currGroup != null && currUser != null) {
             GroupMember groupMember = currGroup.findMember(uid);
             if (groupMember != null) {
-                User user = groupMember.getUser();
-                user.removeMembered(groupMember);
-                currGroup.removeMember(groupMember);
-                userRepo.save(user);
-                groupRepo.save(currGroup);
                 memberRepo.delete(groupMember);
                 return true;
             }
@@ -266,6 +247,15 @@ public class GroupController {
             }
         }
         return groups;
+    }
+
+    @GetMapping("group/{id}/getPlan")
+    public FoodPlan getFoodplan(@PathVariable int id){
+        Group group = groupRepo.findById(id).orElse(null);
+        if (group == null) {
+            return null;
+        }
+        return group.getPlan();
     }
 
 }

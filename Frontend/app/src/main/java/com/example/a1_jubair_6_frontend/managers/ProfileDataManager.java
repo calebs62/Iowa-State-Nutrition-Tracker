@@ -9,9 +9,11 @@ import android.util.Log;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.models.PrivacySettings;
 import com.example.a1_jubair_6_frontend.models.User;
 import com.example.a1_jubair_6_frontend.network.VolleySingleton;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -29,6 +31,9 @@ public class ProfileDataManager {
     private static final String KEY_ACCOUNT = "account";
     private static final String KEY_UID = "uid";
     private static final String KEY_PHONE_NUMBER = "phone_number";
+    private static final String PREF_SHARE_FOOD = "share_food";
+    private static final String PREF_SHARE_GOALS = "share_goals";
+    private static final String PREF_SHARE_ACHIEVEMENTS = "share_achievements";
 
     private static final String uploadDir = "uploads/profile-pictures/";
 
@@ -103,6 +108,18 @@ public class ProfileDataManager {
                 .apply();
     }
 
+    public void setFoodSharingEnabled(boolean enabled) {
+        preferences.edit().putBoolean(PREF_SHARE_FOOD, enabled).apply();
+    }
+
+    public void setGoalSharingEnabled(boolean enabled) {
+        preferences.edit().putBoolean(PREF_SHARE_GOALS, enabled).apply();
+    }
+
+    public void setAchievementSharingEnabled(boolean enabled) {
+        preferences.edit().putBoolean(PREF_SHARE_ACHIEVEMENTS, enabled).apply();
+    }
+
     public String getEmail(){
         return preferences.getString(KEY_EMAIL, "");
     }
@@ -135,6 +152,19 @@ public class ProfileDataManager {
 
     public String getPhoneNumber() { return preferences.getString(KEY_PHONE_NUMBER, null); }
 
+    public boolean getFoodSharingEnabled() {
+        return preferences.getBoolean(PREF_SHARE_FOOD, true);
+    }
+
+    public boolean getGoalSharingEnabled() {
+        return preferences.getBoolean(PREF_SHARE_GOALS, true);
+    }
+
+    public boolean getAchievementSharingEnabled() {
+        return preferences.getBoolean(PREF_SHARE_ACHIEVEMENTS, true);
+    }
+
+
     public User getUser() {
         int id = getId();
         String username = getEmail();
@@ -160,6 +190,81 @@ public class ProfileDataManager {
                 .remove(KEY_PROFILE_IMAGE_URI)
                 .remove(KEY_PHONE_NUMBER)
                 .apply();
+    }
+
+    public void setFood(boolean enabled) {
+        preferences.edit().putBoolean(PREF_SHARE_FOOD, enabled).apply();
+    }
+
+    public void setGoal(boolean enabled) {
+        preferences.edit().putBoolean(PREF_SHARE_GOALS, enabled).apply();
+    }
+
+    public void setAchievement(boolean enabled) {
+        preferences.edit().putBoolean(PREF_SHARE_ACHIEVEMENTS, enabled).apply();
+    }
+
+    public boolean getFood() {
+        return preferences.getBoolean(PREF_SHARE_FOOD, true);
+    }
+
+    public boolean getGoal() {
+        return preferences.getBoolean(PREF_SHARE_GOALS, true);
+    }
+
+    public boolean getAchievement() {
+        return preferences.getBoolean(PREF_SHARE_ACHIEVEMENTS, true);
+    }
+
+    public void updatePrivacySettings(PrivacySettings settings, UpdateCallback callback) {
+        String url = AppConstants.SERVER_URL + "/privacy/settings/" + getId();
+
+        JSONObject jsonBody = new JSONObject();
+        try {
+            jsonBody.put("food", settings.getFood());
+            jsonBody.put("goal", settings.getGoal());
+            jsonBody.put("achievement", settings.getAchievement());
+        } catch (JSONException e) {
+            callback.onError("Failed to create request: " + e.getMessage());
+            return;
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.PUT,
+                url,
+                jsonBody,
+                response -> {
+                    setFood(settings.getFood());
+                    setGoal(settings.getGoal());
+                    setAchievement(settings.getAchievement());
+                    callback.onSuccess();
+                },
+                error -> callback.onError("Network error: " + error.getMessage())
+        );
+
+        VolleySingleton.getInstance(context).addToRequestQueue(request);
+    }
+
+    public void fetchPrivacySettings() {
+        String url = AppConstants.SERVER_URL + "/privacy/settings/" + getId();
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    try {
+                        setFoodSharingEnabled(response.getBoolean("food"));
+                        setGoalSharingEnabled(response.getBoolean("goal"));
+                        setAchievementSharingEnabled(response.getBoolean("achievement"));
+                    } catch (JSONException e) {
+                        Log.e("Privacy", "Error parsing privacy settings", e);
+                    }
+                },
+                error -> Log.e("Privacy", "Error fetching privacy settings", error)
+        );
+
+        VolleySingleton.getInstance(context).addToRequestQueue(request);
     }
 
     public void updateUserToServer(){
@@ -229,5 +334,10 @@ public class ProfileDataManager {
         catch (Exception e){
             throw new RuntimeException("Failed to save image", e);
         }
+    }
+
+    public interface UpdateCallback {
+        void onSuccess();
+        void onError(String error);
     }
 }

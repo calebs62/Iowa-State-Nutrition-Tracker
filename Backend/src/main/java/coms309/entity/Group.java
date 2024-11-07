@@ -1,10 +1,14 @@
 package coms309.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
 import java.util.*;
 
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id")
 @Entity
 @Table(name="groups")
 public class Group {
@@ -20,12 +24,10 @@ public class Group {
     private int ownerId;
 
     @OneToMany(mappedBy = "group")
-    @JsonManagedReference
-    private Set<GroupMember> members;
+    private Set<GroupMember> members = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name="foodPlan")
-    @JsonManagedReference
     private FoodPlan plan;
 
     public Group() {}
@@ -33,7 +35,6 @@ public class Group {
     public Group(String name, int oId, FoodPlan plan) {
         groupName = name;
         ownerId = oId;
-        members = new HashSet<>();
         this.plan = plan;
     }
 

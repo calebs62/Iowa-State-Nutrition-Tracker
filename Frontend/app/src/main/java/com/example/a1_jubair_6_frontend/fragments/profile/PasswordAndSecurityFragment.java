@@ -17,7 +17,9 @@ import android.widget.TextView;
 import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.activities.BaseActivity;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.example.a1_jubair_6_frontend.models.PrivacySettings;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 
 
 public class PasswordAndSecurityFragment extends Fragment {
@@ -28,6 +30,9 @@ public class PasswordAndSecurityFragment extends Fragment {
     private MaterialButton btnChangePassword;
     private MaterialButton btnSetup2FA;
     private ProfileDataManager profileDataManager;
+    private SwitchMaterial switchShareFood;
+    private SwitchMaterial switchShareGoals;
+    private SwitchMaterial switchShareAchievements;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -49,6 +54,7 @@ public class PasswordAndSecurityFragment extends Fragment {
         initializeViews(view);
         setupClickListeners();
         displayPassword();
+        loadPrivacySettings();
     }
 
     private void initializeViews(View view) {
@@ -56,6 +62,9 @@ public class PasswordAndSecurityFragment extends Fragment {
         passwordText = view.findViewById(R.id.tvPasswordHidden);
         btnChangePassword = view.findViewById(R.id.btnChangePassword);
         btnSetup2FA = view.findViewById(R.id.btnSetup2FA);
+        switchShareFood = view.findViewById(R.id.switchShareFood);
+        switchShareGoals = view.findViewById(R.id.switchShareGoals);
+        switchShareAchievements = view.findViewById(R.id.switchShareAchievements);
     }
 
     private void displayPassword() {
@@ -80,6 +89,21 @@ public class PasswordAndSecurityFragment extends Fragment {
             v.startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.click_animation));
             // TODO: Implement 2FA setup navigation
         });
+
+        switchShareFood.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            profileDataManager.setFoodSharingEnabled(isChecked);
+            updatePrivacySettings();
+        });
+
+        switchShareGoals.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            profileDataManager.setGoalSharingEnabled(isChecked);
+            updatePrivacySettings();
+        });
+
+        switchShareAchievements.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            profileDataManager.setAchievementSharingEnabled(isChecked);
+            updatePrivacySettings();
+        });
     }
 
 
@@ -87,6 +111,33 @@ public class PasswordAndSecurityFragment extends Fragment {
         if(getActivity() instanceof BaseActivity){
             ((BaseActivity) getActivity()).loadFragment(fragment, true);  // True to add to back stack
         }
+    }
+
+    private void loadPrivacySettings() {
+        switchShareFood.setChecked(profileDataManager.getFood());
+        switchShareGoals.setChecked(profileDataManager.getGoal());
+        switchShareAchievements.setChecked(profileDataManager.getAchievement());
+    }
+
+    private void updatePrivacySettings() {
+        PrivacySettings settings = new PrivacySettings(
+                switchShareFood.isChecked(),
+                switchShareGoals.isChecked(),
+                switchShareAchievements.isChecked()
+        );
+
+        profileDataManager.updatePrivacySettings(settings, new ProfileDataManager.UpdateCallback() {
+            @Override
+            public void onSuccess() {
+
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e("Privacy", "Failed to update privacy settings: " + error);
+                loadPrivacySettings(); // Reload original settings
+            }
+        });
     }
 
     public void goBack(){
