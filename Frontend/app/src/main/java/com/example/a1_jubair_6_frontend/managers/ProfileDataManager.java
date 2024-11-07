@@ -13,6 +13,7 @@ import com.example.a1_jubair_6_frontend.models.PrivacySettings;
 import com.example.a1_jubair_6_frontend.models.User;
 import com.example.a1_jubair_6_frontend.network.VolleySingleton;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -191,13 +192,79 @@ public class ProfileDataManager {
                 .apply();
     }
 
+    public void setFood(boolean enabled) {
+        preferences.edit().putBoolean(PREF_SHARE_FOOD, enabled).apply();
+    }
+
+    public void setGoal(boolean enabled) {
+        preferences.edit().putBoolean(PREF_SHARE_GOALS, enabled).apply();
+    }
+
+    public void setAchievement(boolean enabled) {
+        preferences.edit().putBoolean(PREF_SHARE_ACHIEVEMENTS, enabled).apply();
+    }
+
+    public boolean getFood() {
+        return preferences.getBoolean(PREF_SHARE_FOOD, true);
+    }
+
+    public boolean getGoal() {
+        return preferences.getBoolean(PREF_SHARE_GOALS, true);
+    }
+
+    public boolean getAchievement() {
+        return preferences.getBoolean(PREF_SHARE_ACHIEVEMENTS, true);
+    }
+
     public void updatePrivacySettings(PrivacySettings settings, UpdateCallback callback) {
-        // TODO: Implement API call to update privacy settings on server
-        // For now, just save locally
-        setFoodSharingEnabled(settings.isFoodSharingEnabled());
-        setGoalSharingEnabled(settings.isGoalSharingEnabled());
-        setAchievementSharingEnabled(settings.isAchievementSharingEnabled());
-        callback.onSuccess();
+        String url = AppConstants.SERVER_URL + "/privacy/settings/" + getId();
+
+        JSONObject jsonBody = new JSONObject();
+        try {
+            jsonBody.put("food", settings.getFood());
+            jsonBody.put("goal", settings.getGoal());
+            jsonBody.put("achievement", settings.getAchievement());
+        } catch (JSONException e) {
+            callback.onError("Failed to create request: " + e.getMessage());
+            return;
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.PUT,
+                url,
+                jsonBody,
+                response -> {
+                    setFood(settings.getFood());
+                    setGoal(settings.getGoal());
+                    setAchievement(settings.getAchievement());
+                    callback.onSuccess();
+                },
+                error -> callback.onError("Network error: " + error.getMessage())
+        );
+
+        VolleySingleton.getInstance(context).addToRequestQueue(request);
+    }
+
+    public void fetchPrivacySettings() {
+        String url = AppConstants.SERVER_URL + "/privacy/settings/" + getId();
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    try {
+                        setFoodSharingEnabled(response.getBoolean("food"));
+                        setGoalSharingEnabled(response.getBoolean("goal"));
+                        setAchievementSharingEnabled(response.getBoolean("achievement"));
+                    } catch (JSONException e) {
+                        Log.e("Privacy", "Error parsing privacy settings", e);
+                    }
+                },
+                error -> Log.e("Privacy", "Error fetching privacy settings", error)
+        );
+
+        VolleySingleton.getInstance(context).addToRequestQueue(request);
     }
 
     public void updateUserToServer(){

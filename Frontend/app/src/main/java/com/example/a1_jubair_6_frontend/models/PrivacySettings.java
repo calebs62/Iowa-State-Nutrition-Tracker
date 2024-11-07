@@ -1,24 +1,30 @@
 package com.example.a1_jubair_6_frontend.models;
 
 public class PrivacySettings {
-    private boolean foodSharingEnabled;
-    private boolean goalSharingEnabled;
-    private boolean achievementSharingEnabled;
+    private int id;
+    private boolean food;
+    private boolean goal;
+    private boolean achievement;
 
-    public PrivacySettings(boolean foodSharingEnabled, boolean goalSharingEnabled,
-                           boolean achievementSharingEnabled) {
-        this.foodSharingEnabled = foodSharingEnabled;
-        this.goalSharingEnabled = goalSharingEnabled;
-        this.achievementSharingEnabled = achievementSharingEnabled;
+    public PrivacySettings() {
+        this.food = true;
+        this.goal = true;
+        this.achievement = true;
     }
 
-    // Getters and setters
-    public boolean isFoodSharingEnabled() { return foodSharingEnabled; }
-    public void setFoodSharingEnabled(boolean enabled) { this.foodSharingEnabled = enabled; }
+    public PrivacySettings(boolean food, boolean goal, boolean achievement) {
+        this.food = food;
+        this.goal = goal;
+        this.achievement = achievement;
+    }
 
-    public boolean isGoalSharingEnabled() { return goalSharingEnabled; }
-    public void setGoalSharingEnabled(boolean enabled) { this.goalSharingEnabled = enabled; }
+    public int getId() { return id; }
+    public boolean getFood() { return food; }
+    public boolean getGoal() { return goal; }
+    public boolean getAchievement() { return achievement; }
 
-    public boolean isAchievementSharingEnabled() { return achievementSharingEnabled; }
-    public void setAchievementSharingEnabled(boolean enabled) { this.achievementSharingEnabled = enabled; }
+    public void setId(int id) { this.id = id; }
+    public void setFood(boolean food) { this.food = food; }
+    public void setGoal(boolean goal) { this.goal = goal; }
+    public void setAchievement(boolean achievement) { this.achievement = achievement; }
 }

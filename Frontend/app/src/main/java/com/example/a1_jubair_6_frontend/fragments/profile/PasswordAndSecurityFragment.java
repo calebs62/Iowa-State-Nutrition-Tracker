@@ -114,10 +114,9 @@ public class PasswordAndSecurityFragment extends Fragment {
     }
 
     private void loadPrivacySettings() {
-        // Load settings from ProfileDataManager
-        switchShareFood.setChecked(profileDataManager.getFoodSharingEnabled());
-        switchShareGoals.setChecked(profileDataManager.getGoalSharingEnabled());
-        switchShareAchievements.setChecked(profileDataManager.getAchievementSharingEnabled());
+        switchShareFood.setChecked(profileDataManager.getFood());
+        switchShareGoals.setChecked(profileDataManager.getGoal());
+        switchShareAchievements.setChecked(profileDataManager.getAchievement());
     }
 
     private void updatePrivacySettings() {
