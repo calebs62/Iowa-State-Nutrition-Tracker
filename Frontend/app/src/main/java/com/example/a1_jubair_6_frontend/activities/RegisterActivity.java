@@ -174,7 +174,6 @@ public class RegisterActivity extends AppCompatActivity {
                     profileDataManager.saveUserData(user);
 
                     Toast.makeText(this, "Registered Successfully", Toast.LENGTH_SHORT).show();
-                    //TODO reroute to login page, then from there whether weight and height are empty reroute to ProfileInitializeActivity.
                     Intent homeIntent = new Intent(RegisterActivity.this, LoginSignupActivity.class);
                     startActivity(homeIntent);
                 },

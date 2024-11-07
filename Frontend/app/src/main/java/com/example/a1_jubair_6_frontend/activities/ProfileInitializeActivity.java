@@ -5,6 +5,7 @@ import static android.text.TextUtils.isEmpty;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -17,17 +18,24 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.fragments.HomePageFragment;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.example.a1_jubair_6_frontend.models.User;
 import com.example.a1_jubair_6_frontend.network.VolleySingleton;
 import com.example.a1_jubair_6_frontend.network.WebSocketClient;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 
 public class ProfileInitializeActivity extends AppCompatActivity {
@@ -38,19 +46,21 @@ public class ProfileInitializeActivity extends AppCompatActivity {
     private Button confirm;
     private WebSocketClient webSocketClient;
     private int id;
+    private String sessionToken;
 
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState){
+
         super.onCreate(savedInstanceState);
         profileDataManager = new ProfileDataManager(this);
         id = getIntent().getIntExtra("id", -1);
+        getSessionToken(id);
 
         setContentView(R.layout.activity_profile_initialize);
 
         userWeight = findViewById(R.id.etWeight);
         userHeight = findViewById(R.id.etHeight);
-
         confirm = findViewById(R.id.btnConfirm);
 
         confirm.setOnClickListener(v -> {
@@ -62,24 +72,27 @@ public class ProfileInitializeActivity extends AppCompatActivity {
         gainMuscle = findViewById(R.id.btnGainMuscle);
 
         loseWeight.setOnClickListener(v -> {
-            Intent intent = new Intent(this, ChatActivity.class);
-            intent.putExtra("username", profileDataManager.getFirstname());
-            intent.putExtra("groupChatId", "1");
-            startActivity(intent);
+            addUserToGroup(id, 15);
+            Intent exploreIntent = new Intent(ProfileInitializeActivity.this, BaseActivity.class);
+            exploreIntent.putExtra(BaseActivity.EXTRA_INITIAL_FRAGMENT, HomePageFragment.class.getName());
+            startActivity(exploreIntent);
+            finish();
         });
 
         gainWeight.setOnClickListener(v -> {
-            Intent intent = new Intent(this, ChatActivity.class);
-            intent.putExtra("username", profileDataManager.getFirstname());
-            intent.putExtra("groupChatId", "2");
-            startActivity(intent);
+            addUserToGroup(id, 17);
+            Intent exploreIntent = new Intent(ProfileInitializeActivity.this, BaseActivity.class);
+            exploreIntent.putExtra(BaseActivity.EXTRA_INITIAL_FRAGMENT, HomePageFragment.class.getName());
+            startActivity(exploreIntent);
+            finish();
         });
 
         gainMuscle.setOnClickListener(v -> {
-            Intent intent = new Intent(this, ChatActivity.class);
-            intent.putExtra("username", profileDataManager.getFirstname());
-            intent.putExtra("groupChatId", "3");
-            startActivity(intent);
+            addUserToGroup(id, 19);
+            Intent exploreIntent = new Intent(ProfileInitializeActivity.this, BaseActivity.class);
+            exploreIntent.putExtra(BaseActivity.EXTRA_INITIAL_FRAGMENT, HomePageFragment.class.getName());
+            startActivity(exploreIntent);
+            finish();
         });
     }
 
@@ -174,5 +187,75 @@ public class ProfileInitializeActivity extends AppCompatActivity {
         }
     }
 
-    //TODO Get new user information from server and put into profileDataManager
+    public void getSessionToken(int id) {
+        String requestUrl = AppConstants.SERVER_URL + "/" + id + "/sessionToken";
+
+        StringRequest joinRequest = new StringRequest(
+                Request.Method.GET,
+                requestUrl,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        sessionToken = response.toString();
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e("Volley Error", "Session token retrieval failed: " + error.getMessage());
+                        Toast.makeText(ProfileInitializeActivity.this, "Session token retrieval failed.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        ) {
+            @Override
+            public byte[] getBody() {
+                return sessionToken.getBytes();
+            }
+
+            @Override
+            public String getBodyContentType() {
+                return "text/plain; charset=utf-8";
+            }
+        };
+        VolleySingleton.getInstance(this).addToRequestQueue(joinRequest);
+    }
+
+    public void addUserToGroup(int uid, int gid){
+        String requestUrl = AppConstants.SERVER_URL + "/group/" + gid + "/join";
+
+        JSONObject requestBody = new JSONObject();
+        try {
+            requestBody.put("sessionToken", sessionToken);
+        } catch (JSONException e) {
+            Log.e("JSON Exception", Objects.requireNonNull(e.getMessage()));
+        }
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
+            Request.Method.PUT,
+            requestUrl,
+            requestBody,
+            new Response.Listener<JSONObject>() {
+                @Override
+                public void onResponse(JSONObject response) {
+                    try {
+                        boolean success = response.getBoolean("success");
+                        if (success) {
+                            Toast.makeText(ProfileInitializeActivity.this, "User added successfully to group.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(ProfileInitializeActivity.this, "User was not added to the group. Please try again.", Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (JSONException e) {
+                        Log.e("JSON Exception", Objects.requireNonNull(e.getMessage()));
+                    }
+                }
+            },
+            new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.e("Error", Objects.requireNonNull(error.getMessage()));
+                }
+            }
+        );
+        VolleySingleton.getInstance(ProfileInitializeActivity.this).addToRequestQueue(jsonObjectRequest);
+    }
 }
