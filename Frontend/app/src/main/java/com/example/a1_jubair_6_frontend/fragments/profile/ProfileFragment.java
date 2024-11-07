@@ -111,7 +111,7 @@ public class ProfileFragment extends Fragment {
                         new Response.Listener<String>() {
                             @Override
                             public void onResponse(String response) {
-                                // Handle the response (which is a plain string in this case)
+
                                 Toast.makeText(getActivity(), response, Toast.LENGTH_SHORT).show();
 
                                 if(response.equals("Logout successful")) {
@@ -133,13 +133,11 @@ public class ProfileFragment extends Fragment {
                 ) {
                     @Override
                     public byte[] getBody() {
-                        // Send the sessionToken string in the body of the request
                         return sessionToken.getBytes();
                     }
 
                     @Override
                     public String getBodyContentType() {
-                        // Specify the content type as plain text
                         return "text/plain; charset=utf-8";
                     }
                 };

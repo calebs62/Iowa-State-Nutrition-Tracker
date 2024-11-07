@@ -33,8 +33,8 @@ public class ChatActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_chat);
 
-        username = getIntent().getStringExtra("username");
-        String groupChatId = getIntent().getStringExtra("groupChatId");
+        username = "username";
+        String groupChatId = "Group Chat";
 
 
         ImageView backButton = findViewById(R.id.backButton);
