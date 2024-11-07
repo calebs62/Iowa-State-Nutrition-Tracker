@@ -136,12 +136,21 @@ public class TrackerFragment extends Fragment {
                 t.printStackTrace();
                 String responseBody = response != null ? response.toString() : "No response";
                 Log.e("WebSocket", "Response: " + responseBody);
-                requireActivity().runOnUiThread(() -> {
-                    Toast.makeText(requireContext(),
-                            "Connection lost. Retrying...",
-                            Toast.LENGTH_SHORT).show();
-                    setupWebSocket();
-                });
+
+                if (isAdded()) {
+                    requireActivity().runOnUiThread(() -> {
+                        if (isAdded()) {
+                            try {
+                                Toast.makeText(requireContext(),
+                                        "Connection lost. Retrying...",
+                                        Toast.LENGTH_SHORT).show();
+                                setupWebSocket();
+                            } catch (IllegalStateException e) {
+                                Log.e("WebSocket", "Fragment not attached", e);
+                            }
+                        }
+                    });
+                }
             }
         });
 
