@@ -21,7 +21,7 @@ public class Group {
 
     @OneToMany(mappedBy = "group")
     @JsonManagedReference
-    private Set<GroupMember> members;
+    private Set<GroupMember> members = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name="foodPlan")
@@ -33,7 +33,6 @@ public class Group {
     public Group(String name, int oId, FoodPlan plan) {
         groupName = name;
         ownerId = oId;
-        members = new HashSet<>();
         this.plan = plan;
     }
 

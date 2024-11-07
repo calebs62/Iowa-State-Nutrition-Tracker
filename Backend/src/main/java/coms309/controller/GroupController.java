@@ -41,12 +41,13 @@ public class GroupController {
         if (plan != null) {
             plan.addGroup(group);
         }
+        groupRepo.save(group);
         if (owner != null) {
             GroupMember ownerMem = new GroupMember(group, owner);
             ownerMem.setPermissionOwner();
             memberRepo.save(ownerMem);
         }
-        return groupRepo.save(group);
+        return group;
     }
 
     // Read

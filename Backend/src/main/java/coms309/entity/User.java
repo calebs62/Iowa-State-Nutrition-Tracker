@@ -36,7 +36,7 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     @JsonManagedReference
-    private Set<GroupMember> membered;
+    private Set<GroupMember> membered = new HashSet<>();
 
     public enum Account {
         USER,
@@ -57,7 +57,6 @@ public class User {
         this.password = password;
         this.fname = fname;
         this.lname = lname;
-        membered = new HashSet<>();
     }
 
     public int getUid(){return uid;}
