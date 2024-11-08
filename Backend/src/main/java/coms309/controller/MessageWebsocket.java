@@ -1,9 +1,6 @@
 package coms309.controller;
 
-import coms309.entity.Group;
-import coms309.entity.GroupMember;
-import coms309.entity.GroupMemberKey;
-import coms309.entity.Message;
+import coms309.entity.*;
 import coms309.repository.GroupMemberRepository;
 import coms309.repository.MessageRepository;
 
@@ -51,10 +48,11 @@ public class MessageWebsocket {
         sessionMemberKeyMap.put(session, memberKey);
         memberKeySessionMap.put(memberKey, session);
 
-        sendMessageToUser(member, getChatHistory());
+//        sendMessageToUser(member, getChatHistory());
 
         String message = "User: " + member.getUser().getFName() + " has joined the Chat";
-        sendMessageToGroup(member.getGroup(), message);
+        logger.info(message);
+//        sendMessageToGroup(member.getGroup(), message);
     }
 
     @OnClose
@@ -91,8 +89,8 @@ public class MessageWebsocket {
             //TODO - this is a reply
         } else {
           sendMessageToGroup(member.getGroup(), member.getUser().getFName() + ": " + message);
+            msgRepo.save(new Message(member.getUser().getFName(), message, null)); //TODO - allow replies
         }
-        msgRepo.save(new Message(member.getUser().getFName(), message, null)); //TODO - allow replies
     }
 
     @OnError
