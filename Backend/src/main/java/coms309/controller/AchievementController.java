@@ -87,5 +87,19 @@ public class AchievementController {
         return achievement;
     }
 
+    @PutMapping("/{uid}/revoke/{aid}")
+    @JsonView(value = {Views.Achievement.class})
+    public Achievement revokeUserAch(@PathVariable(value = "uid") int uid, @PathVariable(value = "aid") int aid){
+        Achievement achievement = achievementRepo.findById(aid).orElse(null);
+        if (achievement != null) {
+            Earned earned = achievement.findUser(uid);
+            if (earned == null) {
+                return achievement;
+            }
+            earnedRepo.delete(earned);
+        }
+        return achievement;
+    }
+
 
 }
