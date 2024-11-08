@@ -110,6 +110,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
+                    android:visibility="gone"
                     android:gravity="center_vertical"
                     android:layout_marginBottom="16dp">
 
@@ -281,48 +282,6 @@
                             android:layout_height="wrap_content"
                             android:text="Less Than"/>
                     </com.google.android.material.button.MaterialButtonToggleGroup>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Calories"
-                        android:layout_marginTop="16dp"
-                        android:textStyle="bold" />
-
-                    <com.google.android.material.slider.RangeSlider
-                        android:id="@+id/serverCaloriesSlider"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:valueFrom="0"
-                        android:valueTo="1000"
-                        android:stepSize="50"
-                        app:labelBehavior="withinBounds"
-                        app:thumbColor="@color/Iowa_State_Red"
-                        app:trackColorActive="@color/Iowa_State_Red"
-                        app:trackColorInactive="#DDDDDD"
-                        app:tickVisible="false" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Protein (g)"
-                        android:layout_marginTop="16dp"
-                        android:textStyle="bold" />
-
-                    <com.google.android.material.slider.RangeSlider
-                        android:id="@+id/serverProteinSlider"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:valueFrom="0"
-                        android:valueTo="50"
-                        android:stepSize="5"
-                        app:labelBehavior="withinBounds"
-                        app:thumbColor="@color/Iowa_State_Red"
-                        app:trackColorActive="@color/Iowa_State_Red"
-                        app:trackColorInactive="#DDDDDD"
-                        app:tickVisible="false" />
                 </LinearLayout>
 
                 <com.google.android.material.button.MaterialButton

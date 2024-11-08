@@ -342,31 +342,72 @@ public class MenuFragment extends Fragment {
             return;
         }
 
-        Set<FoodItem> currentItems;
-        int currentTab = mealTypeTabs.getSelectedTabPosition();
-        switch (currentTab) {
-            case 1:
-                currentItems = lunchMenus.get(currentLunchMenuIndex).getFoodItems();
-                break;
-            case 2:
-                currentItems = dinnerMenus.get(currentDinnerMenuIndex).getFoodItems();
-                break;
-            default:
-                currentItems = breakfastMenus.get(currentBreakfastMenuIndex).getFoodItems();
-                break;
-        }
+        if (useServerFilter) {
 
-        List<FoodItem> searchResults = new ArrayList<>();
-        String lowercaseQuery = query.toLowerCase();
+            String url = AppConstants.SERVER_URL + "/item/search?query=" + query;
 
-        for (FoodItem item : currentItems) {
-            if (item.getName().toLowerCase().contains(lowercaseQuery) ||
-                    (item.getDescription() != null && item.getDescription().toLowerCase().contains(lowercaseQuery))) {
-                searchResults.add(item);
+            JsonObjectRequest request = new JsonObjectRequest(
+                    Request.Method.GET,
+                    url,
+                    null,
+                    response -> {
+                        try {
+                            JSONArray foodItemsArray = response.optJSONArray("items");
+                            List<FoodItem> searchResults = new ArrayList<>();
+
+                            if (foodItemsArray != null) {
+                                for (int i = 0; i < foodItemsArray.length(); i++) {
+                                    JSONObject itemJson = foodItemsArray.getJSONObject(i);
+                                    FoodItem item = gson.fromJson(itemJson.toString(), FoodItem.class);
+                                    searchResults.add(item);
+                                }
+                            }
+
+                            updateFoodList(searchResults);
+                        } catch (Exception e) {
+                            Log.e("Search Error", "Error parsing response: " + e.getMessage());
+                        }
+                    },
+                    error -> {
+                        Log.e("Search Error", "Request failed: " + error.toString());
+                    }
+            );
+
+            request.setRetryPolicy(new DefaultRetryPolicy(
+                    30000,
+                    DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                    DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+            ));
+
+            VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
+        } else {
+
+            Set<FoodItem> currentItems;
+            int currentTab = mealTypeTabs.getSelectedTabPosition();
+            switch (currentTab) {
+                case 1:
+                    currentItems = lunchMenus.get(currentLunchMenuIndex).getFoodItems();
+                    break;
+                case 2:
+                    currentItems = dinnerMenus.get(currentDinnerMenuIndex).getFoodItems();
+                    break;
+                default:
+                    currentItems = breakfastMenus.get(currentBreakfastMenuIndex).getFoodItems();
+                    break;
             }
-        }
 
-        updateFoodList(searchResults);
+            List<FoodItem> searchResults = new ArrayList<>();
+            String lowercaseQuery = query.toLowerCase();
+
+            for (FoodItem item : currentItems) {
+                if (item.getName().toLowerCase().contains(lowercaseQuery) ||
+                        (item.getDescription() != null && item.getDescription().toLowerCase().contains(lowercaseQuery))) {
+                    searchResults.add(item);
+                }
+            }
+
+            updateFoodList(searchResults);
+        }
     }
 
     // </editor-fold>
@@ -625,22 +666,8 @@ public class MenuFragment extends Fragment {
     }
 
     private void setupServerFilters() {
-        RangeSlider serverCaloriesSlider = view.findViewById(R.id.serverCaloriesSlider);
-        RangeSlider serverProteinSlider = view.findViewById(R.id.serverProteinSlider);
         MaterialButtonToggleGroup endpointFilterGroup = view.findViewById(R.id.endpointFilterGroup);
 
-        // Initialize sliders
-        serverCaloriesSlider.setValueFrom(0f);
-        serverCaloriesSlider.setValueTo(1000f);
-        serverCaloriesSlider.setStepSize(50f);
-        serverCaloriesSlider.setValues(Collections.singletonList(0f));
-
-        serverProteinSlider.setValueFrom(0f);
-        serverProteinSlider.setValueTo(50f);
-        serverProteinSlider.setStepSize(5f);
-        serverProteinSlider.setValues(Collections.singletonList(0f));
-
-        // Setup comparison type buttons
         endpointFilterGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
             if (isChecked && useServerFilter) {
                 if (checkedId == R.id.btnFilterEqual) {
@@ -650,19 +677,6 @@ public class MenuFragment extends Fragment {
                 } else if (checkedId == R.id.btnFilterLess) {
                     currentComparisonType = "<=";
                 }
-                filterByNutritionServer();
-            }
-        });
-
-        // Setup slider listeners
-        serverCaloriesSlider.addOnChangeListener((slider, value, fromUser) -> {
-            if (fromUser && useServerFilter) {
-                filterByNutritionServer();
-            }
-        });
-
-        serverProteinSlider.addOnChangeListener((slider, value, fromUser) -> {
-            if (fromUser && useServerFilter) {
                 filterByNutritionServer();
             }
         });
@@ -724,24 +738,10 @@ public class MenuFragment extends Fragment {
 
     private void filterByNutritionServer() {
         if (useServerFilter) {
-            RangeSlider caloriesSlider = view.findViewById(R.id.serverCaloriesSlider);
-            RangeSlider proteinSlider = view.findViewById(R.id.serverProteinSlider);
-
             Map<String, Object> searchTerms = new HashMap<>();
+            searchTerms.put("comparisonType", currentComparisonType);
 
-            float calorieValue = caloriesSlider.getValues().get(0);
-            if (calorieValue > 0) {
-                searchTerms.put("calories", (int)calorieValue);
-                searchTerms.put("caloriescomp", currentComparisonType);
-            }
-
-            float proteinValue = proteinSlider.getValues().get(0);
-            if (proteinValue > 0) {
-                searchTerms.put("protein", (int)proteinValue);
-                searchTerms.put("proteincomp", currentComparisonType);
-            }
-
-            String url = AppConstants.SERVER_URL + "/item";
+            String url = AppConstants.SERVER_URL + "/item/filter";
 
             JsonObjectRequest request = new JsonObjectRequest(
                     Request.Method.GET,
@@ -761,17 +761,12 @@ public class MenuFragment extends Fragment {
                             }
 
                             updateFoodList(filteredResults);
-                            Log.d("Server Filter", "Received " + filteredResults.size() +
-                                    " items for query: " + searchTerms.toString());
                         } catch (Exception e) {
                             Log.e("Filter Error", "Error parsing response: " + e.getMessage());
                         }
                     },
                     error -> {
                         Log.e("Filter Error", "Request failed: " + error.toString());
-                        if (error.networkResponse != null) {
-                            Log.e("Filter Error", "Status Code: " + error.networkResponse.statusCode);
-                        }
                     }
             );
 
