@@ -28,8 +28,9 @@ public class Achievement {
     @JsonView(value = {Views.Achievement.class})
     private String icon;
 
+    @OneToMany(mappedBy = "achievement")
     @JsonView(value = {Views.Achievement.class})
-    private Set<User> users = new HashSet<>();
+    private Set<Earned> earnedBy = new HashSet<>();
 
     public Achievement() {}
 
@@ -67,19 +68,19 @@ public class Achievement {
         return id;
     }
 
-    public Set<User> getUsers() {
-        return users;
+    public Set<Earned> getEarnedBy() {
+        return earnedBy;
     }
 
-    public void setUsers(Set<User> users) {
-        this.users = users;
+    public void setEarnedBy(Set<Earned> earnedBy) {
+        this.earnedBy = earnedBy;
     }
 
-    public void addUsers(User user){
-        this.users.add(user);
+    public void addEarnedBy(Earned earnedBy){
+        this.earnedBy.add(earnedBy);
     }
 
-    public void removeUsers(User user){
-        this.users.remove(user);
+    public void removeEarnedBy(Earned earnedBy){
+        this.earnedBy.remove(earnedBy);
     }
 }

@@ -50,6 +50,10 @@ public class User {
     @JsonView(Views.User.class)
     private Set<GroupMember> membered = new HashSet<>();
 
+    @OneToMany(mappedBy = "user")
+    @JsonView(Views.User.class)
+    private Set<Earned> earned = new HashSet<>();
+
     public enum Account {
         USER,
         CONTRIBUTOR,
@@ -132,5 +136,11 @@ public class User {
         sessionToken = tmp[0] + ":" + accounttype.ordinal() + ":" + uid;
     }
 
+    public Set<Earned> getEarned() {
+        return earned;
+    }
 
+    public void setEarned(Set<Earned> earned) {
+        this.earned = earned;
+    }
 }
