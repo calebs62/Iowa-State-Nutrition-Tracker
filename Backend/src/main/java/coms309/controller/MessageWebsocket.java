@@ -87,8 +87,9 @@ public class MessageWebsocket {
 
         if (message.startsWith("r:")){
             //TODO - this is a reply
+            //msgRepo.save(new Message(member.getUser().getFName(), message, null)); //TODO - allow replies
         } else {
-          sendMessageToGroup(member.getGroup(), member.getUser().getFName() + ": " + message);
+            sendMessageToGroup(member.getGroup(), member.getUser().getFName() + ": " + message);
             msgRepo.save(new Message(member.getUser().getFName(), message, null)); //TODO - allow replies
         }
     }
