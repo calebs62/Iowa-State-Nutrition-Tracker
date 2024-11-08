@@ -19,12 +19,12 @@ public class Earned {
     private Date earnDate = new Date();
 
     @ManyToOne
-    @Column(name = "user")
+    @JoinColumn(name = "user")
     @JsonView(Views.Earned.class)
     private User user;
 
     @ManyToOne
-    @Column(name = "achievement")
+    @JoinColumn(name = "achievement")
     @JsonView(Views.Earned.class)
     private Achievement achievement;
 

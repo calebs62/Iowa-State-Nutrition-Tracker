@@ -83,4 +83,14 @@ public class Achievement {
     public void removeEarnedBy(Earned earnedBy){
         this.earnedBy.remove(earnedBy);
     }
+
+    public Earned findUser(int uid){
+        for (Earned em : earnedBy){
+            User user = em.getUser();
+            if (user.getUid() == uid){
+                return em;
+            }
+        }
+        return null;
+    }
 }

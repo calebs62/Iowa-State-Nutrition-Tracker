@@ -10,7 +10,7 @@ public class EarnedKey implements Serializable {
     @Column(name = "userId")
     private int userId;
 
-    @Column(name = "achievement")
+    @Column(name = "achievementId")
     private int achievementId;
 
     public EarnedKey(){}
