@@ -72,7 +72,7 @@ public class ProfileInitializeActivity extends AppCompatActivity {
         gainMuscle = findViewById(R.id.btnGainMuscle);
 
         loseWeight.setOnClickListener(v -> {
-            addUserToGroup(id, 15);
+            addUserToGroup(id, 29);
             Intent exploreIntent = new Intent(ProfileInitializeActivity.this, BaseActivity.class);
             exploreIntent.putExtra(BaseActivity.EXTRA_INITIAL_FRAGMENT, HomePageFragment.class.getName());
             startActivity(exploreIntent);
@@ -80,7 +80,7 @@ public class ProfileInitializeActivity extends AppCompatActivity {
         });
 
         gainWeight.setOnClickListener(v -> {
-            addUserToGroup(id, 17);
+            addUserToGroup(id, 29);
             Intent exploreIntent = new Intent(ProfileInitializeActivity.this, BaseActivity.class);
             exploreIntent.putExtra(BaseActivity.EXTRA_INITIAL_FRAGMENT, HomePageFragment.class.getName());
             startActivity(exploreIntent);
@@ -88,7 +88,7 @@ public class ProfileInitializeActivity extends AppCompatActivity {
         });
 
         gainMuscle.setOnClickListener(v -> {
-            addUserToGroup(id, 19);
+            addUserToGroup(id, 29);
             Intent exploreIntent = new Intent(ProfileInitializeActivity.this, BaseActivity.class);
             exploreIntent.putExtra(BaseActivity.EXTRA_INITIAL_FRAGMENT, HomePageFragment.class.getName());
             startActivity(exploreIntent);
@@ -223,39 +223,31 @@ public class ProfileInitializeActivity extends AppCompatActivity {
     public void addUserToGroup(int uid, int gid){
         String requestUrl = AppConstants.SERVER_URL + "/group/" + gid + "/join";
 
-        JSONObject requestBody = new JSONObject();
-        try {
-            requestBody.put("sessionToken", sessionToken);
-        } catch (JSONException e) {
-            Log.e("JSON Exception", Objects.requireNonNull(e.getMessage()));
-        }
-
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
-            Request.Method.PUT,
-            requestUrl,
-            requestBody,
-            new Response.Listener<JSONObject>() {
-                @Override
-                public void onResponse(JSONObject response) {
-                    try {
-                        boolean success = response.getBoolean("success");
-                        if (success) {
-                            Toast.makeText(ProfileInitializeActivity.this, "User added successfully to group.", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(ProfileInitializeActivity.this, "User was not added to the group. Please try again.", Toast.LENGTH_SHORT).show();
+        StringRequest stringRequest = new StringRequest(
+                Request.Method.PUT,
+                requestUrl,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Log.i("Added Successfully", response);
+                        if(response.equals("true")){
+                            Toast.makeText(ProfileInitializeActivity.this, "User successfully added to group: " + gid, Toast.LENGTH_SHORT).show();
                         }
-                    } catch (JSONException e) {
-                        Log.e("JSON Exception", Objects.requireNonNull(e.getMessage()));
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        error.getMessage();
                     }
                 }
-            },
-            new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    Log.e("Error", Objects.requireNonNull(error.getMessage()));
-                }
-            }
-        );
-        VolleySingleton.getInstance(ProfileInitializeActivity.this).addToRequestQueue(jsonObjectRequest);
+        ) {
+            @Override
+            public byte[] getBody() { return sessionToken.getBytes(); }
+
+            @Override
+            public String getBodyContentType() { return "text/plain; charset=utf-8"; }
+        };
+        VolleySingleton.getInstance(ProfileInitializeActivity.this).addToRequestQueue(stringRequest);
     }
 }

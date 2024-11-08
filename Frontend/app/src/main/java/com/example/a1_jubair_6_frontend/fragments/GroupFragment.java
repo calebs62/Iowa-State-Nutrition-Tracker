@@ -20,7 +20,6 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.activities.ChatActivity;
-import com.example.a1_jubair_6_frontend.activities.LoginSignupActivity;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
 import com.example.a1_jubair_6_frontend.network.VolleySingleton;
@@ -49,7 +48,8 @@ public class GroupFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        getGroupData(view, 29);
+        getGroupId(view, profileDataManager.getId());
+        //Iterate for each member to show names
 
         enter = view.findViewById(R.id.btnEnter);
         enter.setOnClickListener(v -> {
@@ -60,6 +60,7 @@ public class GroupFragment extends Fragment {
 
     public void getGroupData(View view, int groupId) {
         String requestUrl = AppConstants.SERVER_URL + "/group/" + groupId;
+        Log.i("GroupId", String.valueOf(groupId));
 
         JsonObjectRequest groupRequest = new JsonObjectRequest(
                 Request.Method.GET,
@@ -79,14 +80,15 @@ public class GroupFragment extends Fragment {
                             int carbohydrate = plan.getInt("carbohydrate");
                             int protein = plan.getInt("protein");
 
-                            JSONArray members = response.getJSONArray("members");
-                            JSONObject member = members.getJSONObject(0);
-                            JSONObject id = member.getJSONObject("id");
-                            int userId = id.getInt("userId");
-
                             updatePlan(view, groupName, planName, calories, totalFat, sodium, carbohydrate, protein);
-                            getUserInfo(view, userId);
 
+                            JSONArray members = response.getJSONArray("members");
+                            for(int i = 0; i < members.length(); i++) {
+                                JSONObject member = members.getJSONObject(i);
+                                JSONObject id = member.getJSONObject("id");
+                                int userId = id.getInt("userId");
+                                getUserInfo(view, userId);
+                            }
 
                         } catch (JSONException e) {
                             Log.e("JSON Error", "Failed to parse group data: " + e.getMessage());
@@ -128,7 +130,7 @@ public class GroupFragment extends Fragment {
     public void updateMembers(View view, String memberName) {
 
         TextView memberNameTextView = view.findViewById(R.id.memberName);
-        memberNameTextView.setText(memberName);
+        memberNameTextView.append(memberName + "\n");
     }
 
     public void getUserInfo(View view, int id) {
@@ -158,6 +160,40 @@ public class GroupFragment extends Fragment {
                     public void onErrorResponse(VolleyError error) {
                         Log.e("Volley Error", "User data retrieval failed: " + error.getMessage());
                         Toast.makeText(requireContext(), "User data retrieval failed.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+        VolleySingleton.getInstance(getContext()).addToRequestQueue(groupRequest);
+    }
+
+    public void getGroupId(View view, int id) {
+        String requestUrl = AppConstants.SERVER_URL + "/user/" + id;
+
+        JsonObjectRequest groupRequest = new JsonObjectRequest(
+                Request.Method.GET,
+                requestUrl,
+                null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+
+                            JSONArray membered = response.getJSONArray("membered");
+                            JSONObject member = membered.getJSONObject(0);
+                            JSONObject id = member.getJSONObject("id");
+                            getGroupData(view, id.getInt("groupId"));
+
+                        } catch (JSONException e) {
+                            Log.e("JSON Error", "Failed to parse group id: " + e.getMessage());
+                            Toast.makeText(requireContext(), "Failed to load group id.", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e("Volley Error", "Group id retrieval failed: " + error.getMessage());
+                        Toast.makeText(requireContext(), "Group id retrieval failed.", Toast.LENGTH_SHORT).show();
                     }
                 }
         );
