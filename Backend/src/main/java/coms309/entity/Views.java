@@ -6,6 +6,7 @@ public class Views {
     public static class GroupMember extends Public{}
     public static class FoodPlan extends Public{}
     public static class Message extends Public{}
+    public static class Achievement extends Public{}
 
     public static class Public{}
     public static class Internal extends Public{}
