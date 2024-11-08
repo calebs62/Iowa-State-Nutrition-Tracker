@@ -31,6 +31,8 @@ public class ActivityFeedTestDialog extends DialogFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setStyle(DialogFragment.STYLE_NO_TITLE, com.google.android.material.R.style.Theme_Material3_Light_Dialog_Alert);
+
+        profileDataManager = new ProfileDataManager(requireContext());
     }
 
     @Override

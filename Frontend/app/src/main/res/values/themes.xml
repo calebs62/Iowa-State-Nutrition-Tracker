@@ -19,6 +19,8 @@
 
         <item name="textInputStyle">@style/Widget.App.TextInputLayout</item>
         <item name="radioButtonStyle">@style/Widget.App.RadioButton</item>
+
+        <item name="colorControlActivated">@color/Iowa_State_Red</item>
     </style>
 
     <style name="Theme._1_jubair_6_Frontend" parent="Base.Theme._1_jubair_6_Frontend" />

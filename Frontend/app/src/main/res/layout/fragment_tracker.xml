@@ -7,14 +7,16 @@
 
     <TextView
         android:id="@+id/titleActivity"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Activity Feed"
         android:textSize="24sp"
         android:textStyle="bold"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/testFeedButton"
         app:layout_constraintTop_toTopOf="parent" />
 
     <com.google.android.material.button.MaterialButton
@@ -23,13 +25,15 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
+        android:minWidth="0dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
         android:text="Test Feed"
         android:visibility="gone"
         android:textColor="@color/Iowa_State_Red"
         app:strokeColor="@color/Iowa_State_Red"
         app:layout_constraintEnd_toStartOf="@id/filterButton"
-        app:layout_constraintTop_toTopOf="@id/titleActivity"
-        app:layout_constraintBottom_toBottomOf="@id/titleActivity" />
+        app:layout_constraintTop_toTopOf="@id/titleActivity" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/filterButton"
@@ -37,14 +41,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
+        android:minWidth="0dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
         android:text="Filter Activities"
         android:textColor="@color/Iowa_State_Red"
         app:icon="@drawable/ic_filter"
         app:iconTint="@color/Iowa_State_Red"
         app:strokeColor="@color/Iowa_State_Red"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/titleActivity"
-        app:layout_constraintBottom_toBottomOf="@id/titleActivity" />
+        app:layout_constraintTop_toTopOf="@id/titleActivity" />
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshLayout"
