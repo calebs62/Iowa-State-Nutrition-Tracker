@@ -45,6 +45,7 @@ public class TrackerFragment extends Fragment {
     private WebSocketClient webSocketClient;
     private ProfileDataManager profileDataManager;
     private MaterialButton testFeedButton;
+    View view;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -55,7 +56,7 @@ public class TrackerFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_tracker, container, false);
+        view = inflater.inflate(R.layout.fragment_tracker, container, false);
 
         // Initialize views
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
@@ -219,11 +220,32 @@ public class TrackerFragment extends Fragment {
     private void setupRecyclerView(View view) {
         RecyclerView recyclerView = view.findViewById(R.id.activityFeedRecyclerView);
         adapter = new ActivityFeedAdapter(requireContext());
+
+        // Add scroll listener for "Load More" functionality
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+
+                LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+                int visibleItemCount = layoutManager.getChildCount();
+                int totalItemCount = layoutManager.getItemCount();
+                int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
+
+                // Check if end of list is reached
+                if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount
+                        && firstVisibleItemPosition >= 0) {
+                    adapter.loadMoreItems();
+                }
+            }
+        });
+
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
     }
 
     private void refreshActivityFeed() {
+        adapter.resetPagination();
         swipeRefreshLayout.setRefreshing(false);
     }
 
@@ -242,6 +264,7 @@ public class TrackerFragment extends Fragment {
     }
 
     private void setupTestButton() {
+        testFeedButton = view.findViewById(R.id.testFeedButton);
         if (profileDataManager.isAdminOrContributor()) {
             testFeedButton.setVisibility(View.VISIBLE);
             testFeedButton.setOnClickListener(v -> showTestDialog());
@@ -249,7 +272,6 @@ public class TrackerFragment extends Fragment {
             testFeedButton.setVisibility(View.GONE);
         }
     }
-
     private void showTestDialog() {
         ActivityFeedTestDialog dialog = new ActivityFeedTestDialog();
         dialog.show(getChildFragmentManager(), "activity_test_dialog");

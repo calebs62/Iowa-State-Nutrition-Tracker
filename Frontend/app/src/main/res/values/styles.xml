@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="RadioButtonStyle">
+        <item name="colorControlActivated">@color/Iowa_State_Red</item>
+        <item name="colorControlNormal">@color/Iowa_State_Red</item>
+    </style>
+</resources>

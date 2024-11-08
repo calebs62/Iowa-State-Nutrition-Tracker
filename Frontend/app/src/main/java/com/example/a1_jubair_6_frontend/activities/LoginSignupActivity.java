@@ -132,7 +132,7 @@ public class LoginSignupActivity extends AppCompatActivity {
                     String lname = response.getString("lname");
                     int height = response.getInt("height");
                     int weight = response.getInt("weight");
-                    String accountType = response.getString("accountType");
+                    String accountType = response.getString("accounttype");
 
                     Log.i("User Info", "Logged in user: " + username + ", " + fname + " " + lname);
 

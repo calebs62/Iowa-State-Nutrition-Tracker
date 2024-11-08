@@ -30,7 +30,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            android:hint="Group ID">
+            android:hint="Group ID"
+            app:boxStrokeColor="@color/Iowa_State_Red"
+            app:hintTextColor="@color/Iowa_State_Red">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/groupId"
@@ -54,7 +56,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginBottom="24dp">
+            android:layout_marginBottom="24dp"
+            android:theme="@style/RadioButtonStyle">
 
             <com.google.android.material.radiobutton.MaterialRadioButton
                 android:id="@+id/radioFood"
