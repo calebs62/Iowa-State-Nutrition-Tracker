@@ -15,27 +15,26 @@ import android.widget.TextView;
 import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.fragments.HomePageFragment;
 import com.example.a1_jubair_6_frontend.network.WebSocketClient;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 
 public class ChatActivity extends AppCompatActivity {
-
     private EditText msgEtx;
     private TextView chatMessages;
     private WebSocketClient webSocketClient;
-    private String username;
+    private final String username = "username";  // Hardcoded username
+    private final String groupChatId = "1";      // Hardcoded groupId
     private boolean isTyping = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_chat);
-
-        username = "username";
-        String groupChatId = "Group Chat";
-
 
         ImageView backButton = findViewById(R.id.backButton);
         Button sendBtn = findViewById(R.id.sendBtn);
@@ -80,12 +79,13 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
-        String url = "wss://ws.postman-echo.com/raw";
+        //This will be the real string once its finished String url = AppConstants.SERVER_URL + "/chat/" + username + "/" + profileDataManager.getId() + "/" + groupChatId;
+        String url = "wss://ws.postman-echo.com/raw";  // Replace with your backend URL when ready
         webSocketClient.connect(url);
 
         msgEtx.setOnKeyListener((v, keyCode, event) -> {
             if (!isTyping) {
-                webSocketClient.send("{\"type\":\"typing-started\", \"user\":\"" + username + "\"}");
+                sendTypingStatus(true);
                 isTyping = true;
             }
             return false;
@@ -93,50 +93,91 @@ public class ChatActivity extends AppCompatActivity {
 
         sendBtn.setOnClickListener(v -> {
             if (isTyping) {
-                webSocketClient.send("{\"type\":\"typing-stopped\", \"user\":\"" + username + "\"}");
+                sendTypingStatus(false);
                 isTyping = false;
             }
-
-            String message = msgEtx.getText().toString();
-            if (!message.isEmpty()) {
-                webSocketClient.send(message);
-                msgEtx.setText("");
-            }
+            sendMessage();
         });
     }
 
     private void handleIncomingMessage(String message) {
-        if (message.contains("\"type\":\"typing-started\"")) {
-            onTypingStarted();
-        } else if (message.contains("\"type\":\"typing-stopped\"")) {
-            onTypingStopped();
-        } else {
-            String s = chatMessages.getText().toString();
-            chatMessages.setText(s + "\n" + message);
+        try {
+            JSONObject jsonMessage = new JSONObject(message);
+            String type = jsonMessage.getString("type");
+            String messageUsername = jsonMessage.getString("username");
+
+            switch (type) {
+                case "chat":
+                    String messageText = jsonMessage.getString("message");
+                    String formattedMessage = messageUsername + ": " + messageText;
+                    appendMessage(formattedMessage);
+                    break;
+
+                case "typing-started":
+                    if (!messageUsername.equals(username)) {
+                        appendMessage(messageUsername + " is typing...");
+                    }
+                    break;
+
+                case "typing-stopped":
+                    if (!messageUsername.equals(username)) {
+                        removeTypingMessage(messageUsername);
+                    }
+                    break;
+            }
+        } catch (JSONException e) {
+            Log.e("ChatActivity", "Error parsing message: " + e.getMessage());
+            appendMessage(message);  // Fallback to displaying raw message
+        }
+    }
+
+    private void sendMessage() {
+        String messageText = msgEtx.getText().toString().trim();
+        if (!messageText.isEmpty()) {
+            try {
+                JSONObject jsonMessage = new JSONObject();
+                jsonMessage.put("type", "chat");
+                jsonMessage.put("username", username);
+                jsonMessage.put("groupId", groupChatId);
+                jsonMessage.put("message", messageText);
+
+                webSocketClient.send(jsonMessage.toString());
+                msgEtx.setText("");
+            } catch (JSONException e) {
+                Log.e("ChatActivity", "Error creating message: " + e.getMessage());
+            }
+        }
+    }
+
+    private void sendTypingStatus(boolean typing) {
+        try {
+            JSONObject jsonMessage = new JSONObject();
+            jsonMessage.put("type", typing ? "typing-started" : "typing-stopped");
+            jsonMessage.put("username", username);
+            jsonMessage.put("groupId", groupChatId);
+
+            webSocketClient.send(jsonMessage.toString());
+        } catch (JSONException e) {
+            Log.e("ChatActivity", "Error sending typing status: " + e.getMessage());
+        }
+    }
+
+    private void appendMessage(String message) {
+        String currentText = chatMessages.getText().toString();
+        chatMessages.setText(currentText.isEmpty() ? message : currentText + "\n" + message);
+    }
+
+    private void removeTypingMessage(String username) {
+        String currentText = chatMessages.getText().toString();
+        String typingText = username + " is typing...";
+        if (currentText.endsWith(typingText)) {
+            chatMessages.setText(currentText.substring(0, currentText.length() - typingText.length()).trim());
         }
     }
 
     private void handleConnectionClosed(String reason, boolean remote) {
         String closedBy = remote ? "server" : "local";
-        String s = chatMessages.getText().toString();
-        chatMessages.setText(s + "---\nconnection closed by " + closedBy + "\nreason: " + reason);
-    }
-
-    private void onTypingStarted() {
-        String currentText = chatMessages.getText().toString();
-        chatMessages.setText(currentText + "\nA user is typing...");
-    }
-
-    private void onTypingStopped() {
-        String currentText = chatMessages.getText().toString();
-        String[] lines = currentText.split("\n");
-        if (lines.length > 0) {
-            StringBuilder updatedText = new StringBuilder();
-            for (int i = 0; i < lines.length - 1; i++) {
-                updatedText.append(lines[i]).append("\n");
-            }
-            chatMessages.setText(updatedText.toString());
-        }
+        appendMessage("---\nConnection closed by " + closedBy + "\nReason: " + reason);
     }
 
     @Override
@@ -145,19 +186,16 @@ public class ChatActivity extends AppCompatActivity {
         webSocketClient.close();
     }
 
-    private String findGroupChat(String id){
-        if(id.equals("1")){
-            return "Weight Loss Group";
-        }
-        else if(id.equals("2")){
-            return "Weight Gain Group";
-        }
-        else if(id.equals("3")){
-            return "Muscle Gain Group";
-        }
-        else{
-            Log.e("Error Finding Group", "Could not find the group, returning blank string.");
-            return "";
+    private String findGroupChat(String id) {
+        switch (id) {
+            case "1":
+                return "Weight Loss Group";
+            case "2":
+                return "Weight Gain Group";
+            case "3":
+                return "Muscle Gain Group";
+            default:
+                return "Chat Group";
         }
     }
 }

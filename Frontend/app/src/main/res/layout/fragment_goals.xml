@@ -41,24 +41,16 @@
             android:text="Consecutive Logins"
             android:textColor="@color/Iowa_State_Red"
             android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <ProgressBar
-            android:layout_width="match_parent"
-            android:layout_height="8dp"
-            android:progress="3"
-            android:max="10"
-            android:progressDrawable="@drawable/ic_flame"
-            android:layout_marginTop="8dp" />
+            android:textStyle="bold"/>
 
         <TextView
+            android:id="@+id/consecLoginGoal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="3/10"
             android:gravity="end"
             android:textColor="@color/dark_grey"
             android:textSize="14sp"
-            android:layout_marginTop="4dp" />
+            android:layout_marginTop="4dp"/>
     </LinearLayout>
 
     <LinearLayout
@@ -77,14 +69,6 @@
             android:textColor="@color/Iowa_State_Red"
             android:textSize="18sp"
             android:textStyle="bold" />
-
-        <ProgressBar
-            android:layout_width="match_parent"
-            android:layout_height="8dp"
-            android:progress="2"
-            android:max="5"
-            android:progressDrawable="@drawable/progress_bar"
-            android:layout_marginTop="8dp" />
 
         <TextView
             android:layout_width="match_parent"
@@ -112,14 +96,6 @@
             android:textColor="@color/Iowa_State_Red"
             android:textSize="18sp"
             android:textStyle="bold" />
-
-        <ProgressBar
-            android:layout_width="match_parent"
-            android:layout_height="8dp"
-            android:progress="4"
-            android:max="7"
-            android:progressDrawable="@drawable/progress_bar"
-            android:layout_marginTop="8dp" />
 
         <TextView
             android:layout_width="match_parent"

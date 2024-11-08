@@ -37,6 +37,8 @@ public class ProfileDataManager {
     private static final String PREF_SHOW_FOOD = "show_food";
     private static final String PREF_SHOW_GOALS = "show_goals";
     private static final String PREF_SHOW_ACHIEVEMENTS = "show_achievements";
+    private static final String KEY_CONSECUTIVE_LOGIN_COUNT = "consecutive_login_count";
+    private static final String KEY_LAST_LOGIN_DATE = "last_login_date";
 
     private static final String uploadDir = "uploads/profile-pictures/";
 
@@ -121,6 +123,22 @@ public class ProfileDataManager {
 
     public void setAchievementSharingEnabled(boolean enabled) {
         preferences.edit().putBoolean(PREF_SHARE_ACHIEVEMENTS, enabled).apply();
+    }
+
+    public void setConsecutiveLoginCount(int count) {
+        preferences.edit().putInt(KEY_CONSECUTIVE_LOGIN_COUNT, count).apply();
+    }
+
+    public void setLastLoginDate(String date) {
+        preferences.edit().putString(KEY_LAST_LOGIN_DATE, date).apply();
+    }
+
+    public String getKeyLastLoginDate() {
+        return preferences.getString(KEY_LAST_LOGIN_DATE, "");
+    }
+
+    public int getConsecutiveLoginCount() {
+        return preferences.getInt(KEY_CONSECUTIVE_LOGIN_COUNT, 0);
     }
 
     public String getEmail(){
