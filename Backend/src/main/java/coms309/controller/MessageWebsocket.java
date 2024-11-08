@@ -1,5 +1,6 @@
 package coms309.controller;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import coms309.entity.*;
 import coms309.repository.GroupMemberRepository;
 import coms309.repository.MessageRepository;
@@ -71,7 +72,7 @@ public class MessageWebsocket {
 
         if (member != null) {
             String message = member.getUser().getFName() + " disconnected";
-            sendMessageToGroup(member.getGroup(), message);
+//            sendMessageToGroup(member.getGroup(), message);
         }
     }
 
@@ -115,7 +116,7 @@ public class MessageWebsocket {
         Set<GroupMember> groupMembers = group.getMembers();
         Set<GroupMemberKey> memberKeys = new HashSet<>();
         for(GroupMember mem : groupMembers){
-            memberKeys.add(mem.getId());
+            memberKeys.add(mem.getId());    //TODO - Error on mem.getId() - can't lazily enter into member to retrieve.
         }
         sessionMemberKeyMap.forEach((session, groupMemberKey)->{
             if (memberKeys.contains(groupMemberKey)){
