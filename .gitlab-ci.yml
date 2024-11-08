@@ -56,14 +56,15 @@ android-build:
     - android_tag
   before_script:
     - export GRADLE_USER_HOME=`pwd`/.gradle
-    - chmod +x ./gradlew  
+    - chmod +x ./Frontend/gradlew  
   script:
-    - ./gradlew build  
+    - cd Frontend                 
+    - ./gradlew build
   only:
     refs:
       - main
     changes:
-      - "**/*"          
+      - "Frontend/**/*"           
 
 android-test:
   image: afirefly/android-ci:java17
@@ -72,11 +73,12 @@ android-test:
     - android_tag
   before_script:
     - export GRADLE_USER_HOME=`pwd`/.gradle
-    - chmod +x ./gradlew  
+    - chmod +x ./Frontend/gradlew  
   script:
-    - ./gradlew test    
+    - cd Frontend                  
+    - ./gradlew test
   only:
     refs:
       - main
     changes:
-      - "**/*"         
+      - "Frontend/**/*"
