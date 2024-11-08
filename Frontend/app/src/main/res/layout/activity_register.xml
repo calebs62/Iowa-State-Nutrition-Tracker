@@ -17,7 +17,7 @@
             android:layout_width="0dp"
             android:layout_height="50dp"
             android:contentDescription="@string/isu_dining_image"
-            android:src="@drawable/isu_dining"
+            android:src="@drawable/ic_food"
             app:layout_constraintBottom_toTopOf="@+id/tvTitle"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
