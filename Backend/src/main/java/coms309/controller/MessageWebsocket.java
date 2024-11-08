@@ -3,6 +3,7 @@ package coms309.controller;
 import coms309.entity.Group;
 import coms309.entity.GroupMember;
 import coms309.entity.GroupMemberKey;
+import coms309.entity.Message;
 import coms309.repository.GroupMemberRepository;
 import coms309.repository.MessageRepository;
 
@@ -16,10 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Controller
 @ServerEndpoint(value = "/chat/{username}/{uid}/{gid}")
@@ -40,18 +38,20 @@ public class MessageWebsocket {
     private final Logger logger = LoggerFactory.getLogger(MessageWebsocket.class);
 
     @OnOpen
-    public void onOpen(Session session, @PathParam("uid") int uid, @PathParam("gid") int gid)
+    public void onOpen(Session session, @PathParam("username") String username, @PathParam("uid") int uid, @PathParam("gid") int gid)
             throws IOException {
         logger.info("Entered into Open");
         GroupMemberKey memberKey = new GroupMemberKey(gid, uid);
         GroupMember member = memberRepo.findById(memberKey).orElse(null);
         if (member == null){
-            logger.info("member not found: " + uid + ", " + gid);
+            logger.info("OnOpen: member not found: " + uid + ", " + gid);
             return;
         }
 
         sessionMemberKeyMap.put(session, memberKey);
         memberKeySessionMap.put(memberKey, session);
+
+        sendMessageToUser(member, getChatHistory());
 
         String message = "User: " + member.getUser().getFName() + " has joined the Chat";
         sendMessageToGroup(member.getGroup(), message);
@@ -64,6 +64,7 @@ public class MessageWebsocket {
         GroupMemberKey key = sessionMemberKeyMap.get(session);
         sessionMemberKeyMap.remove(session);
         if (key == null){
+            logger.info("OnClose: member key not found from session.");
             return;
         }
         memberKeySessionMap.remove(key);
@@ -82,13 +83,16 @@ public class MessageWebsocket {
         GroupMemberKey memberKey= sessionMemberKeyMap.get(session);
         GroupMember member = memberRepo.findById(memberKey).orElse(null);
         if (member == null){
+            logger.info("OnMessage: Member not found.");
             return;
         }
-        if (message.startsWith("@")){
-            //TODO
+
+        if (message.startsWith("r:")){
+            //TODO - this is a reply
         } else {
           sendMessageToGroup(member.getGroup(), member.getUser().getFName() + ": " + message);
         }
+        msgRepo.save(new Message(member.getUser().getFName(), message, null)); //TODO - allow replies
     }
 
     @OnError
@@ -97,7 +101,14 @@ public class MessageWebsocket {
         throwable.printStackTrace();
     }
 
-    private void sendMessageToUser(){}
+    private void sendMessageToUser(GroupMember member, String message){
+        try{
+            memberKeySessionMap.get(member.getId()).getBasicRemote().sendText(message);
+        } catch (IOException e) {
+            logger.info("Exception: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 
     private void broadcast(String message){}
 
@@ -116,5 +127,17 @@ public class MessageWebsocket {
                 }
             }
         });
+    }
+
+    public String getChatHistory(){
+        List<Message> messages = msgRepo.findAll();
+
+        StringBuilder sb = new StringBuilder();
+        if (messages != null && messages.size() != 0) {
+            for (Message message : messages){
+                sb.append(message.getUserName() + ": " + message.getContent() + "\n");
+            }
+        }
+        return sb.toString();
     }
 }
