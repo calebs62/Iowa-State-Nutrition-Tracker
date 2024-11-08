@@ -92,36 +92,39 @@ public class FoodItemController {
          */
 
         List<FoodItem> items = foodRepo.findAll();
+        List<FoodItem> itemsToRemove = new ArrayList<FoodItem>();
         if (searchTerms != null) {
             for (FoodItem item : items) {
-                if (searchTerms.containsKey("name") && !(item.getName().toLowerCase().contains(((String)searchTerms.get("search")).toLowerCase()))) {
-                    items.remove(item);
+                if (searchTerms.containsKey("name") && !(item.getName().toLowerCase().contains(((String)searchTerms.get("name")).toLowerCase()))) {
+                    itemsToRemove.add(item);
                 }
                 if (searchTerms.containsKey("description") && !(item.getDescription().toLowerCase().contains(((String)searchTerms.get("description")).toLowerCase()))) {
-                    items.remove(item);
+                    itemsToRemove.add(item);
                 }
-                if (searchTerms.containsKey("calories") && !(compareVals(item.getCalories(), (Integer)searchTerms.get("calories"), (String)searchTerms.get("caloriescomp")))) {
-                    items.remove(item);
+                if (searchTerms.containsKey("calories") && !(compareVals(item.getCalories(), (String)searchTerms.get("calories"), (String)searchTerms.get("caloriescomp")))) {
+                    itemsToRemove.add(item);
                 }
-                if (searchTerms.containsKey("carbohydrate") && !(compareVals(item.getCarbohydrate(), (Integer)searchTerms.get("carbohydrate"), (String)searchTerms.get("carbohydratecomp")))) {
-                    items.remove(item);
+                if (searchTerms.containsKey("carbohydrate") && !(compareVals(item.getCarbohydrate(), (String)searchTerms.get("carbohydrate"), (String)searchTerms.get("carbohydratecomp")))) {
+                    itemsToRemove.add(item);
                 }
-                if (searchTerms.containsKey("protein") && !(compareVals(item.getProtein(), (Integer)searchTerms.get("protein"), (String)searchTerms.get("proteincomp")))) {
-                    items.remove(item);
+                if (searchTerms.containsKey("protein") && !(compareVals(item.getProtein(), (String)searchTerms.get("protein"), (String)searchTerms.get("proteincomp")))) {
+                    itemsToRemove.add(item);
                 }
-                if (searchTerms.containsKey("sodium") && !(compareVals(item.getSodium(), (Integer)searchTerms.get("sodium"), (String)searchTerms.get("sodiumcomp")))) {
-                    items.remove(item);
+                if (searchTerms.containsKey("sodium") && !(compareVals(item.getSodium(), (String)searchTerms.get("sodium"), (String)searchTerms.get("sodiumcomp")))) {
+                    itemsToRemove.add(item);
                 }
-                if (searchTerms.containsKey("totalfat") && !(compareVals(item.getTotalFat(), (Integer)searchTerms.get("totalfat"), (String)searchTerms.get("totalfatcomp")))) {
-                    items.remove(item);
+                if (searchTerms.containsKey("totalfat") && !(compareVals(item.getTotalFat(), (String)searchTerms.get("totalfat"), (String)searchTerms.get("totalfatcomp")))) {
+                    itemsToRemove.add(item);
                 }
             }
+            items.removeAll(itemsToRemove);
 
         }
         return items;
     }
 
-    private boolean compareVals(int foodNumber, int otherNumber, String comparison) {
+    private boolean compareVals(int foodNumber, String on, String comparison) {
+        int otherNumber = Integer.parseInt(on);
         if ((Objects.equals(comparison, "<") || Objects.equals(comparison, "<=")) && foodNumber < otherNumber) {
             return true;
         }
