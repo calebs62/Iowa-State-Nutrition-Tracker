@@ -15,6 +15,7 @@ maven-build:
   tags:
     - springboot_tag
   script:
+    - java -version
     - cd Backend
     - mvn package
   artifacts:
