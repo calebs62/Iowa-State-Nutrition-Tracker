@@ -17,7 +17,7 @@ maven-build:
   script:
     - java -version
     - cd Backend
-    - mvn package
+    - mvn package -t toolchains.xml -X
   artifacts:
     paths:
       - Backend/target/*.jar
