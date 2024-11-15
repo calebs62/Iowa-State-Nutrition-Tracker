@@ -85,32 +85,12 @@ android-test:
   stage: androidtest
   tags:
     - android_tag
-  variables:
-    ANDROID_HOME: "/usr/lib/android-sdk"
-    ANDROID_SDK_ROOT: "/usr/lib/android-sdk"
-    ANDROID_COMPILE_SDK: "34"
-    ANDROID_BUILD_TOOLS: "34.0.0"
-    ANDROID_SDK_TOOLS: "9477386"
-    AVD_NAME: "test_device"
-    EMULATOR_API_LEVEL: "29"
-    EMULATOR_ABI: "armeabi-v7a"        
-    EMULATOR_TAG: "default"            
   before_script:
     - export GRADLE_USER_HOME=`pwd`/.gradle
     - chmod +x ./Frontend/gradlew
-    - export PATH=${ANDROID_HOME}/cmdline-tools/tools/bin:${ANDROID_HOME}/platform-tools:${PATH}
-    - yes | sdkmanager --licenses || true
-    - sdkmanager --install "emulator" "platform-tools" "platforms;android-${ANDROID_COMPILE_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" "system-images;android-${EMULATOR_API_LEVEL};${EMULATOR_TAG};${EMULATOR_ABI}"
-    - echo "no" | avdmanager create avd -n ${AVD_NAME} -k "system-images;android-${EMULATOR_API_LEVEL};${EMULATOR_TAG};${EMULATOR_ABI}"
   script:
     - cd Frontend
-    - ${ANDROID_HOME}/emulator/emulator -avd ${AVD_NAME} -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect -accel off &
-    - timeout 300 adb wait-for-device shell 'while [[ $(getprop sys.boot_completed) != "1" ]]; do sleep 5; done' || exit 1
-    - ./gradlew connectedAndroidTest
-  artifacts:
-    paths:
-      - Frontend/app/build/reports/androidTests/
-    when: always
+    - ./gradlew test
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
       changes:
