@@ -13,11 +13,39 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * Utility class for processing and encoding images.
+ * Provides functionality to resize, compress, and encode images to Base64 format
+ * while maintaining reasonable memory usage and image quality.
+ *
+ * @author Alexander Svobodny, Caleb Sanchez
+ */
 public class ImageUtils {
+    /** Tag for logging purposes */
     private static final String TAG = "ImageUtil";
+
+    /** Maximum allowed dimension (width or height) for processed images */
     private static final int MAX_IMAGE_DIMENSION = 1024;
+
+    /** JPEG compression quality (0-100) for processed images */
     private static final int COMPRESSION_QUALITY = 80;
 
+    /**
+     * Processes an image from a URI and converts it to a Base64 encoded string.
+     * This method performs the following operations:
+     * <ul>
+     *     <li>Loads the image from the provided URI</li>
+     *     <li>Calculates appropriate sample size to resize the image</li>
+     *     <li>Decodes the image with the calculated sample size</li>
+     *     <li>Compresses the image to JPEG format</li>
+     *     <li>Converts the compressed image to Base64 string</li>
+     * </ul>
+     *
+     * @param context The application context needed to access content resolver
+     * @param imageUri The URI of the image to process
+     * @return A Base64 encoded string representation of the processed image
+     * @throws Exception If image processing or encoding fails
+     */
     public static String processAndEncodeImage(Context context, Uri imageUri) throws Exception {
         InputStream inputStream = context.getContentResolver().openInputStream(imageUri);
 
@@ -52,6 +80,15 @@ public class ImageUtils {
         return base64Image;
     }
 
+    /**
+     * Calculates the appropriate sample size for image downsampling.
+     * The sample size is calculated to ensure that the loaded image's dimensions
+     * do not exceed MAX_IMAGE_DIMENSION while maintaining aspect ratio.
+     * The sample size is always a power of 2.
+     *
+     * @param options BitmapFactory.Options containing the original image dimensions
+     * @return The calculated sample size (power of 2) for image downsampling
+     */
     private static int calculateSampleSize(BitmapFactory.Options options) {
         int height = options.outHeight;
         int width = options.outWidth;
