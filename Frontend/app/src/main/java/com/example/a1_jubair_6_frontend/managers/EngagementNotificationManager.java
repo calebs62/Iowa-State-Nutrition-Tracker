@@ -18,17 +18,41 @@ import com.example.a1_jubair_6_frontend.utils.EngagementWorker;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Manages user engagement notifications for the application.
+ * This class handles the scheduling, creation, and sending of notifications
+ * to encourage user engagement based on their last access time.
+ * It supports different message types for various periods of inactivity
+ * (daily, weekly, and monthly).
+ *
+ * @author Alexander Svobodny, Caleb Sanchez
+ */
 public class EngagementNotificationManager {
+    /** Shared preferences file name for storing engagement data */
     private static final String PREF_NAME = "EngagementPreferences";
+
+    /** Key for storing the last access timestamp */
     private static final String KEY_LAST_ACCESS = "last_access_time";
+
+    /** Notification channel ID for engagement notifications */
     private static final String CHANNEL_ID = "engagement_channel";
+
+    /** Unique identifier for engagement notifications */
     private static final int NOTIFICATION_ID = 1001;
+
+    /** Tag for WorkManager engagement check tasks */
     private static final String WORK_TAG = "engagement_check";
 
+    /** Application context */
     private final Context context;
+
+    /** SharedPreferences instance for storing engagement data */
     private final SharedPreferences preferences;
+
+    /** Random number generator for message selection */
     private final Random random;
 
+    /** Array of notification messages for daily engagement */
     private final String[] dayMessages = {
             "We miss you! Come check your calories for today! 📱",
             "Don't break your streak! Log your meals today 🍽️",
@@ -36,6 +60,7 @@ public class EngagementNotificationManager {
             "Your health journey is waiting! Come back and log your progress 🎯"
     };
 
+    /** Array of notification messages for weekly engagement */
     private final String[] weekMessages = {
             "It's been a week! Don't forget about your health goals 🎯",
             "A week goes by fast! Let's resume your progress 📈",
@@ -43,6 +68,7 @@ public class EngagementNotificationManager {
             "One week without updates - come back and stay on track! 💪"
     };
 
+    /** Array of notification messages for monthly engagement */
     private final String[] monthMessages = {
             "A month is too long! Let's restart your health journey 🌟",
             "New month, new goals! Return and set your targets 🎯",
@@ -50,6 +76,12 @@ public class EngagementNotificationManager {
             "Missing your progress updates? Let's get back to it! 📱"
     };
 
+    /**
+     * Constructs a new EngagementNotificationManager.
+     * Initializes the notification channel and schedules periodic engagement checks.
+     *
+     * @param context The application context used for accessing system services
+     */
     public EngagementNotificationManager(Context context) {
         this.context = context;
         this.preferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
@@ -58,12 +90,20 @@ public class EngagementNotificationManager {
         scheduleEngagementCheck();
     }
 
+    /**
+     * Updates the timestamp of the user's last access to the application.
+     * This timestamp is used to calculate periods of inactivity.
+     */
     public void updateLastAccessTime() {
         preferences.edit()
                 .putLong(KEY_LAST_ACCESS, System.currentTimeMillis())
                 .apply();
     }
 
+    /**
+     * Creates a notification channel for engagement notifications on Android O and above.
+     * This is required for displaying notifications on newer Android versions.
+     */
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
@@ -79,6 +119,11 @@ public class EngagementNotificationManager {
         }
     }
 
+    /**
+     * Schedules periodic checks for user engagement using WorkManager.
+     * Sets up a periodic work request that runs every 24 hours to check
+     * user activity and send notifications if needed.
+     */
     public void scheduleEngagementCheck() {
         // Create a periodic work request that runs every 24 hours
         PeriodicWorkRequest engagementWorkRequest =
@@ -96,6 +141,16 @@ public class EngagementNotificationManager {
                 );
     }
 
+    /**
+     * Checks the user's last access time and sends an appropriate notification
+     * if the user has been inactive for a significant period.
+     * Different messages are selected based on the duration of inactivity:
+     * <ul>
+     *     <li>30+ days: Monthly messages</li>
+     *     <li>7+ days: Weekly messages</li>
+     *     <li>1+ days: Daily messages</li>
+     * </ul>
+     */
     public void checkAndSendEngagementNotification() {
         long lastAccess = preferences.getLong(KEY_LAST_ACCESS, 0);
         long currentTime = System.currentTimeMillis();
@@ -122,6 +177,14 @@ public class EngagementNotificationManager {
         sendNotification(title, message);
     }
 
+    /**
+     * Sends a notification with the specified title and message.
+     * Handles the actual creation and display of the notification using
+     * the NotificationCompat.Builder.
+     *
+     * @param title The title to display in the notification
+     * @param message The message body to display in the notification
+     */
     private void sendNotification(String title, String message) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.notifications_icon)
