@@ -63,7 +63,6 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.androidx.work.runtime)
     implementation(libs.androidx.swiperefreshlayout)
-    implementation(files("C:\\Users\\dsvob\\AppData\\Local\\Android\\Sdk\\platforms\\android-35\\android.jar"))
 
     androidTestImplementation(libs.androidx.junit)
 
