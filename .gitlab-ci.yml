@@ -86,18 +86,32 @@ android-test:
   tags:
     - android_tag
   variables:
-    ANDROID_HOME: "/sdk"
-    ANDROID_SDK_ROOT: "/sdk"
+    ANDROID_HOME: "/usr/lib/android-sdk"
+    ANDROID_SDK_ROOT: "/usr/lib/android-sdk"
+    ANDROID_COMPILE_SDK: "34"
+    ANDROID_BUILD_TOOLS: "34.0.0"
+    ANDROID_SDK_TOOLS: "9477386"
+    AVD_NAME: "pixel8pro_test"
+    EMULATOR_DEVICE: "pixel_8_pro"
+    EMULATOR_API_LEVEL: "34"
+    EMULATOR_ABI: "x86_64"
+    EMULATOR_TAG: "google_apis"
   before_script:
-    - echo "Checking environment..."
-    - ls -la /sdk || echo "SDK directory not found at /sdk"
-    - ls -la /opt/android-sdk || echo "SDK directory not found at /opt/android-sdk"
-    - which sdkmanager || echo "sdkmanager not found in PATH"
-    - echo "PATH=$PATH"
-    - find / -name "sdkmanager" 2>/dev/null || echo "No sdkmanager found on system"
-    - find / -name "cmdline-tools" 2>/dev/null || echo "No cmdline-tools found on system"
+    - export GRADLE_USER_HOME=`pwd`/.gradle
+    - chmod +x ./Frontend/gradlew
+    - export PATH=${ANDROID_HOME}/cmdline-tools/tools/bin:${ANDROID_HOME}/platform-tools:${PATH}
+    - yes | sdkmanager --licenses || true
+    - sdkmanager --install "platform-tools" "platforms;android-${ANDROID_COMPILE_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" "emulator" "system-images;android-${EMULATOR_API_LEVEL};${EMULATOR_TAG};${EMULATOR_ABI}" || true
+    - echo "no" | avdmanager create avd -n ${AVD_NAME} -k "system-images;android-${EMULATOR_API_LEVEL};${EMULATOR_TAG};${EMULATOR_ABI}" -d ${EMULATOR_DEVICE} || true
   script:
-    - echo "Environment check complete"
+    - cd Frontend
+    - ${ANDROID_HOME}/emulator/emulator -avd ${AVD_NAME} -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot -skindir ${ANDROID_HOME}/skins -skin pixel_8_pro &
+    - timeout 300 adb wait-for-device shell 'while [[ $(getprop sys.boot_completed) != "1" ]]; do sleep 5; done' || exit 1
+    - ./gradlew connectedAndroidTest
+  artifacts:
+    paths:
+      - Frontend/app/build/reports/androidTests/
+    when: always
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
       changes:
