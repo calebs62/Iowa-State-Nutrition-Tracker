@@ -85,12 +85,35 @@ android-test:
   stage: androidtest
   tags:
     - android_tag
+  variables:
+    ANDROID_HOME: "/sdk"
+    ANDROID_SDK_ROOT: "/sdk"
+    ANDROID_COMPILE_SDK: "34"
+    ANDROID_BUILD_TOOLS: "34.0.0"
+    ANDROID_SDK_TOOLS: "9477386"
+    AVD_NAME: "pixel8pro_test"
+    EMULATOR_DEVICE: "pixel_8_pro"  
+    EMULATOR_API_LEVEL: "34"        
+    EMULATOR_ABI: "x86_64"
+    EMULATOR_TAG: "google_apis"     
   before_script:
     - export GRADLE_USER_HOME=`pwd`/.gradle
     - chmod +x ./Frontend/gradlew
+    # Install emulator and create AVD
+    - sdkmanager "platform-tools" "platforms;android-${ANDROID_COMPILE_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" "emulator" "system-images;android-${EMULATOR_API_LEVEL};${EMULATOR_TAG};${EMULATOR_ABI}"
+    - echo "no" | avdmanager create avd -n ${AVD_NAME} -k "system-images;android-${EMULATOR_API_LEVEL};${EMULATOR_TAG};${EMULATOR_ABI}" -d ${EMULATOR_DEVICE} || true
   script:
     - cd Frontend
-    - ./gradlew test
+    # Start emulator in background with specific configurations
+    - $ANDROID_HOME/emulator/emulator -avd ${AVD_NAME} -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot -skindir ${ANDROID_HOME}/skins -skin pixel_8_pro &
+    # Wait for emulator to be ready with timeout
+    - timeout 300 adb wait-for-device shell 'while [[ $(getprop sys.boot_completed) != "1" ]]; do sleep 5; done' || exit 1
+    # Run instrumented tests
+    - ./gradlew connectedAndroidTest
+  artifacts:
+    paths:
+      - Frontend/app/build/reports/androidTests/
+    when: always
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
       changes:
