@@ -4,6 +4,7 @@ import coms309.entity.PrivacySettings;
 import coms309.entity.SystemNotificationQueue;
 import coms309.entity.User;
 import coms309.repository.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+@Tag(name="Privacy Settings", description="Privacy Settings API")
 @RestController
 @RequestMapping("/privacy/settings")
 public class PrivacySettingController {

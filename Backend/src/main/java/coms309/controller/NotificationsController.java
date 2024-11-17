@@ -3,6 +3,7 @@ package coms309.controller;
 
 import coms309.repository.*;
 import coms309.entity.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +13,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+@Tag(name="Notifications", description="Notifications API")
 @RestController
 public class NotificationsController {
     @Autowired
