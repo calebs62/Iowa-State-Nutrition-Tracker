@@ -2,6 +2,9 @@ package coms309.controller;
 
 import coms309.repository.FoodItemRepository;
 import coms309.entity.FoodItem;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,12 +13,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-
+@Tag(name="Food Item", description="Food nuritional information APIs")
 @RestController
 public class FoodItemController {
     @Autowired
     FoodItemRepository foodRepo;
     // Create item
+    @Operation(
+            summary="Create item",
+            description="Create  fooditem object from request body."
+    )
     @PostMapping("/item")
     public FoodItem saveFoodItem(@RequestBody FoodItem foodItem){
         return foodRepo.save(foodItem);
@@ -23,14 +30,22 @@ public class FoodItemController {
 
 
     // Get item from id
+    @Operation(
+            summary="Get foodItem",
+            description="Get food item based on id"
+    )
     @GetMapping("/item/{id}")
-    public FoodItem getFoodItemById(@PathVariable int id) {
+    public FoodItem getFoodItemById(@Parameter(description="Id of food item to be returned.")@PathVariable int id) {
         return foodRepo.findById(id).get();
     }
 
     // Update item fields
+    @Operation(
+            summary="Update food item",
+            description="Update food item based on id"
+    )
     @PutMapping("/item/update/{id}")
-    public FoodItem updateFoodItem(@PathVariable int id, @RequestBody Map<String, Object> foodItem) {
+    public FoodItem updateFoodItem(@Parameter(description="Id of food item to be updated.")@PathVariable int id, @Parameter(description="Map containing certain key value pairs corrosponding to fields to be changed.")@RequestBody Map<String, Object> foodItem) {
         FoodItem item = foodRepo.findById(id).orElse(null);
         if (item != null) {
             if (foodItem.containsKey("name")) {
@@ -63,8 +78,12 @@ public class FoodItemController {
         return item;
     }
        // Delete item
+       @Operation(
+               summary="Delete foodItem",
+               description="Delete food item based on id"
+       )
     @DeleteMapping("/item/{id}")
-    public FoodItem delete(@PathVariable int id) {
+    public FoodItem delete(@Parameter(description="Id of food item to be deleted.")@PathVariable int id) {
         FoodItem val = foodRepo.findById(id).orElse(null);
         if (foodRepo.existsById(id)) {
 
@@ -74,9 +93,13 @@ public class FoodItemController {
         return val;
     }
 
+    @Operation(
+            summary="Get list of foodItem",
+            description="Get list of food item based on criteria"
+    )
     // List all items
     @GetMapping("/item")
-    public List<FoodItem> getAllFoodItems(@RequestBody(required = false) Map<String, Object> searchTerms) {
+    public List<FoodItem> getAllFoodItems(@Parameter(description="Map containing search criteria to filter search results by")@RequestBody(required = false) Map<String, Object> searchTerms) {
         /*
             Map will contain search terms if values have been entered
             Keys : info

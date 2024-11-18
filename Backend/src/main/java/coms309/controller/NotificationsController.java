@@ -3,6 +3,9 @@ package coms309.controller;
 
 import coms309.repository.*;
 import coms309.entity.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +15,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+@Tag(name="Notifications", description="Notifications API")
 @RestController
 public class NotificationsController {
     @Autowired
@@ -23,8 +27,12 @@ public class NotificationsController {
     @Autowired
     SystemNotificationQueueRepository sysNotRepo;
 
+    @Operation(
+            summary="Get notification settings",
+            description="Returns notification settings for given user."
+    )
     @GetMapping("/notifications/settings/{userId}")
-    public ResponseEntity<?> getPreferences(@PathVariable int userId) {
+    public ResponseEntity<?> getPreferences(@Parameter(description="Id of user who's notification settings are to be returned.")@PathVariable int userId) {
         try {
             User user = userRepo.findById(userId).orElse(null);
             if (user == null) {
@@ -38,15 +46,22 @@ public class NotificationsController {
                     .body("Error retrieving settings: " + e.getMessage());
         }
     }
-
+    @Operation(
+            summary="Get specific user notification setting",
+            description="Returns boolean for given user's specific notification setting."
+    )
     @GetMapping("/notifications/settings/{userId}/{type}")
-    public boolean savePreferences(@PathVariable int userId, @PathVariable String type) {
+    public boolean savePreferences(@Parameter(description="Id of user who's notification settings are to be returned.")@PathVariable int userId, @Parameter(description="String of type of notification to be returned.")@PathVariable String type) {
         return checkSetting(userId, type);
     }
 
+    @Operation(
+            summary="Sets notification settings",
+            description="Sets notification settings for given user."
+    )
     @PutMapping("/notifications/settings/{userId}")
-    public ResponseEntity<?> setNotificationSettings(@PathVariable int userId,
-                                                     @RequestBody Map<String, Boolean> newSettings) {
+    public ResponseEntity<?> setNotificationSettings(@Parameter(description="Id of user who's notification settings are to be updated.")@PathVariable int userId,
+                                                     @Parameter(description="Map of notification settings to be changed")@RequestBody Map<String, Boolean> newSettings) {
         try {
             NotificationSettings settings = findSetting(userId);
             if (settings == null) {
@@ -78,8 +93,12 @@ public class NotificationsController {
         }
     }
 
+    @Operation(
+            summary="Create new system notification",
+            description="Create a new system notification to add to notification queue"
+    )
     @PostMapping("/notifications/system")
-    private SystemNotificationQueue queue(@RequestBody Map<String, Object> data) {
+    private SystemNotificationQueue queue(@Parameter(description="Map containing information for the new system notification.")@RequestBody Map<String, Object> data) {
         SystemNotificationQueue newNot;
         if (data.containsKey("time")) {
             newNot =  new SystemNotificationQueue((String)data.get("header"), (String)data.get("body"), (Timestamp)data.get("time"));
@@ -91,16 +110,25 @@ public class NotificationsController {
         return newNot;
     }
 
+    @Operation(
+            summary="Delete system notification",
+            description="Deletes a system notification based on id."
+    )
     @DeleteMapping("/notifications/system/{id}")
-    private SystemNotificationQueue removeId(@PathVariable int id) {
+    private SystemNotificationQueue removeId(@Parameter(description="Id of system notification to be deleted.")@PathVariable int id) {
         SystemNotificationQueue queue = sysNotRepo.findById(id).orElse(null);
         if (sysNotRepo.existsById(id)) {
             sysNotRepo.deleteById(id);
         }
         return queue;
     }
+
+    @Operation(
+            summary="Delete system notifications before",
+            description="Deletes system notifications before given time."
+    )
     @DeleteMapping("/notifications/system/before")
-    private Set<SystemNotificationQueue> removeBefore(@RequestBody Timestamp time) {
+    private Set<SystemNotificationQueue> removeBefore(@Parameter(description="Timestamp of time to return system notifications before.")@RequestBody Timestamp time) {
         Set<SystemNotificationQueue> queue = new HashSet<SystemNotificationQueue>();
         queue.addAll(sysNotRepo.findAll());
         Set<SystemNotificationQueue> ret = new HashSet<SystemNotificationQueue>();
@@ -114,8 +142,12 @@ public class NotificationsController {
         return ret;
     }
 
+    @Operation(
+            summary="Get system notifications for user",
+            description="Returns system notifications dated for after last time user logged in."
+    )
     @GetMapping("/notifications/system/user/{userId}")
-    public ResponseEntity<?> userNewNotifs(@PathVariable int userId) {
+    public ResponseEntity<?> userNewNotifs(@Parameter(description="Id of user to find new system notifications for.")@PathVariable int userId) {
         try {
             User user = userRepo.findById(userId).orElse(null);
             if (user == null) {
