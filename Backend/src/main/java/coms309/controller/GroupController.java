@@ -6,12 +6,16 @@ import coms309.repository.FoodPlanRepository;
 import coms309.repository.GroupMemberRepository;
 import coms309.repository.GroupRepository;
 import coms309.repository.UserRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 
+@Tag(name = "Groups", description = "Group API")
 @RestController
 public class GroupController {
     @Autowired
@@ -24,9 +28,13 @@ public class GroupController {
     FoodPlanRepository planRepo;
 
     // Create
+    @Operation(
+            summary="Create Group",
+            description="Create group object from map. Requires name, ownerId, and planId."
+    )
     @PostMapping("/group")
     @JsonView(value = {Views.Group.class})
-    public Group createGroup(@RequestBody Map<String, Object> map){
+    public Group createGroup(@Parameter(description = "Map containing key value pairs to build the group. Requires name, ownerId, and planId.")@RequestBody Map<String, Object> map){
         String name = (String) map.get("groupName");
         Integer ownerId = (Integer) map.get("ownerId");
         Integer planId = (Integer) map.get("planId");
@@ -50,16 +58,24 @@ public class GroupController {
     }
 
     // Read
+    @Operation(
+            summary="Get Group",
+            description="Returns a group by given id."
+    )
     @GetMapping("/group/{id}")
     @JsonView(value = {Views.Group.class})
-    public Group getGroupById(@PathVariable int id){
+    public Group getGroupById(@Parameter(description = "Group id")@PathVariable int id){
         return groupRepo.findById(id).orElse(null);
     }
 
     // Get Owner
+    @Operation(
+            summary="Get Owner",
+            description="Returns user that owns the group denoted by given id."
+    )
     @GetMapping("/group/{id}/getOwner")
     @JsonView(value = {Views.User.class})
-    public User getOwner(@PathVariable int id) {
+    public User getOwner(@Parameter(description = "Group id")@PathVariable int id) {
         Group currGroup = groupRepo.findById(id).orElse(null);
         if (currGroup != null) {
             return userRepo.findById(currGroup.getOwnerId()).orElse(null);
@@ -68,25 +84,33 @@ public class GroupController {
     }
 
     // Update
+    @Operation(
+            summary="Update Group",
+            description="Updates group based on id and map."
+    )
     @PutMapping("/group/update/{id}")
     @JsonView(value = {Views.Group.class})
-    public Group updateGroup(@PathVariable int id, @RequestBody Map<String, Object> newGroup){
+    public Group updateGroup(@Parameter(description = "Group id")@PathVariable int id, @Parameter(description = "Map containing key value pairs corresponding to fields to be changed.")@RequestBody Map<String, Object> map){
         Group currGroup = groupRepo.findById(id).orElse(null);
-        if (currGroup != null  && currGroup.isModLevel((String) newGroup.get("sessionToken"))){
-            if (newGroup.containsKey("groupName")){
-                currGroup.setName((String) newGroup.get("groupName"));
+        if (currGroup != null  && currGroup.isModLevel((String) map.get("sessionToken"))){
+            if (map.containsKey("groupName")){
+                currGroup.setName((String) map.get("groupName"));
             }
-            if (newGroup.containsKey("groupOwner")){
-                currGroup.setOwnerId((int) newGroup.get("groupOwner"));
+            if (map.containsKey("groupOwner")){
+                currGroup.setOwnerId((int) map.get("groupOwner"));
             }
         }
         return currGroup;
     }
 
     // Mod add member by id
+    @Operation(
+            summary="Moderator Add Member",
+            description="Moderator adds user to group based on uid and group id."
+    )
     @PutMapping("/group/{id}/addMember")
     @JsonView(value = {Views.Group.class})
-    public Group addMember(@PathVariable int id, @RequestBody Map<String, Object> map){
+    public Group addMember(@Parameter(description = "Group id")@PathVariable int id, @Parameter(description = "Map containing key value pairs. Requires sessionToken and uid.")@RequestBody Map<String, Object> map){
         Group currGroup = groupRepo.findById(id).orElse(null);
         if (currGroup != null && currGroup.isModLevel((String) map.get("sessionToken"))){
             User user = userRepo.findById((int) map.get("uid")).orElse(null);
@@ -100,9 +124,13 @@ public class GroupController {
     }
 
     // Mod remove member by id
+    @Operation(
+            summary="Moderator Remove Member",
+            description="Moderator removes user from the group based on uid and group id."
+    )
     @PutMapping("/group/{id}/removeMember")
     @JsonView(value = {Views.Group.class})
-    public Group removeMember(@PathVariable int id, @RequestBody Map<String, Object> map){
+    public Group removeMember(@Parameter(description = "Group id")@PathVariable int id, @Parameter(description = "Map containing key value pairs. Requires sessionToken and uid.")@RequestBody Map<String, Object> map){
         Group currGroup = groupRepo.findById(id).orElse(null);
         if (currGroup != null && currGroup.isModLevel((String) map.get("sessionToken"))){
             GroupMember member = currGroup.findMember((int) map.get("uid"));
@@ -115,9 +143,13 @@ public class GroupController {
     }
 
     // User join
+    @Operation(
+            summary="User Join Group",
+            description="User joins group based on sessionToken and group id."
+    )
     @PutMapping("/group/{id}/join")
     @JsonView(value = {Views.Group.class})
-    public Boolean memberJoin(@PathVariable int id, @RequestBody String sessionToken){
+    public Boolean memberJoin(@Parameter(description = "Group id")@PathVariable int id, @Parameter(description = "String holding sessionToken of user.")@RequestBody String sessionToken){
         Group currGroup = groupRepo.findById(id).orElse(null);
         String[] array = sessionToken.split(":");
         int uid = Integer.parseInt(array[2].trim());
@@ -131,9 +163,13 @@ public class GroupController {
     }
 
     // User leave
+    @Operation(
+            summary="User Leave Group",
+            description="User leave group based on sessionToken and group id."
+    )
     @PutMapping("/group/{id}/leave")
     @JsonView(value = {Views.Group.class})
-    public Boolean memberLeave(@PathVariable int id, @RequestBody String sessionToken){
+    public Boolean memberLeave(@Parameter(description = "Group id")@PathVariable int id, @Parameter(description = "String holding sessionToken of user.")@RequestBody String sessionToken){
         Group currGroup = groupRepo.findById(id).orElse(null);
         String[] array = sessionToken.split(":");
         int uid = Integer.parseInt(array[2]);
@@ -149,9 +185,13 @@ public class GroupController {
     }
 
     // Change group plan
+    @Operation(
+            summary="Change Group Food Plan",
+            description="Changes group's food plan based on plan id and group id."
+    )
     @PutMapping("/group/{id}/changePlan")
     @JsonView(value = {Views.Group.class})
-    public Group changePlan(@PathVariable int id, @RequestBody Map<String, Object> map){
+    public Group changePlan(@Parameter(description = "Group id")@PathVariable int id, @Parameter(description = "Map containing key value pairs. Requires sessionToken and planId.")@RequestBody Map<String, Object> map){
         Group currGroup = groupRepo.findById(id).orElse(null);
         if (currGroup != null && currGroup.isModLevel((String) map.get("sessionToken"))) {
             FoodPlan plan = planRepo.findById((int) map.get("planId")).orElse(null);
@@ -169,9 +209,13 @@ public class GroupController {
     }
 
     // Owner make user mod
+    @Operation(
+            summary="Promote to Moderator",
+            description="Owner promotes user to moderator by map and group id."
+    )
     @PutMapping("/group/{id}/promoteMod")
     @JsonView(value = {Views.GroupMember.class})
-    public GroupMember promoteUser(@PathVariable int id, @RequestBody Map<String, Object> map){
+    public GroupMember promoteUser(@Parameter(description = "Group id")@PathVariable int id, @Parameter(description = "Map containing key value pairs. Requires sessionToken and uid.")@RequestBody Map<String, Object> map){
         Group currGroup = groupRepo.findById(id).orElse(null);
         if (currGroup != null && currGroup.isOwnerLevel((String) map.get("sessionToken"))) {
             GroupMember member = currGroup.findMember((int) map.get("uid"));
@@ -186,9 +230,13 @@ public class GroupController {
     }
 
     // Owner demote mod to user
+    @Operation(
+            summary="Demote Moderator",
+            description="Owner demotes moderator to user by group id and map."
+    )
     @PutMapping("/group/{id}/demoteMod")
     @JsonView(value = {Views.GroupMember.class})
-    public GroupMember demoteUser(@PathVariable int id, @RequestBody Map<String, Object> map){
+    public GroupMember demoteUser(@Parameter(description = "Group id")@PathVariable int id, @Parameter(description = "Map containing key value pairs. Requires sessionToken and uid.")@RequestBody Map<String, Object> map){
         Group currGroup = groupRepo.findById(id).orElse(null);
         if (currGroup != null && currGroup.isOwnerLevel((String) map.get("sessionToken"))) {
             GroupMember member = currGroup.findMember((int) map.get("uid"));
@@ -203,9 +251,13 @@ public class GroupController {
     }
 
     // Owner give user owner
+    @Operation(
+            summary="Give User Owner",
+            description="Owner gives user ownership of group by group id and map."
+    )
     @PutMapping("/group/{id}/makeOwner")
     @JsonView(value = {Views.GroupMember.class})
-    public GroupMember makeOwner(@PathVariable int id, @RequestBody Map<String, Object> map){
+    public GroupMember makeOwner(@Parameter(description = "Group id")@PathVariable int id, @Parameter(description = "Map containing key value pairs. Requires sessionToken and uid.")@RequestBody Map<String, Object> map){
         Group currGroup = groupRepo.findById(id).orElse(null);
         if (currGroup != null && currGroup.isOwnerLevel((String) map.get("sessionToken"))) {
             GroupMember member = currGroup.findMember((int) map.get("uid"));
@@ -228,9 +280,13 @@ public class GroupController {
     }
 
     // Delete
+    @Operation(
+            summary="Delete Group",
+            description="Deletes group by given id and returns deleted group."
+    )
     @DeleteMapping("/group/{id}")
     @JsonView(value = {Views.Group.class})
-    public Group delete(@PathVariable int id, @RequestBody String sessionToken){
+    public Group delete(@Parameter(description = "Group id")@PathVariable int id, @Parameter(description = "String holding sessionToken of user")@RequestBody String sessionToken){
         Group group = groupRepo.findById(id).orElse(null);
         if (group != null && group.isOwnerLevel(sessionToken)){
             groupRepo.delete(group);
@@ -239,15 +295,23 @@ public class GroupController {
     }
 
     // List
+    @Operation(
+            summary="Get All Groups",
+            description="Returns a list of all groups."
+    )
     @GetMapping("/allGroups")
     @JsonView(value = {Views.Group.class})
     public List<Group> getAllGroups(){
         return groupRepo.findAll();
     }
 
+    @Operation(
+            summary="Search Groups",
+            description="Returns a list of groups with name containing keyword."
+    )
     @GetMapping("/searchGroups")
     @JsonView(value = {Views.Group.class})
-    public List<Group> searchGroups(@RequestParam(defaultValue = "") String keyword){
+    public List<Group> searchGroups(@Parameter(description = "String keyword to search by")@RequestParam(defaultValue = "") String keyword){
         List<Group> groups = groupRepo.findAll();
         if (keyword.isEmpty()){
             return groups;
@@ -262,9 +326,13 @@ public class GroupController {
         return groups;
     }
 
+    @Operation(
+            summary="Get Group Plan",
+            description="Returns group's plan based on group id."
+    )
     @GetMapping("group/{id}/getPlan")
     @JsonView(value = {Views.FoodPlan.class})
-    public FoodPlan getFoodplan(@PathVariable int id){
+    public FoodPlan getFoodplan(@Parameter(description = "Group id")@PathVariable int id){
         Group group = groupRepo.findById(id).orElse(null);
         if (group == null) {
             return null;
