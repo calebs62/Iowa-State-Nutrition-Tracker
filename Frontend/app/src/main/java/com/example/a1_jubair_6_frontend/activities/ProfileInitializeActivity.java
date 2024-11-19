@@ -13,16 +13,13 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
-import com.example.a1_jubair_6_frontend.R;
+//import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
 import com.example.a1_jubair_6_frontend.fragments.HomePageFragment;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
@@ -35,9 +32,14 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
-
+/**
+ * Activity class to initialize and manage the user's profile data, including weight, height,
+ * and BMI calculations. It also manages adding the user to a specific group based on the selected
+ * goal (e.g., lose weight, gain weight, gain muscle).
+ *
+ * @author Caleb Sanchez, Alexander Svobodny
+ */
 public class ProfileInitializeActivity extends AppCompatActivity {
 
     private ProfileDataManager profileDataManager;
@@ -48,10 +50,15 @@ public class ProfileInitializeActivity extends AppCompatActivity {
     private int id;
     private String sessionToken;
 
+    /**
+     * Called when the activity is created. Initializes the layout, retrieves the session token,
+     * and sets up the buttons for user interaction.
+     *
+     * @param savedInstanceState the saved state of the activity (if any).
+     */
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState){
-
         super.onCreate(savedInstanceState);
         profileDataManager = new ProfileDataManager(this);
         id = getIntent().getIntExtra("id", -1);
@@ -96,6 +103,12 @@ public class ProfileInitializeActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Saves the user's weight and height to local storage and sends the data to the server.
+     *
+     * @param weight the user's weight.
+     * @param height the user's height.
+     */
     private void saveNewValue(String weight, String height) {
         int usrWeight = Integer.parseInt(weight);
         int usrHeight = Integer.parseInt(height);
@@ -105,6 +118,12 @@ public class ProfileInitializeActivity extends AppCompatActivity {
         updateHeightToServer(usrHeight, id);
     }
 
+    /**
+     * Sends a request to the server to update the user's weight.
+     *
+     * @param weight the new weight of the user.
+     * @param id the ID of the user.
+     */
     public void updateWeightToServer(int weight, int id){
         try {
             JSONObject requestBody = new JSONObject();
@@ -137,6 +156,12 @@ public class ProfileInitializeActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Sends a request to the server to update the user's height.
+     *
+     * @param height the new height of the user.
+     * @param id the ID of the user.
+     */
     public void updateHeightToServer(int height, int id){
         try {
             JSONObject requestBody = new JSONObject();
@@ -169,6 +194,10 @@ public class ProfileInitializeActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Calculates the user's BMI based on the input weight and height.
+     * The result is displayed on the screen.
+     */
     public void calculateBMI(){
         if(!isEmpty(userWeight.getText().toString()) && !isEmpty(userHeight.getText().toString())){
             saveNewValue(userWeight.getText().toString(), userHeight.getText().toString());
@@ -187,6 +216,11 @@ public class ProfileInitializeActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Retrieves the session token for the current user from the server.
+     *
+     * @param id the ID of the user.
+     */
     public void getSessionToken(int id) {
         String requestUrl = AppConstants.SERVER_URL + "/" + id + "/sessionToken";
 
@@ -220,6 +254,12 @@ public class ProfileInitializeActivity extends AppCompatActivity {
         VolleySingleton.getInstance(this).addToRequestQueue(joinRequest);
     }
 
+    /**
+     * Adds the user to a specific group based on what the user chose as their goal.
+     *
+     * @param uid the user ID.
+     * @param gid the group ID.
+     */
     public void addUserToGroup(int uid, int gid){
         String requestUrl = AppConstants.SERVER_URL + "/group/" + gid + "/join";
 

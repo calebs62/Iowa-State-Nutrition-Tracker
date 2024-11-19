@@ -15,7 +15,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.example.a1_jubair_6_frontend.R;
+//import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
 
 public class EditPasswordFragment extends Fragment {

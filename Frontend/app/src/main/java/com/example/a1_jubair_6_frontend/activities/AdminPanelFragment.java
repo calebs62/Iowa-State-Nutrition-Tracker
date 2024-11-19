@@ -22,7 +22,7 @@ import android.widget.Toast;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.example.a1_jubair_6_frontend.R;
+//import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.adapters.FoodAdapter;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
 import com.example.a1_jubair_6_frontend.fragments.profile.PasswordAndSecurityFragment;

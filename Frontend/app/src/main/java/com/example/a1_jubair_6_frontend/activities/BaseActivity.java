@@ -12,7 +12,7 @@ import com.example.a1_jubair_6_frontend.fragments.GoalsFragment;
 import com.example.a1_jubair_6_frontend.fragments.HomePageFragment;
 import com.example.a1_jubair_6_frontend.fragments.MenuFragment;
 import com.example.a1_jubair_6_frontend.fragments.profile.ProfileFragment;
-import com.example.a1_jubair_6_frontend.R;
+//import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.fragments.TrackerFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 

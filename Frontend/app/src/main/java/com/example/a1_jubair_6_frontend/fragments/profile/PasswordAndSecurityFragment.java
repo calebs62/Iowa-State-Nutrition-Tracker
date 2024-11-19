@@ -14,7 +14,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.example.a1_jubair_6_frontend.R;
+//import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.activities.BaseActivity;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
 import com.example.a1_jubair_6_frontend.models.PrivacySettings;

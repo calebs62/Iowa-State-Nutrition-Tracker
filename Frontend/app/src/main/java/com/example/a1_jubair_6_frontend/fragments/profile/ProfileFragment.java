@@ -33,15 +33,22 @@ import com.bumptech.glide.Glide;
 import com.example.a1_jubair_6_frontend.activities.AdminPanelFragment;
 import com.example.a1_jubair_6_frontend.activities.LoginSignupActivity;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
-import com.example.a1_jubair_6_frontend.R;
+//import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
-import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
 import com.example.a1_jubair_6_frontend.models.User;
 import com.example.a1_jubair_6_frontend.network.VolleySingleton;
 import com.example.a1_jubair_6_frontend.activities.*;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/**
+ * Fragment representing the user's profile information, including their picture, weight, height,
+ * and settings options. This fragment allows users to view and update their profile data, change
+ * profile picture, and navigate to different sections like personal information, security settings,
+ * and notifications.
+ *
+ * @author Caleb Sanchez, Alexander Svobodny
+ */
 public class ProfileFragment extends Fragment {
 
     private View rootView;
@@ -54,6 +61,9 @@ public class ProfileFragment extends Fragment {
     private ProfileDataManager profileDataManager;
     boolean isAdmin = false;
 
+    /**
+     * Launcher for updating the profile picture.
+     */
     private final ActivityResultLauncher<Intent> updateProfilePictureLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == AppCompatActivity.RESULT_OK) {
@@ -69,6 +79,11 @@ public class ProfileFragment extends Fragment {
                 }
             });
 
+    /**
+     * Initializes the fragment, sets up the profile data manager, and checks if the user is an admin.
+     *
+     * @param savedInstanceState the saved state of the fragment, if any.
+     */
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,15 +92,28 @@ public class ProfileFragment extends Fragment {
         isAdmin = accountType.equals("ADMINISTRATOR") || accountType.equals("CONTRIBUTOR");
     }
 
+    /**
+     * Inflates the layout for this fragment.
+     *
+     * @param inflater the LayoutInflater object to inflate the layout.
+     * @param container the container in which the fragment will be placed.
+     * @param savedInstanceState the saved state of the fragment, if any.
+     * @return the inflated view of the fragment.
+     */
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         rootView = inflater.inflate(R.layout.fragment_profile, container, false);
         return rootView;
     }
 
+    /**
+     * Sets up the profile information and handles UI interactions for logout and profile picture updates.
+     *
+     * @param view the root view of the fragment.
+     * @param savedInstancesState the saved state of the fragment, if any.
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstancesState) {
         super.onViewCreated(view, savedInstancesState);
@@ -111,10 +139,9 @@ public class ProfileFragment extends Fragment {
                         new Response.Listener<String>() {
                             @Override
                             public void onResponse(String response) {
-
                                 Toast.makeText(getActivity(), response, Toast.LENGTH_SHORT).show();
 
-                                if(response.equals("Logout successful")) {
+                                if (response.equals("Logout successful")) {
                                     Intent intent = new Intent(getActivity(), LoginSignupActivity.class);
                                     profileDataManager.clearUserData();
                                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -125,7 +152,6 @@ public class ProfileFragment extends Fragment {
                         new Response.ErrorListener() {
                             @Override
                             public void onErrorResponse(VolleyError error) {
-                                // Handle error
                                 Log.e("Volley Error", "Logout failed: " + error.getMessage());
                                 Toast.makeText(getActivity(), "Logout failed. Please try again.", Toast.LENGTH_SHORT).show();
                             }
@@ -169,27 +195,41 @@ public class ProfileFragment extends Fragment {
         });
     }
 
+    /**
+     * Updates the user's profile information, including full name, weight, and height.
+     */
     private void updateUserInfo() {
         String fullName = profileDataManager.getFirstname() + " " + profileDataManager.getLastname();
         username.setText(fullName);
 
         int weightVal = profileDataManager.getWeight();
-        if(weightVal > -1)
+        if (weightVal > -1)
             weight.setText(String.format("Height\n%d lb", weightVal));
 
         int heightVal = profileDataManager.getHeight();
-        if(heightVal > -1)
+        if (heightVal > -1)
             height.setText(String.format("Weight\n%d ft", heightVal));
     }
 
-    private void setupMenuItems(){
+    /**
+     * Sets up the menu items in the profile section, including personal info, security settings, and notifications.
+     * If the user is an admin, the admin panel option is also added.
+     */
+    private void setupMenuItems() {
         setupMenuItem(R.id.personalInfo, R.drawable.profile_icon, "Personal Information");
         setupMenuItem(R.id.passwordSecurity, R.drawable.security_icon, "Password & Security");
         setupMenuItem(R.id.notifications, R.drawable.notifications_icon, "Notifications");
-        if(isAdmin)
+        if (isAdmin)
             setupMenuItem(R.id.adminPanel, R.drawable.menu_icon, "Admin Panel");
     }
 
+    /**
+     * Sets up an individual menu item, including icon, title, and click event.
+     *
+     * @param itemId the ID of the menu item.
+     * @param iconResId the resource ID of the icon.
+     * @param title the title of the menu item.
+     */
     private void setupMenuItem(int itemId, int iconResId, String title) {
         View item = rootView.findViewById(itemId);
         ImageView icon = item.findViewById(R.id.icon);
@@ -198,7 +238,7 @@ public class ProfileFragment extends Fragment {
 
         icon.setImageResource(iconResId);
         titleView.setText(title);
-        if(itemId == R.id.adminPanel){
+        if (itemId == R.id.adminPanel) {
             item.setVisibility(View.VISIBLE);
         }
 
@@ -208,30 +248,34 @@ public class ProfileFragment extends Fragment {
             icon.setColorFilter(getResources().getColor(R.color.Iowa_State_Red));
             rightArrow.setColorFilter(getResources().getColor(R.color.Iowa_State_Red));
 
-            if(itemId == R.id.personalInfo){
+            if (itemId == R.id.personalInfo) {
                 navigateToSubFragment(new PersonalInfoFragment());
-            }
-            else if(itemId == R.id.passwordSecurity){
+            } else if (itemId == R.id.passwordSecurity) {
                 navigateToSubFragment(new PasswordAndSecurityFragment());
-            }
-            else if(itemId == R.id.notifications){
+            } else if (itemId == R.id.notifications) {
                 navigateToSubFragment(new NotificationsFragment());
-            }
-            else if(itemId == R.id.adminPanel){
+            } else if (itemId == R.id.adminPanel) {
                 navigateToSubFragment(new AdminPanelFragment());
-            }
-            else{
+            } else {
                 Log.e("Navigation Error", "Could not navigate from profile page!");
             }
         });
     }
 
-    private void navigateToSubFragment(Fragment fragment){
-        if(getActivity() instanceof BaseActivity){
+    /**
+     * Navigates to a sub-fragment.
+     *
+     * @param fragment the fragment to navigate to.
+     */
+    private void navigateToSubFragment(Fragment fragment) {
+        if (getActivity() instanceof BaseActivity) {
             ((BaseActivity) getActivity()).loadFragment(fragment, true);  // True to add to back stack
         }
     }
 
+    /**
+     * Updates the profile picture displayed in the profile fragment.
+     */
     private void updateProfilePicture() {
         if (getContext() == null) return;
 

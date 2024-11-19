@@ -31,7 +31,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.a1_jubair_6_frontend.R;
+//import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.managers.NotificationDataManager;
 import com.example.a1_jubair_6_frontend.models.User;
 import com.google.android.material.button.MaterialButton;
