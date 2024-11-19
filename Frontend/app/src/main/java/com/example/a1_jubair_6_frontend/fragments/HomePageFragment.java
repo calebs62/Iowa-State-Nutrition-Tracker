@@ -13,7 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-//import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.activities.BaseActivity;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
 import com.example.a1_jubair_6_frontend.widgets.NutrientProgressView;

@@ -26,7 +26,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.bumptech.glide.Glide;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
-//import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.network.VolleySingleton;
 import com.example.a1_jubair_6_frontend.utils.ImageUtils;
 

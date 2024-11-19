@@ -22,7 +22,7 @@ import com.example.a1_jubair_6_frontend.constants.AppConstants;
 import com.example.a1_jubair_6_frontend.fragments.HomePageFragment;
 import com.example.a1_jubair_6_frontend.managers.EngagementNotificationManager;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
-//import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.models.User;
 import com.example.a1_jubair_6_frontend.network.VolleySingleton;
 

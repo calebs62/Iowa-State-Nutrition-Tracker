@@ -12,7 +12,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-//import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.fragments.HomePageFragment;
 import com.example.a1_jubair_6_frontend.network.WebSocketClient;
 

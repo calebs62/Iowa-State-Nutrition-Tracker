@@ -8,7 +8,7 @@ import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
 
 
-//import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.fragments.MenuFragment;
 
 public class ViewMenusActivityTesting extends AppCompatActivity {
