@@ -35,6 +35,13 @@ import org.json.JSONObject;
 
 import java.util.List;
 
+/**
+ * Adapter class for managing and displaying food items in a RecyclerView.
+ * This class handles the display, editing, and deletion of food items, with different
+ * functionality available for admin and non-admin users.
+ *
+ * @author Alexander Svobodny, Caleb Sanchez
+ */
 public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder> {
 
     private List<FoodItem> foodItemList;
@@ -43,6 +50,12 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
     private boolean isAdmin;
     Menu currentMenu;
 
+    /**
+     * Constructs a new FoodAdapter with the specified list of food items and admin status.
+     *
+     * @param foodItemList List of FoodItem objects to be displayed
+     * @param isAdmin Boolean indicating whether the user has admin privileges
+     */
     public FoodAdapter(List<FoodItem> foodItemList, boolean isAdmin) {
         this.foodItemList = foodItemList;
         this.isAdmin = isAdmin;
@@ -92,6 +105,11 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         holder.itemView.setOnClickListener(v -> showFoodDetailsDialog(foodItem));
     }
 
+    /**
+     * Shows a confirmation dialog before deleting a food item.
+     *
+     * @param position The position of the item to be deleted in the foodItemList
+     */
     private void showDeleteConfirmationDialog(int position) {
         new AlertDialog.Builder(context)
                 .setTitle("Delete Food Item")
@@ -106,6 +124,10 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         return foodItemList.size();
     }
 
+    /**
+     * ViewHolder class for food items in the RecyclerView.
+     * Holds references to the views that display food item information.
+     */
     public static class FoodViewHolder extends RecyclerView.ViewHolder {
         TextView foodName;
         TextView calories;
@@ -115,6 +137,11 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         Button buttonEdit;
         Button buttonDelete;
 
+        /**
+         * Constructs a new FoodViewHolder and initializes its views.
+         *
+         * @param itemView The View object containing the layout for a single food item
+         */
         public FoodViewHolder(@NonNull View itemView) {
             super(itemView);
             foodName = itemView.findViewById(R.id.foodName);
@@ -127,10 +154,20 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         }
     }
 
+    /**
+     * Sets the current menu context for the adapter.
+     *
+     * @param menu The Menu object to associate with this adapter
+     */
     public void setCurrentMenu(Menu menu){
         currentMenu = menu;
     }
 
+    /**
+     * Displays a dialog showing detailed nutritional information for a food item.
+     *
+     * @param item The FoodItem whose details should be displayed
+     */
     private void showFoodDetailsDialog(FoodItem item) {
         Dialog dialog = new Dialog(context);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -165,6 +202,12 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         dialog.show();
     }
 
+    /**
+     * Displays a dialog for editing a food item's details.
+     *
+     * @param position The position of the item in the foodItemList
+     * @param item The FoodItem to be edited
+     */
     private void showEditDialog(int position, FoodItem item) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         View dialogView = LayoutInflater.from(context).inflate(R.layout.food_item_dialog, null);
@@ -255,14 +298,31 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         proteinInput.addTextChangedListener(textWatcher);
     }
 
+    /**
+     * Returns the provided string or a default value if the string is null.
+     *
+     * @param value The string to check
+     * @return The original string if not null, "N/A" otherwise
+     */
     private String getStringOrDefault(String value) {
         return value != null ? value : "N/A";
     }
 
+    /**
+     * Returns the provided integer or a default value if the integer is null.
+     *
+     * @param value The Integer to check
+     * @return The original integer if not null, 0 otherwise
+     */
     private int getIntOrDefault(Integer value) {
         return value != null ? value : 0;
     }
 
+    /**
+     * Deletes a food item from the list and the server.
+     *
+     * @param position The position of the item to delete in the foodItemList
+     */
     public void deleteItem(int position){
         int id = foodItemList.get(position).getId();
         if( currentMenu != null)
@@ -274,6 +334,13 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         notifyItemRangeChanged(position, foodItemList.size());
     }
 
+    /**
+     * Updates a food item's details both in the list and on the server.
+     *
+     * @param position The position of the item to update in the foodItemList
+     * @param updatedItem The new FoodItem data
+     * @throws JSONException If there's an error creating the JSON request
+     */
     public void editItem(int position, FoodItem updatedItem) throws JSONException {
         int id = updatedItem.getId();
         if(currentMenu != null)
@@ -284,6 +351,11 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         notifyItemChanged(position);
     }
 
+    /**
+     * Sends a DELETE request to remove a food item from the server.
+     *
+     * @param id The ID of the food item to delete
+     */
     private void deleteFoodItem(int id) {
         String url = AppConstants.SERVER_URL + "/item/" + id;
 
@@ -298,6 +370,13 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         VolleySingleton.getInstance(context).addToRequestQueue(request);
     }
 
+    /**
+     * Sends a PUT request to update a food item's details on the server.
+     *
+     * @param id The ID of the food item to update
+     * @param foodItem The updated food item data
+     * @throws JSONException If there's an error creating the JSON request
+     */
     private void updateFoodItem(int id, FoodItem foodItem) throws JSONException {
         String url = AppConstants.SERVER_URL + "/item/update/" + id;
 
@@ -316,6 +395,11 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         VolleySingleton.getInstance(context).addToRequestQueue(request);
     }
 
+    /**
+     * Sends a DELETE request to remove a food item from a menu on the server.
+     *
+     * @param id The ID of the food item to remove from the menu
+     */
     private void deleteMenuFoodItem(int id){
         String url = AppConstants.SERVER_URL + "/menu/" + currentMenu.getId() + "/remove/" + id;
 
@@ -336,6 +420,12 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         VolleySingleton.getInstance(context).addToRequestQueue(request);
     }
 
+    /**
+     * Sends a PUT request to add/update a food item in a menu on the server.
+     *
+     * @param id The ID of the food item to add/update in the menu
+     * @param foodItem The food item data to update
+     */
     private void updateMenuFoodItem(int id, FoodItem foodItem){
         String url = AppConstants.SERVER_URL + "/menu/" + currentMenu.getId() + "/add/" + id;
 

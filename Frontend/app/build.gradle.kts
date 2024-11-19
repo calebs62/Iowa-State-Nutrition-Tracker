@@ -29,6 +29,27 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+
+    sourceSets {
+        getByName("test") {
+            java.srcDirs("src/test/java")
+        }
+    }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            isReturnDefaultValues = true
+        }
+    }
+
+    tasks.withType<Test> {
+        testLogging {
+            outputs.upToDateWhen { false }
+            showStandardStreams = true
+            events("passed", "skipped", "failed")
+        }
+    }
 }
 
 dependencies {
@@ -39,11 +60,14 @@ dependencies {
     implementation(libs.volley)
     implementation(libs.glide)
     implementation(libs.gson)
-    implementation(libs.androidx.junit)
     implementation(libs.okhttp)
     implementation(libs.androidx.work.runtime)
     implementation(libs.androidx.swiperefreshlayout)
-    implementation(files("C:\\Users\\minim\\AppData\\Local\\Android\\Sdk\\platforms\\android-35\\android.jar"))
+
+    androidTestImplementation(libs.androidx.junit)
+
     testImplementation(libs.junit.junit)
-    testImplementation(libs.testng)
+    testImplementation(libs.mockito.android)
+
+    androidTestImplementation(libs.androidx.espresso.core.v361)
 }

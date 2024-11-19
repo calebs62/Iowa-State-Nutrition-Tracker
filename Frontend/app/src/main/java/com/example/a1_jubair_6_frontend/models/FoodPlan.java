@@ -23,7 +23,7 @@ public class FoodPlan {
     public void setCalories(int val) {this.calories = val;}
     public void setTotalFat(int val) {this.totalFat = val;}
     public void setSodium(int val) {this.sodium = val;}
-    public void setCarbohydrate(int val) {this.sodium = val;}
+    public void setCarbohydrate(int val) {this.carbohydrate = val;}
     public void setProtein(int val) {this.protein = val;}
 
 }

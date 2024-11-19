@@ -4,6 +4,9 @@ import coms309.entity.PrivacySettings;
 import coms309.entity.SystemNotificationQueue;
 import coms309.entity.User;
 import coms309.repository.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +18,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+@Tag(name="Privacy Settings", description="Privacy Settings API")
 @RestController
 @RequestMapping("/privacy/settings")
 public class PrivacySettingController {
@@ -26,8 +30,12 @@ public class PrivacySettingController {
     @Autowired
     UserRepository userRepo;
 
+    @Operation(
+            summary="Get privacy settings for user",
+            description="Returns given user's privacy settings"
+    )
     @GetMapping("/{userId}")
-    public ResponseEntity<?> getPreferences(@PathVariable int userId) {
+    public ResponseEntity<?> getPreferences(@Parameter(description="Id of user who's notification settings are to be retrieved.")@PathVariable int userId) {
         logger.info("Getting privacy settings for user: " + userId);
         PrivacySettings settings = findSetting(userId);
         if (settings == null) {
@@ -36,8 +44,13 @@ public class PrivacySettingController {
         return ResponseEntity.ok(settings);
     }
 
+    @Operation(
+            summary="Updated privacy settings",
+            description="Updated privacy settings for given user."
+    )
     @PutMapping("/{userId}")
-    public ResponseEntity<?> updateSettings(@PathVariable int userId, @RequestBody Map<String, Boolean> newSettings) {
+    public ResponseEntity<?> updateSettings(@Parameter(description="Id of user who's privacy settings are to be updated.")@PathVariable int userId,
+                                            @Parameter(description="Map containing settings and whether they should be changed.")@RequestBody Map<String, Boolean> newSettings) {
         logger.info("Updating privacy settings for user: " + userId + " with: " + newSettings);
 
         PrivacySettings settings = findSetting(userId);

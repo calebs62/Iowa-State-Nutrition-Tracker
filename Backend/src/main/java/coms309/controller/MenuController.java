@@ -4,12 +4,16 @@ import coms309.repository.MenuRepository;
 import coms309.entity.Menu;
 import coms309.repository.FoodItemRepository;
 import coms309.entity.FoodItem;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Tag(name = "Menus", description = "Menu API")
 @RestController
 public class MenuController {
     @Autowired
@@ -18,20 +22,32 @@ public class MenuController {
     FoodItemRepository foodRepo;
 
     // Create
+    @Operation(
+            summary = "Create Menu",
+            description = "Create menu object from request body."
+    )
     @PostMapping("/menu")
-    public Menu saveMenu(@RequestBody Menu menu){
+    public Menu saveMenu(@Parameter(description = "Menu object")@RequestBody Menu menu){
         return menuRepo.save(menu);
     }
 
     // Read
+    @Operation(
+            summary = "Get Menu",
+            description = "Returns menu by given id."
+    )
     @GetMapping("/menu/{id}")
-    public Menu getMenubyId(@PathVariable int id){
+    public Menu getMenubyId(@Parameter(description = "Menu id")@PathVariable int id){
         return menuRepo.findById(id).get();
     }
 
     // Update
+    @Operation(
+            summary = "Update Menu",
+            description = "Updates menu based on id and menu object."
+    )
     @PutMapping("/menu/update/{id}")
-    public Menu updateMenu(@PathVariable int id, @RequestBody Menu updatedMenu){
+    public Menu updateMenu(@Parameter(description = "Menu id")@PathVariable int id, @Parameter(description = "Updated menu object")@RequestBody Menu updatedMenu){
         Menu currMenu = menuRepo.findById(id).orElse(null);
         if (currMenu != null){
             currMenu.setAll(updatedMenu);
@@ -41,8 +57,12 @@ public class MenuController {
     }
 
     // Add item to menu
+    @Operation(
+            summary = "Add Menu Item",
+            description = "Add food item to menu."
+    )
     @PutMapping("/menu/{menuid}/add/{foodid}")
-    public Menu addFood(@PathVariable("menuid") int menuId, @PathVariable("foodid") int foodId){
+    public Menu addFood(@Parameter(description = "Menu id")@PathVariable("menuid") int menuId, @Parameter(description = "Food item id")@PathVariable("foodid") int foodId){
         Menu currMenu = menuRepo.findById(menuId).orElse(null);
         FoodItem newItem = foodRepo.findById(foodId).orElse(null);
         if (currMenu != null && newItem != null){
@@ -53,8 +73,12 @@ public class MenuController {
     }
 
     // Remove item from menu
+    @Operation(
+            summary = "Remove Menu Item",
+            description = "Removes food item from menu."
+    )
     @PutMapping("/menu/{menuid}/remove/{foodid}")
-    public Menu removeFood(@PathVariable("menuid") int menuId, @PathVariable("foodid") int foodId){
+    public Menu removeFood(@Parameter(description = "Menu id")@PathVariable("menuid") int menuId, @Parameter(description = "Food item id")@PathVariable("foodid") int foodId){
         Menu currMenu = menuRepo.findById(menuId).orElse(null);
         FoodItem delItem = foodRepo.findById(foodId).orElse(null);
         if (currMenu != null && delItem != null){
@@ -65,8 +89,12 @@ public class MenuController {
     }
 
     // Delete
+    @Operation(
+            summary = "Delete Menu",
+            description = "Deletes menu by given id."
+    )
     @DeleteMapping("/menu/{id}")
-    public Menu delete(@PathVariable int id){
+    public Menu delete(@Parameter(description = "Group id")@PathVariable int id){
         Menu delMenu = menuRepo.findById(id).orElse(null);
         if (menuRepo.existsById(id)){
             menuRepo.deleteById(id);
@@ -75,14 +103,22 @@ public class MenuController {
     }
 
     //List
+    @Operation(
+            summary = "Get All Menus",
+            description = "Returns a list of all menus."
+    )
     @GetMapping("/allMenus")
     public List<Menu> getAllMenus(){
         return new ArrayList<>(menuRepo.findAll());
     }
 
     // Search by keyword
+    @Operation(
+            summary = "Search Menus",
+            description = "Returns a list of menus with name containing keyword."
+    )
     @GetMapping("/menu/search")
-    public List<Menu> searchMenus(@RequestParam(defaultValue="") String keyword){
+    public List<Menu> searchMenus(@Parameter(description = "String keyword to search by")@RequestParam(defaultValue="") String keyword){
         List<Menu> menus = menuRepo.findAll();
         if (keyword.isEmpty()){
             return menus;

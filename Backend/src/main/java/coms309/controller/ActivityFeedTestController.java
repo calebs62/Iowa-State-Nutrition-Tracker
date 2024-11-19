@@ -5,6 +5,8 @@ import coms309.entity.Group;
 import coms309.entity.User;
 import coms309.repository.GroupRepository;
 import coms309.repository.UserRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Random;
 
+@Tag(name="Activity Feed Test", description="Used to test activity feed functions")
 @RestController
 public class ActivityFeedTestController {
     @Autowired
@@ -62,6 +65,10 @@ public class ActivityFeedTestController {
                 calories, protein, carbs, fat);
     }
 
+    @Operation(
+            summary="Used to test sending a number of ActivityFeed functions",
+            description="Input the userId, groupId, and type of activity. Will output activity to activity feed."
+    )
     @GetMapping("/test/activity/{userId}/{groupId}/{type}")
     public String createTestActivity(
             @PathVariable int userId,
