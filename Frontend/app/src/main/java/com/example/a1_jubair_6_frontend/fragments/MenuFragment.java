@@ -1,7 +1,9 @@
 package com.example.a1_jubair_6_frontend.fragments;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -28,14 +30,16 @@ import com.android.volley.Request;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.a1_jubair_6_frontend.R;
-import com.example.a1_jubair_6_frontend.activities.*;
+import com.example.a1_jubair_6_frontend.activities.MenuViewActivity;
 import com.example.a1_jubair_6_frontend.adapters.FoodAdapter;
+import com.example.a1_jubair_6_frontend.adapters.MenuSelectionAdapter;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
 import com.example.a1_jubair_6_frontend.models.FoodItem;
 import com.example.a1_jubair_6_frontend.models.Menu;
 import com.example.a1_jubair_6_frontend.network.VolleySingleton;
-import com.google.android.material.button.MaterialButton;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.slider.RangeSlider;
@@ -64,22 +68,21 @@ public class MenuFragment extends Fragment {
     private Gson gson = new Gson();
     private View adminToolsContainer;
     private boolean isAdmin = false;
-    ProfileDataManager profileDataManager;
+    private ProfileDataManager profileDataManager;
 
-    int currentBreakfastMenuIndex, currentLunchMenuIndex, currentDinnerMenuIndex;
-    private String mealType;
-    private String menuLocation;
-    private Timestamp menuDate;
-    List<Menu> allMenus, breakfastMenus, lunchMenus, dinnerMenus;
-    TabLayout mealTypeTabs;
-
-    MaterialButton addButton;
+    private int currentBreakfastMenuIndex, currentLunchMenuIndex, currentDinnerMenuIndex;
+    private List<Menu> allMenus, breakfastMenus, lunchMenus, dinnerMenus;
+    private TabLayout mealTypeTabs;
+    private Button selectMenusButton;
+    private BottomSheetDialog menuSelectionDialog;
+    private MenuSelectionAdapter breakfastAdapter, lunchAdapter, dinnerAdapter;
+    private RecyclerView breakfastMenuList, lunchMenuList, dinnerMenuList;
 
     private LinearLayout advancedFiltersSection;
     private ImageButton btnShowFilters;
     private boolean isFilterSectionVisible = false;
     private String currentComparisonType = "==";
-    View view;
+    private View view;
     private String currentSearchQuery = "";
     private boolean useServerFilter = false;
 
@@ -122,8 +125,11 @@ public class MenuFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         adminToolsContainer = view.findViewById(R.id.adminToolsContainer);
+        selectMenusButton = view.findViewById(R.id.btnSelectMenus);
+
         if (isAdmin) {
             adminToolsContainer.setVisibility(View.VISIBLE);
+            selectMenusButton.setOnClickListener(v -> showMenuSelectionDialog());
         }
 
         foodList = view.findViewById(R.id.foodList);
@@ -135,47 +141,19 @@ public class MenuFragment extends Fragment {
         int bottomNavHeight = getResources().getDimensionPixelSize(R.dimen.bottom_nav_height);
         foodList.setPadding(0, 0, 0, bottomNavHeight);
 
-        //Gets menus from server
-        //getAllMenus();
-
         mealTypeTabs = view.findViewById(R.id.mealTypeTabs);
 
-        //For Testing purposes, need to remove once we havefull communication with server:
-        Menu mockBreakfastMenu = createMockBreakfastMenu();
-        Menu mockLunchMenu = createMockLunchMenu();
-        Menu mockDinnerMenu = createMockDinnerMenu();
-        breakfastMenus.add(mockBreakfastMenu);
-        lunchMenus.add(mockLunchMenu);
-        dinnerMenus.add(mockDinnerMenu);
-
-        //TODO: Need to set these to what the admin wants, ex. Have a dialog show the list of menus and once you select a certain one it will set this index (hidden controls for admin to add,edit,delete menus)
-        currentBreakfastMenuIndex = 0;
-        currentLunchMenuIndex = 0;
-        currentDinnerMenuIndex = 0;
-
-        //This makes sure the breakfast tab isn't blank on created
-        foodItemList.clear();
-        foodItemList.addAll(breakfastMenus.get(currentBreakfastMenuIndex).getFoodItems());
-        foodAdapter.notifyDataSetChanged();
-
-        //Sets each tab with their corresponding menu set by the admin
-        updateTab();
-
         Button viewMenus = view.findViewById(R.id.btnViewMenus);
-        viewMenus.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(getActivity(), ViewMenusActivityTesting.class);
-
-                // Serialize the mock menu into a JSON string and pass it as an extra
-                Menu mockBreakfastMenu = createMockBreakfastMenu(); // Get your mock menu
-                String menuJson = gson.toJson(mockBreakfastMenu);
-
-                intent.putExtra("menu_data", menuJson); // Pass the menu data to the next activity
-                startActivity(intent);
-            }
+        viewMenus.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), MenuViewActivity.class);
+            startActivity(intent);
         });
 
+        // Get all menus from server
+        getAllMenus();
+
+        loadSavedSelections();
+        updateTab();
         setupSearchAndFilters();
     }
 
@@ -189,23 +167,86 @@ public class MenuFragment extends Fragment {
                 url,
                 null,
                 response -> {
-                    for (int i = 0; i < response.length(); i++){
-                        try{
+                    Log.d("MenuFragment", "Server response: " + response.toString());
+
+                    try {
+                        allMenus.clear();
+                        breakfastMenus.clear();
+                        lunchMenus.clear();
+                        dinnerMenus.clear();
+
+                        for (int i = 0; i < response.length(); i++) {
                             JSONObject menuJson = response.getJSONObject(i);
                             Menu menu = gson.fromJson(menuJson.toString(), Menu.class);
                             allMenus.add(menu);
 
-                            Log.i("All Menus Request", "Got all menus from server");
-                        } catch (JSONException e) {
-                            Log.e("Response Error", String.valueOf(e.getMessage()));
+                            // Sort menu into appropriate list
+                            String mealType = menu.getMeal().toLowerCase().trim();
+                            Log.d("MenuFragment", "Processing menu: " + menu.getId() +
+                                    ", meal type: " + mealType);
+
+                            if (mealType.equals("breakfast")) {
+                                breakfastMenus.add(menu);
+                            } else if (mealType.equals("lunch")) {
+                                lunchMenus.add(menu);
+                            } else if (mealType.equals("dinner")) {
+                                dinnerMenus.add(menu);
+                            }
                         }
+
+                        Log.d("MenuFragment", "Processed menus - Breakfast: " + breakfastMenus.size() +
+                                ", Lunch: " + lunchMenus.size() +
+                                ", Dinner: " + dinnerMenus.size());
+
+                        requireActivity().runOnUiThread(() -> {
+                            Log.d("MenuFragment", "Checking menu lists on UI thread");
+
+                            if (breakfastMenus.isEmpty()) {
+                                breakfastMenus.add(createMockBreakfastMenu());
+                                Log.w("MenuFragment", "No breakfast menus from server, using mock data");
+                            }
+                            if (lunchMenus.isEmpty()) {
+                                lunchMenus.add(createMockLunchMenu());
+                                Log.w("MenuFragment", "No lunch menus from server, using mock data");
+                            }
+                            if (dinnerMenus.isEmpty()) {
+                                dinnerMenus.add(createMockDinnerMenu());
+                                Log.w("MenuFragment", "No dinner menus from server, using mock data");
+                            }
+
+                            // If there's a selection dialog showing, update its adapters
+                            if (menuSelectionDialog != null && menuSelectionDialog.isShowing()) {
+                                setupMenuLists();
+                            }
+                            loadSavedSelections();
+                            updateCurrentMenuDisplay();
+                        });
+
+                    } catch (Exception e) {
+                        Log.e("MenuFragment", "Error processing menus: " + e.getMessage());
+                        requireActivity().runOnUiThread(() -> {
+                            Toast.makeText(requireContext(),
+                                    "Error processing menus from server",
+                                    Toast.LENGTH_SHORT).show();
+
+                            setupMenuLists();
+                            updateCurrentMenuDisplay();
+                        });
                     }
                 },
                 error -> {
-                    Log.e("Request Error", "Could not get all menus from server");
+                    Log.e("MenuFragment", "Server error: " + error.toString());
+                    requireActivity().runOnUiThread(() -> {
+                        Toast.makeText(requireContext(),
+                                "Error loading menus from server",
+                                Toast.LENGTH_SHORT).show();
+
+                        setupMenuLists();
+                        updateCurrentMenuDisplay();
+                    });
                 }
         );
-        sortMenus();
+
         VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
     }
 
@@ -218,10 +259,6 @@ public class MenuFragment extends Fragment {
                 null,
                 response -> {
                     Menu menu = gson.fromJson(response.toString(), Menu.class);
-
-                    mealType = menu.getMeal();
-                    menuDate = menu.getDate();
-                    menuLocation = menu.getLocation();
 
                     foodItemList.clear();
                     foodItemList.addAll(menu.getFoodItems());
@@ -413,20 +450,6 @@ public class MenuFragment extends Fragment {
     // </editor-fold>
 
     // <editor-fold desc="Helper Methods">
-
-    private void sortMenus(){
-        for(Menu menu : allMenus){
-            if(menu.getMeal().equalsIgnoreCase("breakfast")){
-                breakfastMenus.add(menu);
-            }
-            else if(menu.getMeal().equalsIgnoreCase("lunch")){
-                lunchMenus.add(menu);
-            }
-            else if(menu.getMeal().equalsIgnoreCase("dinner")){
-                dinnerMenus.add(menu);
-            }
-        }
-    }
 
     private void updateItemInList(FoodItem updatedItem) {
         for (int i = 0; i < foodItemList.size(); i++) {
@@ -946,6 +969,133 @@ public class MenuFragment extends Fragment {
         foodAdapter.notifyDataSetChanged();
     }
 
+    private void showMenuSelectionDialog() {
+        menuSelectionDialog = new BottomSheetDialog(requireContext(), R.style.BottomSheetDialogTheme);
+        View dialogView = getLayoutInflater().inflate(R.layout.menu_selection_dialog, null);
+        menuSelectionDialog.setContentView(dialogView);
+
+        BottomSheetBehavior<View> behavior = BottomSheetBehavior.from((View) dialogView.getParent());
+        behavior.setPeekHeight(getResources().getDisplayMetrics().heightPixels / 2);
+        behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+
+        breakfastMenuList = dialogView.findViewById(R.id.breakfastMenuList);
+        lunchMenuList = dialogView.findViewById(R.id.lunchMenuList);
+        dinnerMenuList = dialogView.findViewById(R.id.dinnerMenuList);
+
+        setupMenuLists();
+
+        menuSelectionDialog.show();
+    }
+
+    private void setupMenuLists() {
+        if (breakfastMenus.isEmpty()) {
+            Log.w("MenuFragment", "No breakfast menus found, using mock data");
+        }
+        if (lunchMenus.isEmpty()) {
+            Log.w("MenuFragment", "No lunch menus found, using mock data");
+        }
+        if (dinnerMenus.isEmpty()) {
+            Log.w("MenuFragment", "No dinner menus found, using mock data");
+        }
+        // Setup Breakfast Menu List
+        breakfastMenuList.setLayoutManager(new LinearLayoutManager(requireContext()));
+        breakfastAdapter = new MenuSelectionAdapter(breakfastMenus, (position, menu) -> {
+            currentBreakfastMenuIndex = position;
+            if (mealTypeTabs.getSelectedTabPosition() == 0) {
+                updateCurrentMenuDisplay();
+            }
+            saveMenuSelections();
+        });
+        breakfastMenuList.setAdapter(breakfastAdapter);
+        if (currentBreakfastMenuIndex >= 0) {
+            breakfastAdapter.setSelectedPosition(currentBreakfastMenuIndex);
+        }
+
+        // Setup Lunch Menu List
+        lunchMenuList.setLayoutManager(new LinearLayoutManager(requireContext()));
+        lunchAdapter = new MenuSelectionAdapter(lunchMenus, (position, menu) -> {
+            currentLunchMenuIndex = position;
+            if (mealTypeTabs.getSelectedTabPosition() == 1) {
+                updateCurrentMenuDisplay();
+            }
+            saveMenuSelections();
+        });
+        lunchMenuList.setAdapter(lunchAdapter);
+        if (currentLunchMenuIndex >= 0) {
+            lunchAdapter.setSelectedPosition(currentLunchMenuIndex);
+        }
+
+        // Setup Dinner Menu List
+        dinnerMenuList.setLayoutManager(new LinearLayoutManager(requireContext()));
+        dinnerAdapter = new MenuSelectionAdapter(dinnerMenus, (position, menu) -> {
+            currentDinnerMenuIndex = position;
+            if (mealTypeTabs.getSelectedTabPosition() == 2) {
+                updateCurrentMenuDisplay();
+            }
+            saveMenuSelections();
+        });
+        dinnerMenuList.setAdapter(dinnerAdapter);
+        if (currentDinnerMenuIndex >= 0) {
+            dinnerAdapter.setSelectedPosition(currentDinnerMenuIndex);
+        }
+    }
+
+    private void saveMenuSelections() {
+        SharedPreferences prefs = requireContext().getSharedPreferences(
+                "MenuPreferences", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putInt("current_breakfast_index", currentBreakfastMenuIndex);
+        editor.putInt("current_lunch_index", currentLunchMenuIndex);
+        editor.putInt("current_dinner_index", currentDinnerMenuIndex);
+        editor.apply();
+
+        Toast.makeText(requireContext(), "Menu selection updated", Toast.LENGTH_SHORT).show();
+    }
+
+    private void loadSavedSelections() {
+        SharedPreferences prefs = requireContext().getSharedPreferences(
+                "MenuPreferences", Context.MODE_PRIVATE);
+        currentBreakfastMenuIndex = prefs.getInt("current_breakfast_index", 0);
+        currentLunchMenuIndex = prefs.getInt("current_lunch_index", 0);
+        currentDinnerMenuIndex = prefs.getInt("current_dinner_index", 0);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadSavedSelections();
+        updateCurrentMenuDisplay();
+    }
+
+    private void updateCurrentMenuDisplay() {
+        int currentTab = mealTypeTabs.getSelectedTabPosition();
+        foodItemList.clear();
+
+        try {
+            switch (currentTab) {
+                case 0: // Breakfast
+                    if (!breakfastMenus.isEmpty() && currentBreakfastMenuIndex < breakfastMenus.size()) {
+                        foodItemList.addAll(breakfastMenus.get(currentBreakfastMenuIndex).getFoodItems());
+                    }
+                    break;
+                case 1: // Lunch
+                    if (!lunchMenus.isEmpty() && currentLunchMenuIndex < lunchMenus.size()) {
+                        foodItemList.addAll(lunchMenus.get(currentLunchMenuIndex).getFoodItems());
+                    }
+                    break;
+                case 2: // Dinner
+                    if (!dinnerMenus.isEmpty() && currentDinnerMenuIndex < dinnerMenus.size()) {
+                        foodItemList.addAll(dinnerMenus.get(currentDinnerMenuIndex).getFoodItems());
+                    }
+                    break;
+            }
+        } catch (Exception e) {
+            Log.e("MenuFragment", "Error updating menu display: " + e.getMessage());
+            Toast.makeText(requireContext(), "Error loading menu items", Toast.LENGTH_SHORT).show();
+        }
+
+        foodAdapter.notifyDataSetChanged();
+    }
     //</editor-fold>
 
     public static Menu createMockBreakfastMenu() {

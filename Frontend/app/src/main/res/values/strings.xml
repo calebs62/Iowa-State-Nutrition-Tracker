@@ -64,4 +64,21 @@
     <string name="phone_number_no_phone_number_associated_with_account">Phone Number: No phone number associated with account</string>
     <string name="emulator_mode_sms_will_be_sent_to_this_device">Emulator Mode: SMS will be sent to this device</string>
     <string name="sms_notification_emulator_self_test">SMS Notification (Emulator Self-Test)</string>
+    <string name="select_menus">Select Menus</string>
+    <string name="view_menus">View Menus</string>
+    <string name="back">Back</string>
+    <string name="select_menu">Select Menu</string>
+    <string name="menu_details">Menu Details</string>
+    <string name="location">Location</string>
+    <string name="meal_type">Meal Type</string>
+    <string name="date">Date</string>
+    <string name="food_items">Food Items</string>
+    <string name="add_food_item">Add Food Item</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="search_food_items">Search food items</string>
+    <string name="delete_food_item">Delete food item</string>
+    <string name="select_active_menus">Select Active Menus</string>
+    <string name="breakfast_menus">Breakfast Menus</string>
+    <string name="lunch_menus">Lunch Menus</string>
+    <string name="dinner_menus">Dinner Menus</string>
 </resources>
