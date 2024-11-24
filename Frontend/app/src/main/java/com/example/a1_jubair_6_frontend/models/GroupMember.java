@@ -3,33 +3,19 @@ package com.example.a1_jubair_6_frontend.models;
 import java.sql.Timestamp;
 
 public class GroupMember {
-    private GroupMemberKey id;
+    private int id;
     private Group group;
     private User user;
-    private int permissionLvl;
     private Timestamp joinDate;
-
     public GroupMember() {}
 
-    public GroupMember(Group group, User user) {
-        this.id = new GroupMemberKey(group.getId(), user.getId());
-        this.group = group;
-        this.user = user;
-        this.permissionLvl = 0;
-    }
+    public Group getGroup() {return group;}
+    public User getUser() {return user;}
+    public int getId() {return id;}
 
-    public GroupMemberKey getId() { return id; }
-    public void setId(GroupMemberKey id) { this.id = id; }
+    public Timestamp getJoinDate() {return joinDate;}
 
-    public Group getGroup() { return group; }
-    public void setGroup(Group group) { this.group = group; }
-
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
-
-    public int getPermissionLvl() { return permissionLvl; }
-    public void setPermissionLvl(int permissionLvl) { this.permissionLvl = permissionLvl; }
-
-    public Timestamp getJoinDate() { return joinDate; }
-    public void setJoinDate(Timestamp joinDate) { this.joinDate = joinDate; }
+    public void setGroup(Group group) {this.group = group;}
+    public void setUser(User user) {this.user = user;}
+    public void setJoinDate(Timestamp time) {this.joinDate = time;}
 }

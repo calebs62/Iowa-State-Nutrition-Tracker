@@ -80,6 +80,12 @@ public class NutrientProgressView extends View {
         flameIcon = ContextCompat.getDrawable(getContext(), R.drawable.ic_flame);
 
         nutrients = new ArrayList<>();
+        nutrients.add(new NutrientData("Calories", 438f, 842f, Color.BLACK));
+        nutrients.add(new NutrientData("Protein", 210f, 220f, getResources().getColor(R.color.Iowa_State_Red)));
+        nutrients.add(new NutrientData("Carbs", 160f, 145f, getResources().getColor(R.color.Iowa_State_Gold)));
+        nutrients.add(new NutrientData("Fat", 150f, 187f, getResources().getColor(R.color.Iowa_State_Brown)));
+        nutrients.add(new NutrientData("Salt", 16f, 45f, getResources().getColor(R.color.Iowa_State_Light_Brown)));
+        nutrients.add(new NutrientData("Sugar", 27f, 60f, getResources().getColor(R.color.Iowa_State_White)));
 
         bulletPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         bulletPaint.setStyle(Paint.Style.FILL);
@@ -101,10 +107,6 @@ public class NutrientProgressView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-
-        if (nutrients.isEmpty()) {
-            return;
-        }
 
         float maxRadius = radius;
         float circleRadius = maxRadius;
@@ -182,7 +184,7 @@ public class NutrientProgressView extends View {
     }
 
     public void updateAllNutrients(List<NutrientData> newData) {
-        if (newData != null) {
+        if (newData.size() == nutrients.size()) {
             nutrients.clear();
             nutrients.addAll(newData);
             invalidate();
