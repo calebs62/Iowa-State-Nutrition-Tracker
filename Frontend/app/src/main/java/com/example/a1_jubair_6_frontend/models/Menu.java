@@ -57,12 +57,16 @@ public class Menu {
     }
 
     public void setDate(String dateStr) {
+        if (dateStr == null) {
+            this.date = new Timestamp(System.currentTimeMillis());
+            return;
+        }
+
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             java.util.Date parsedDate = sdf.parse(dateStr);
             this.date = new Timestamp(parsedDate.getTime());
         } catch (ParseException e) {
-            Log.e("Menu", "Error parsing date: " + dateStr);
             this.date = new Timestamp(System.currentTimeMillis());
         }
     }
