@@ -9,6 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -34,7 +35,8 @@ public class MenuTest {
         assertNull("Location should be null", newMenu.getLocation());
         assertNull("Meal should be null", newMenu.getMeal());
         assertNull("Date should be null", newMenu.getDate());
-        assertNull("FoodItems should be null", newMenu.getFoodItems());
+        assertNotNull("FoodItems should not be null", newMenu.getFoodItems());
+        assertTrue("FoodItems should be empty", newMenu.getFoodItems().isEmpty());
         assertEquals("Default id should be 0", 0, newMenu.getId());
     }
 
@@ -133,12 +135,19 @@ public class MenuTest {
 
     @Test
     public void testDateSetterWithString() {
+        // Test with valid date string
         String dateStr = "2024-01-01";
         menu.setDate(dateStr);
         assertNotNull("Date should not be null when set with valid string", menu.getDate());
 
+        // Test with null string - should set to current time
         menu.setDate((String)null);
         assertNotNull("Date should not be null when set with null string", menu.getDate());
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        assertEquals("Date should be set to the correct value",
+                "2024-01-01",
+                sdf.format(menu.getDate().getTime()));
     }
 
     @Test
@@ -156,8 +165,10 @@ public class MenuTest {
 
         // Test setting null
         menu.setFoodItems(null);
-        assertNull("FoodItems should be able to be set to null",
+        assertNotNull("FoodItems should never be null",
                 menu.getFoodItems());
+        assertTrue("FoodItems should be empty when set to null",
+                menu.getFoodItems().isEmpty());
     }
 
     @Test
@@ -225,13 +236,10 @@ public class MenuTest {
 
     @Test
     public void testToString() {
-        String expectedString = "Menu{" +
-                "id=" + TEST_ID +
-                ", location='" + TEST_LOCATION + '\'' +
-                ", meal='" + TEST_MEAL + '\'' +
-                ", date=" + TEST_DATE + '\'' +
-                ", foodItems= {" + menu.getFoodItems() + "}" +
-                '}';
+        String expectedString = String.format("%s - %s (%s)",
+                TEST_LOCATION,
+                TEST_MEAL,
+                new SimpleDateFormat("MM/dd/yyyy").format(TEST_DATE));
 
         assertEquals("toString should return correctly formatted string",
                 expectedString,
