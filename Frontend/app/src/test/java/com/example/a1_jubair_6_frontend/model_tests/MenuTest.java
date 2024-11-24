@@ -127,8 +127,18 @@ public class MenuTest {
         assertEquals("Date should be updated to new value", newDate, menu.getDate());
 
         // Test setting null
-        menu.setDate(null);
+        menu.setDate((Timestamp)null);
         assertNull("Date should be able to be set to null", menu.getDate());
+    }
+
+    @Test
+    public void testDateSetterWithString() {
+        String dateStr = "2024-01-01";
+        menu.setDate(dateStr);
+        assertNotNull("Date should not be null when set with valid string", menu.getDate());
+
+        menu.setDate((String)null);
+        assertNotNull("Date should not be null when set with null string", menu.getDate());
     }
 
     @Test
