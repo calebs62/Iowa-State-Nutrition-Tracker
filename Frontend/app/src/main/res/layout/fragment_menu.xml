@@ -28,15 +28,26 @@
         app:layout_constraintTop_toTopOf="@id/titleMenus"
         app:layout_constraintBottom_toBottomOf="@id/titleMenus">
 
+
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSelectMenus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/select_menus"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/Iowa_State_Red"
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_marginStart="8dp"/>
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnViewMenus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Menus"
+            android:text="@string/view_menus"
             android:textColor="@android:color/white"
             android:backgroundTint="@color/Iowa_State_Red"
             style="@style/Widget.MaterialComponents.Button"
-            android:layout_marginEnd="8dp"/>
+            android:layout_marginStart="8dp"/>
     </LinearLayout>
 
     <com.google.android.material.card.MaterialCardView
