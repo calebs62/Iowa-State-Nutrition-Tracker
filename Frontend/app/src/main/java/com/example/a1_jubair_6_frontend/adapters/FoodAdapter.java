@@ -24,6 +24,8 @@ import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.managers.FoodEatenDataManager;
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
 import com.example.a1_jubair_6_frontend.models.FoodItem;
 import com.example.a1_jubair_6_frontend.models.Menu;
 import com.example.a1_jubair_6_frontend.network.VolleySingleton;
@@ -49,6 +51,7 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
     private Gson gson = new Gson();
     private boolean isAdmin;
     Menu currentMenu;
+    ProfileDataManager profileDataManager;
 
     /**
      * Constructs a new FoodAdapter with the specified list of food items and admin status.
@@ -67,6 +70,8 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         context = parent.getContext();
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.food_item, parent, false);
+
+        profileDataManager = new ProfileDataManager(context);
         return new FoodViewHolder(view);
     }
 
@@ -76,6 +81,7 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         holder.foodName.setText(foodItem.getName());
         holder.calories.setText(String.format("%d Cal", foodItem.getCalories()));
         holder.quantity.setText(String.valueOf(foodItem.getQuantity()));
+        FoodEatenDataManager foodEatenManager = new FoodEatenDataManager(context);
 
         View adminActionsContainer = holder.itemView.findViewById(R.id.adminActionsContainer);
         adminActionsContainer.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
@@ -83,18 +89,53 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         holder.buttonIncrease.setOnClickListener(v -> {
             foodItem.setQuantity(foodItem.getQuantity() + 1);
             holder.quantity.setText(String.valueOf(foodItem.getQuantity()));
+
+            foodEatenManager.addFoodEaten(foodItem, new FoodEatenDataManager.FoodEatenCallback() {
+                @Override
+                public void onSuccess() {
+                    Toast.makeText(context, "Food added successfully", Toast.LENGTH_SHORT).show();
+
+                    // Add Food Eaten to Activity Feed
+                    int uid = profileDataManager.getId();
+
+                    // TODO: Make message to web socket with food information. Need Group ID
+                }
+
+                @Override
+                public void onError(String message) {
+                    // Revert the quantity if the server request fails
+                    foodItem.setQuantity(foodItem.getQuantity() - 1);
+                    holder.quantity.setText(String.valueOf(foodItem.getQuantity()));
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+                }
+            });
         });
 
         holder.buttonDecrease.setOnClickListener(v -> {
-            if(foodItem.getQuantity() > 0){
+            if (foodItem.getQuantity() > 0) {
                 foodItem.setQuantity(foodItem.getQuantity() - 1);
                 holder.quantity.setText(String.valueOf(foodItem.getQuantity()));
+
+                foodEatenManager.removeFoodEaten(foodItem, new FoodEatenDataManager.FoodEatenCallback() {
+                    @Override
+                    public void onSuccess() {
+                        Toast.makeText(context, "Food removed successfully", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        // Revert the quantity if the server request fails
+                        foodItem.setQuantity(foodItem.getQuantity() + 1);
+                        holder.quantity.setText(String.valueOf(foodItem.getQuantity()));
+                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         });
 
         if(isAdmin){
             holder.buttonEdit.setOnClickListener(v -> {
-                    showEditDialog(position, foodItem);
+                showEditDialog(position, foodItem);
             });
 
             holder.buttonDelete.setOnClickListener(v -> {
@@ -446,3 +487,4 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         VolleySingleton.getInstance(context).addToRequestQueue(request);
     }
 }
+
