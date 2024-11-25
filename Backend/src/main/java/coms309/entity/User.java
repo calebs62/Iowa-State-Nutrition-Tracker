@@ -9,9 +9,6 @@ import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
 
-//@JsonIdentityInfo(
-//        generator = ObjectIdGenerators.PropertyGenerator.class,
-//        property = "uid")
 @Entity
 @Table(name="user")
 public class User {
@@ -53,6 +50,10 @@ public class User {
     @OneToMany(mappedBy = "user")
     @JsonView(Views.User.class)
     private Set<Earned> earned = new HashSet<>();
+
+    @OneToMany(mappedBy = "user")
+    @JsonView(Views.User.class)
+    private Set<FoodEaten> eaten = new HashSet<>();
 
     public enum Account {
         USER,
@@ -143,4 +144,21 @@ public class User {
     public void setEarned(Set<Earned> earned) {
         this.earned = earned;
     }
+
+    public Set<FoodEaten> getEaten() {
+        return eaten;
+    }
+
+    public void setEaten(Set<FoodEaten> eaten) {
+        this.eaten = eaten;
+    }
+
+    public void addEaten(FoodEaten eaten){
+        this.eaten.add(eaten);
+    }
+
+    public void removeEaten(FoodEaten eaten){
+        this.eaten.remove(eaten);
+    }
+
 }
