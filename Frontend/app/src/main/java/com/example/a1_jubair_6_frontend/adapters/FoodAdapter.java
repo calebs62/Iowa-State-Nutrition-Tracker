@@ -99,6 +99,8 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
                     int uid = profileDataManager.getId();
 
                     // TODO: Make message to web socket with food information. Need Group ID
+
+                    // Comment
                 }
 
                 @Override
