@@ -39,7 +39,6 @@ public class ProfileDataManager {
     private static final String PREF_SHOW_ACHIEVEMENTS = "show_achievements";
     private static final String KEY_CONSECUTIVE_LOGIN_COUNT = "consecutive_login_count";
     private static final String KEY_LAST_LOGIN_DATE = "last_login_date";
-    private static final String KEY_GROUP_ID = "group_id";
 
     private static final String uploadDir = "uploads/profile-pictures/";
 
@@ -142,10 +141,6 @@ public class ProfileDataManager {
         return preferences.getInt(KEY_CONSECUTIVE_LOGIN_COUNT, 0);
     }
 
-    private void setGroupId(int groupId) {
-        preferences.edit().putInt(KEY_GROUP_ID, groupId).apply();
-    }
-
     public String getEmail(){
         return preferences.getString(KEY_EMAIL, "");
     }
@@ -175,8 +170,6 @@ public class ProfileDataManager {
     }
 
     public int getId() {return preferences.getInt(KEY_UID, -1); }
-
-    public int getGroupId() {return preferences.getInt(KEY_GROUP_ID, -1); }
 
     public String getPhoneNumber() { return preferences.getString(KEY_PHONE_NUMBER, null); }
 
