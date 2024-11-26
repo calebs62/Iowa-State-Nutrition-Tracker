@@ -75,7 +75,7 @@ public class AdminPanelFragment extends Fragment {
         foodList = view.findViewById(R.id.foodList);
         foodList.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        foodAdapter = new FoodAdapter(foodItemList, isAdmin);
+        foodAdapter = new FoodAdapter(foodItemList, isAdmin, false);
         foodList.setAdapter(foodAdapter);
 
         int bottomNavHeight = getResources().getDimensionPixelSize(R.dimen.bottom_nav_height);

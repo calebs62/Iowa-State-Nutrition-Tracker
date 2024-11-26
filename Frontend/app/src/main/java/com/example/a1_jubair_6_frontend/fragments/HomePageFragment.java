@@ -6,27 +6,35 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.activities.BaseActivity;
+import com.example.a1_jubair_6_frontend.adapters.FoodEatenAdapter;
 import com.example.a1_jubair_6_frontend.managers.FoodEatenDataManager;
 import com.example.a1_jubair_6_frontend.managers.FoodPlanManager;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
 import com.example.a1_jubair_6_frontend.models.FoodEaten;
 import com.example.a1_jubair_6_frontend.models.FoodPlan;
+import com.example.a1_jubair_6_frontend.utils.FoodEatenPagination;
 import com.example.a1_jubair_6_frontend.widgets.NutrientProgressView;
 import com.google.android.material.tabs.TabLayout;
 
 import java.sql.Timestamp;
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class HomePageFragment extends Fragment {
@@ -37,23 +45,59 @@ public class HomePageFragment extends Fragment {
     private FoodPlanManager foodPlanManager;
     private TabLayout timeRangeTab;
     private Button enter;
+    private FoodEatenPagination pagination;
+    private Button btnPrevious;
+    private Button btnNext;
+    private TextView txtPageIndicator;
+    private RecyclerView foodEatenRecyclerView;
     private static final String TAG = "HomePageFragment";
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        pagination = new FoodEatenPagination();
         profileDataManager = new ProfileDataManager(requireContext());
         foodEatenManager = new FoodEatenDataManager(requireContext());
         foodPlanManager = new FoodPlanManager(requireContext());
     }
 
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home_page, container, false);
         nutrientProgress = view.findViewById(R.id.nutrientProgress);
         timeRangeTab = view.findViewById(R.id.timeRangeTab);
+
+        foodEatenRecyclerView = view.findViewById(R.id.foodEatenRecyclerView);
+        foodEatenRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+
+        FoodEatenAdapter adapter = new FoodEatenAdapter(foodEaten ->
+                foodEatenManager.removeFoodEaten(foodEaten.getId(), new FoodEatenDataManager.FoodEatenCallback() {
+                    @Override
+                    public void onSuccess() {
+                        refreshAllData();
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        Toast.makeText(requireContext(), "Error removing food: " + message,
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }));
+
+        foodEatenRecyclerView.setAdapter(adapter);
+        btnPrevious = view.findViewById(R.id.btnPrevious);
+        btnNext = view.findViewById(R.id.btnNext);
+        txtPageIndicator = view.findViewById(R.id.txtPageIndicator);
+
+        setupPaginationButtons();
+
         return view;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        updateFoodEatenList(timeRangeTab.getSelectedTabPosition());
     }
 
     @Override
@@ -65,33 +109,86 @@ public class HomePageFragment extends Fragment {
 
         setupTabListener();
         loadFoodPlanAndUpdateProgress();
+        updateFoodEatenList(timeRangeTab.getSelectedTabPosition());
     }
 
     private void setupTabListener() {
         timeRangeTab.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                updateNutrientProgress(tab.getPosition());
+                refreshAllData();
             }
 
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {}
 
             @Override
-            public void onTabReselected(TabLayout.Tab tab) {}
+            public void onTabReselected(TabLayout.Tab tab) {
+                refreshAllData();
+            }
         });
     }
 
+    private void updateFoodEatenList(int tabPosition) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startTime = getStartTimeForTab(now, tabPosition);
+        LocalDateTime endTime = now.withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+
+        Date startDate = Date.from(startTime.toInstant(ZoneOffset.UTC));
+        Date endDate = Date.from(endTime.toInstant(ZoneOffset.UTC));
+
+        Log.d(TAG, "Fetching food items from " + startDate + " to " + endDate);
+
+        foodEatenManager.getFoodEatenForTimeRange(startDate, endDate,
+                new FoodEatenDataManager.FoodEatenListCallback() {
+                    @Override
+                    public void onSuccess(List<FoodEaten> foodEatenList) {
+                        if (getView() == null) return;
+
+                        pagination.setItems(foodEatenList);
+                        RecyclerView recyclerView = getView().findViewById(R.id.foodEatenRecyclerView);
+                        FoodEatenAdapter adapter = (FoodEatenAdapter) recyclerView.getAdapter();
+                        if (adapter != null) {
+                            adapter.updateFoodList(pagination.getCurrentPageItems());
+                        }
+                        updatePaginationUI();
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        if (getContext() == null) return;
+                        Log.e(TAG, "Error loading food items: " + message);
+                        Toast.makeText(requireContext(), "Error loading food items: " + message,
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
     private void loadFoodPlanAndUpdateProgress() {
+        Log.d(TAG, "Starting to load food plan");
+
         foodPlanManager.getAllPlans("", new FoodPlanManager.FoodPlanCallback() {
             @Override
             public void onSuccess(FoodPlan plan) {
                 if (plan != null) {
-                    // Initialize with zeros if food data isn't loaded yet
-                    updateNutrientView(new NutrientTotals(), plan, timeRangeTab.getSelectedTabPosition());
-                    // try to load actual food data
-                    updateNutrientProgress(timeRangeTab.getSelectedTabPosition());
+                    Log.d(TAG, "Food plan loaded successfully: " + plan.toString());
+                    foodPlanManager.getFoodPlan(plan.getId(), new FoodPlanManager.FoodPlanCallback() {
+                        @Override
+                        public void onSuccess(FoodPlan detailedPlan) {
+                            if (detailedPlan != null) {
+                                Log.d(TAG, "Detailed plan loaded: " + detailedPlan.toString());
+                                updateNutrientView(new NutrientTotals(), detailedPlan, timeRangeTab.getSelectedTabPosition());
+                                updateNutrientProgress(timeRangeTab.getSelectedTabPosition());
+                            }
+                        }
+
+                        @Override
+                        public void onError(String message) {
+                            Log.e(TAG, "Error loading detailed plan: " + message);
+                        }
+                    });
                 } else {
+                    Log.e(TAG, "No food plan returned from getAllPlans");
                     Toast.makeText(requireContext(), "No food plan found. Please set up your goals.", Toast.LENGTH_LONG).show();
                 }
             }
@@ -108,29 +205,42 @@ public class HomePageFragment extends Fragment {
         // Get current food plan from the user's group
         FoodPlan currentPlan = foodPlanManager.getCurrentPlan();
         if (currentPlan == null) {
-            Log.w(TAG, "No food plan available");
+            Log.e(TAG, "No food plan available in updateNutrientProgress");
             return;
         }
 
         // Calculate time range
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime startTime = getStartTimeForTab(now, tabPosition);
+        LocalDateTime endTime = now.withHour(23).withMinute(59).withSecond(59).withNano(999999999);
 
-        // Get food eaten data for the time range
-        foodEatenManager.getFoodEatenForTimeRange(
-                startTime.toInstant(ZoneOffset.UTC).toEpochMilli(),
-                now.toInstant(ZoneOffset.UTC).toEpochMilli(),
+        Date startDate = Date.from(startTime.toInstant(ZoneOffset.UTC));
+        Date endDate = Date.from(endTime.toInstant(ZoneOffset.UTC));
+
+        Log.d(TAG, "Fetching food between " + startDate + " and " + endDate);
+
+        // Fetch food eaten data for the time range
+        foodEatenManager.getFoodEatenForTimeRange(startDate, endDate,
                 new FoodEatenDataManager.FoodEatenListCallback() {
                     @Override
                     public void onSuccess(List<FoodEaten> foodEatenList) {
-                        NutrientTotals totals = calculateNutrientTotals(foodEatenList, Timestamp.valueOf(startTime.toString()));
+                        Log.d(TAG, "Retrieved " + foodEatenList.size() + " food items");
+                        Timestamp startTimestamp = new Timestamp(startDate.getTime());
+                        NutrientTotals totals = calculateNutrientTotals(foodEatenList, startTimestamp);
+
+                        Log.d(TAG, "Calculated totals: calories=" + totals.calories +
+                                ", protein=" + totals.protein +
+                                ", carbs=" + totals.carbs +
+                                ", fat=" + totals.fat +
+                                ", salt=" + totals.salt);
+
                         updateNutrientView(totals, currentPlan, tabPosition);
                     }
 
                     @Override
                     public void onError(String message) {
-                        Log.e(TAG, "Error loading food eaten data: " + message);
-                        Toast.makeText(requireContext(), "Error loading food data", Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, "Error fetching food eaten data: " + message);
+                        updateNutrientView(new NutrientTotals(), currentPlan, tabPosition);
                     }
                 });
     }
@@ -146,9 +256,14 @@ public class HomePageFragment extends Fragment {
     private NutrientTotals calculateNutrientTotals(List<FoodEaten> foodEatenList, Timestamp startTime) {
         NutrientTotals totals = new NutrientTotals();
 
+        Log.d(TAG, "Calculating totals for " + foodEatenList.size() + " food items");
+
         for (FoodEaten foodEaten : foodEatenList) {
             if (foodEaten.getTime().after(startTime)) {
                 float servings = foodEaten.getServings();
+                Log.d(TAG, "Processing food: " + foodEaten.getFood().getName() +
+                        " servings: " + servings);
+
                 totals.calories += foodEaten.getFood().getCalories() * servings;
                 totals.protein += foodEaten.getFood().getProtein() * servings;
                 totals.carbs += foodEaten.getFood().getCarbohydrate() * servings;
@@ -160,15 +275,21 @@ public class HomePageFragment extends Fragment {
     }
 
     private LocalDateTime getStartTimeForTab(LocalDateTime now, int tabPosition) {
+        // Set the end of day time for better precision
+        LocalDateTime start = now.truncatedTo(ChronoUnit.DAYS);
+
         switch (tabPosition) {
             case 1: // Week
-                return now.minus(7, ChronoUnit.DAYS);
+                return start.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+                        .withHour(0).withMinute(0).withSecond(0).withNano(0);
             case 2: // Month
-                return now.minus(1, ChronoUnit.MONTHS);
+                return start.with(TemporalAdjusters.firstDayOfMonth())
+                        .withHour(0).withMinute(0).withSecond(0).withNano(0);
             case 3: // Year
-                return now.minus(1, ChronoUnit.YEARS);
+                return start.with(TemporalAdjusters.firstDayOfYear())
+                        .withHour(0).withMinute(0).withSecond(0).withNano(0);
             default: // Today
-                return now.truncatedTo(ChronoUnit.DAYS);
+                return start.withHour(0).withMinute(0).withSecond(0).withNano(0);
         }
     }
 
@@ -195,6 +316,7 @@ public class HomePageFragment extends Fragment {
     public void onResume() {
         super.onResume();
         loadFoodPlanAndUpdateProgress();
+        updateFoodEatenList(timeRangeTab.getSelectedTabPosition());
     }
 
     private void updateNutrientView(NutrientTotals totals, FoodPlan plan, int tabPosition) {
@@ -204,6 +326,12 @@ public class HomePageFragment extends Fragment {
         }
 
         float multiplier = getTimeMultiplier(tabPosition);
+
+        Log.d(TAG, "Updating nutrient view with:");
+        Log.d(TAG, "Calories - Current: " + (totals != null ? totals.calories : 0) +
+                " Goal: " + (plan.getCalories() * multiplier));
+        Log.d(TAG, "Protein - Current: " + (totals != null ? totals.protein : 0) +
+                " Goal: " + (plan.getProtein() * multiplier));
 
         List<NutrientProgressView.NutrientData> nutrientDataList = new ArrayList<>();
 
@@ -238,5 +366,37 @@ public class HomePageFragment extends Fragment {
                 getResources().getColor(R.color.Iowa_State_Light_Brown)));
 
         nutrientProgress.updateAllNutrients(nutrientDataList);
+
+
     }
+
+    private void refreshAllData() {
+        loadFoodPlanAndUpdateProgress();
+        updateFoodEatenList(timeRangeTab.getSelectedTabPosition());
+    }
+
+    private void setupPaginationButtons() {
+        btnPrevious.setOnClickListener(v -> {
+            pagination.previousPage();
+            updatePaginationUI();
+        });
+
+        btnNext.setOnClickListener(v -> {
+            pagination.nextPage();
+            updatePaginationUI();
+        });
+    }
+
+    private void updatePaginationUI() {
+        FoodEatenAdapter adapter = (FoodEatenAdapter) foodEatenRecyclerView.getAdapter();
+        if (adapter != null) {
+            adapter.updateFoodList(pagination.getCurrentPageItems());
+        }
+
+        btnPrevious.setEnabled(pagination.hasPreviousPage());
+        btnNext.setEnabled(pagination.hasNextPage());
+        txtPageIndicator.setText(String.format("Page %d of %d",
+                pagination.getCurrentPage(), pagination.getTotalPages()));
+    }
+
 }
