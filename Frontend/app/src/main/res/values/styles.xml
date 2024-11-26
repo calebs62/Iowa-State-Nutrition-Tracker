@@ -4,4 +4,12 @@
         <item name="colorControlActivated">@color/Iowa_State_Red</item>
         <item name="colorControlNormal">@color/Iowa_State_Red</item>
     </style>
+    <style name="CustomSpinner" parent="Widget.AppCompat.Spinner">
+        <item name="android:background">@drawable/spinner_background</item>
+        <item name="android:popupBackground">@drawable/spinner_dropdown_item_background</item>
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingEnd">8dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:dropDownWidth">match_parent</item>
+    </style>
 </resources>

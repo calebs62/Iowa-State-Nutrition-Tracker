@@ -40,9 +40,12 @@ public class MenuSelectionAdapter extends RecyclerView.Adapter<MenuSelectionAdap
     @Override
     public void onBindViewHolder(@NonNull MenuViewHolder holder, int position) {
         Menu menu = menuList.get(position);
-        holder.textView.setText(String.format("%s - %s",
+
+        String displayText = String.format("%s - %s",
                 menu.getLocation(),
-                new SimpleDateFormat("MM/dd/yyyy").format(menu.getDate())));
+                menu.getDate() != null ? menu.getDate() : "No Date");
+
+        holder.textView.setText(displayText);
 
         holder.textView.setBackgroundColor(selectedPosition == position ?
                 holder.itemView.getContext().getColor(R.color.Iowa_State_Red) :

@@ -24,12 +24,12 @@ public class MenuFoodItemAdapter extends RecyclerView.Adapter<MenuFoodItemAdapte
     }
 
     public MenuFoodItemAdapter(List<FoodItem> foodItems, OnFoodItemClickListener listener) {
-        this.foodItems = new ArrayList<>(foodItems);
+        this.foodItems = foodItems != null ? new ArrayList<>(foodItems) : new ArrayList<>();
         this.listener = listener;
     }
 
     public void updateFoodItems(List<FoodItem> newItems) {
-        this.foodItems = new ArrayList<>(newItems);
+        this.foodItems = newItems != null ? new ArrayList<>(newItems) : new ArrayList<>();
         notifyDataSetChanged();
     }
 
@@ -44,18 +44,53 @@ public class MenuFoodItemAdapter extends RecyclerView.Adapter<MenuFoodItemAdapte
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         FoodItem item = foodItems.get(position);
-        holder.foodName.setText(item.getName());
-        holder.calories.setText(String.format("%d Cal", item.getCalories()));
-        holder.servingSize.setText(item.getServingsize());
 
-        holder.itemView.setOnClickListener(v -> listener.onFoodItemClick(item));
+        String name = item.getName() != null ? item.getName() : "Unknown";
+        holder.foodName.setText(name);
 
-        holder.deleteButton.setOnClickListener(v -> listener.onFoodItemClick(item));
+        String calories = String.format("%d Cal", item.getCalories());
+        holder.calories.setText(calories);
+
+        String servingSize = item.getServingsize() != null ? item.getServingsize() : "N/A";
+        holder.servingSize.setText(servingSize);
+
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onFoodItemClick(item);
+            }
+        });
+
+        if (holder.deleteButton != null) {
+            holder.deleteButton.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onFoodItemClick(item);
+                }
+            });
+        }
     }
 
     @Override
     public int getItemCount() {
         return foodItems.size();
+    }
+
+    public void removeItem(int position) {
+        if (position >= 0 && position < foodItems.size()) {
+            foodItems.remove(position);
+            notifyItemRemoved(position);
+            notifyItemRangeChanged(position, foodItems.size());
+        }
+    }
+
+    public void addItem(FoodItem item) {
+        if (item != null) {
+            foodItems.add(item);
+            notifyItemInserted(foodItems.size() - 1);
+        }
+    }
+
+    public List<FoodItem> getFoodItems() {
+        return new ArrayList<>(foodItems);
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

@@ -52,11 +52,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -168,7 +166,6 @@ public class MenuFragment extends Fragment {
                 null,
                 response -> {
                     Log.d("MenuFragment", "Server response: " + response.toString());
-
                     try {
                         allMenus.clear();
                         breakfastMenus.clear();
@@ -178,74 +175,49 @@ public class MenuFragment extends Fragment {
                         for (int i = 0; i < response.length(); i++) {
                             JSONObject menuJson = response.getJSONObject(i);
                             Menu menu = gson.fromJson(menuJson.toString(), Menu.class);
+                            Log.d("MenuFragment", "Parsed menu: " + menu.toString());
                             allMenus.add(menu);
 
-                            // Sort menu into appropriate list
                             String mealType = menu.getMeal().toLowerCase().trim();
-                            Log.d("MenuFragment", "Processing menu: " + menu.getId() +
-                                    ", meal type: " + mealType);
-
-                            if (mealType.equals("breakfast")) {
-                                breakfastMenus.add(menu);
-                            } else if (mealType.equals("lunch")) {
-                                lunchMenus.add(menu);
-                            } else if (mealType.equals("dinner")) {
-                                dinnerMenus.add(menu);
+                            switch(mealType) {
+                                case "breakfast":
+                                    breakfastMenus.add(menu);
+                                    break;
+                                case "lunch":
+                                    lunchMenus.add(menu);
+                                    break;
+                                case "dinner":
+                                    dinnerMenus.add(menu);
+                                    break;
                             }
                         }
-
-                        Log.d("MenuFragment", "Processed menus - Breakfast: " + breakfastMenus.size() +
-                                ", Lunch: " + lunchMenus.size() +
-                                ", Dinner: " + dinnerMenus.size());
-
-                        requireActivity().runOnUiThread(() -> {
-                            Log.d("MenuFragment", "Checking menu lists on UI thread");
-
-                            if (breakfastMenus.isEmpty()) {
-                                breakfastMenus.add(createMockBreakfastMenu());
-                                Log.w("MenuFragment", "No breakfast menus from server, using mock data");
-                            }
-                            if (lunchMenus.isEmpty()) {
-                                lunchMenus.add(createMockLunchMenu());
-                                Log.w("MenuFragment", "No lunch menus from server, using mock data");
-                            }
-                            if (dinnerMenus.isEmpty()) {
-                                dinnerMenus.add(createMockDinnerMenu());
-                                Log.w("MenuFragment", "No dinner menus from server, using mock data");
-                            }
-
-                            // If there's a selection dialog showing, update its adapters
-                            if (menuSelectionDialog != null && menuSelectionDialog.isShowing()) {
-                                setupMenuLists();
-                            }
-                            loadSavedSelections();
-                            updateCurrentMenuDisplay();
-                        });
-
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() -> {
+                                updateCurrentMenuDisplay();
+                                if (menuSelectionDialog != null && menuSelectionDialog.isShowing()) {
+                                    setupMenuLists();
+                                }
+                            });
+                        }
                     } catch (Exception e) {
-                        Log.e("MenuFragment", "Error processing menus: " + e.getMessage());
-                        requireActivity().runOnUiThread(() -> {
-                            Toast.makeText(requireContext(),
-                                    "Error processing menus from server",
-                                    Toast.LENGTH_SHORT).show();
-
-                            setupMenuLists();
-                            updateCurrentMenuDisplay();
-                        });
+                        Log.e("MenuFragment", "Parse error: " + e.getMessage(), e);
                     }
                 },
-                error -> {
-                    Log.e("MenuFragment", "Server error: " + error.toString());
-                    requireActivity().runOnUiThread(() -> {
-                        Toast.makeText(requireContext(),
-                                "Error loading menus from server",
-                                Toast.LENGTH_SHORT).show();
+                error -> Log.e("MenuFragment", "Network error: " + error.toString())
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Accept", "application/json");
+                return headers;
+            }
+        };
 
-                        setupMenuLists();
-                        updateCurrentMenuDisplay();
-                    });
-                }
-        );
+        request.setRetryPolicy(new DefaultRetryPolicy(
+                30000,
+                0,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+        ));
 
         VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
     }
@@ -978,25 +950,21 @@ public class MenuFragment extends Fragment {
         behavior.setPeekHeight(getResources().getDisplayMetrics().heightPixels / 2);
         behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
 
+        // Initialize RecyclerViews after dialog view is inflated
         breakfastMenuList = dialogView.findViewById(R.id.breakfastMenuList);
         lunchMenuList = dialogView.findViewById(R.id.lunchMenuList);
         dinnerMenuList = dialogView.findViewById(R.id.dinnerMenuList);
 
         setupMenuLists();
-
         menuSelectionDialog.show();
     }
 
     private void setupMenuLists() {
-        if (breakfastMenus.isEmpty()) {
-            Log.w("MenuFragment", "No breakfast menus found, using mock data");
+        if (breakfastMenuList == null || lunchMenuList == null || dinnerMenuList == null) {
+            Log.e("MenuFragment", "RecyclerViews not properly initialized");
+            return;
         }
-        if (lunchMenus.isEmpty()) {
-            Log.w("MenuFragment", "No lunch menus found, using mock data");
-        }
-        if (dinnerMenus.isEmpty()) {
-            Log.w("MenuFragment", "No dinner menus found, using mock data");
-        }
+
         // Setup Breakfast Menu List
         breakfastMenuList.setLayoutManager(new LinearLayoutManager(requireContext()));
         breakfastAdapter = new MenuSelectionAdapter(breakfastMenus, (position, menu) -> {
@@ -1007,11 +975,10 @@ public class MenuFragment extends Fragment {
             saveMenuSelections();
         });
         breakfastMenuList.setAdapter(breakfastAdapter);
-        if (currentBreakfastMenuIndex >= 0) {
+        if (currentBreakfastMenuIndex >= 0 && currentBreakfastMenuIndex < breakfastMenus.size()) {
             breakfastAdapter.setSelectedPosition(currentBreakfastMenuIndex);
         }
 
-        // Setup Lunch Menu List
         lunchMenuList.setLayoutManager(new LinearLayoutManager(requireContext()));
         lunchAdapter = new MenuSelectionAdapter(lunchMenus, (position, menu) -> {
             currentLunchMenuIndex = position;
@@ -1021,11 +988,10 @@ public class MenuFragment extends Fragment {
             saveMenuSelections();
         });
         lunchMenuList.setAdapter(lunchAdapter);
-        if (currentLunchMenuIndex >= 0) {
+        if (currentLunchMenuIndex >= 0 && currentLunchMenuIndex < lunchMenus.size()) {
             lunchAdapter.setSelectedPosition(currentLunchMenuIndex);
         }
 
-        // Setup Dinner Menu List
         dinnerMenuList.setLayoutManager(new LinearLayoutManager(requireContext()));
         dinnerAdapter = new MenuSelectionAdapter(dinnerMenus, (position, menu) -> {
             currentDinnerMenuIndex = position;
@@ -1035,7 +1001,7 @@ public class MenuFragment extends Fragment {
             saveMenuSelections();
         });
         dinnerMenuList.setAdapter(dinnerAdapter);
-        if (currentDinnerMenuIndex >= 0) {
+        if (currentDinnerMenuIndex >= 0 && currentDinnerMenuIndex < dinnerMenus.size()) {
             dinnerAdapter.setSelectedPosition(currentDinnerMenuIndex);
         }
     }
@@ -1097,43 +1063,4 @@ public class MenuFragment extends Fragment {
         foodAdapter.notifyDataSetChanged();
     }
     //</editor-fold>
-
-    public static Menu createMockBreakfastMenu() {
-        // Create mock food items
-        Set<FoodItem> breakfastItems = new HashSet<>();
-        breakfastItems.add(new FoodItem("Pancakes", 350, 10, 600, 60, 8, "2 pancakes", "Fluffy pancakes with syrup"));
-        breakfastItems.add(new FoodItem("Scrambled Eggs", 200, 15, 150, 2, 12, "1 serving", "Lightly scrambled eggs"));
-        breakfastItems.add(new FoodItem("Orange Juice", 110, 0, 5, 25, 2, "8 oz", "Freshly squeezed orange juice"));
-
-        // Create mock breakfast menu
-        Menu breakfastMenu = new Menu("Main Dining Hall", "Breakfast", new Timestamp(System.currentTimeMillis()));
-        breakfastMenu.setFoodItems(breakfastItems);
-        return breakfastMenu;
-    }
-
-    public static Menu createMockLunchMenu() {
-        // Create mock food items
-        Set<FoodItem> lunchItems = new HashSet<>();
-        lunchItems.add(new FoodItem("Grilled Chicken Sandwich", 500, 20, 900, 45, 30, "1 sandwich", "Grilled chicken with lettuce and tomato on a bun"));
-        lunchItems.add(new FoodItem("Caesar Salad", 350, 25, 600, 10, 8, "1 bowl", "Classic Caesar salad with croutons"));
-        lunchItems.add(new FoodItem("Iced Tea", 50, 0, 10, 12, 0, "12 oz", "Unsweetened iced tea"));
-
-        // Create mock lunch menu
-        Menu lunchMenu = new Menu("Main Dining Hall", "Lunch", new Timestamp(System.currentTimeMillis()));
-        lunchMenu.setFoodItems(lunchItems);
-        return lunchMenu;
-    }
-
-    public static Menu createMockDinnerMenu() {
-        // Create mock food items
-        Set<FoodItem> dinnerItems = new HashSet<>();
-        dinnerItems.add(new FoodItem("Steak", 700, 40, 1200, 0, 60, "8 oz", "Grilled ribeye steak"));
-        dinnerItems.add(new FoodItem("Mashed Potatoes", 250, 10, 500, 35, 5, "1 cup", "Creamy mashed potatoes"));
-        dinnerItems.add(new FoodItem("Red Wine", 125, 0, 5, 4, 0, "5 oz", "Glass of red wine"));
-
-        // Create mock dinner menu
-        Menu dinnerMenu = new Menu("Main Dining Hall", "Dinner", new Timestamp(System.currentTimeMillis()));
-        dinnerMenu.setFoodItems(dinnerItems);
-        return dinnerMenu;
-    }
 }

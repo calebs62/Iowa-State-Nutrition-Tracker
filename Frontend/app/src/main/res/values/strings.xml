@@ -88,4 +88,13 @@
     <string name="carbs_format">Carbs: %d g</string>
     <string name="fat_format">Fat: %d g</string>
     <string name="sodium_format">Sodium: %d mg</string>
+    <string name="add_menu">Add Menu</string>
+    <string name="create_menu">Create Menu</string>
+    <string name="menu_location_yyyy_mm_dd">Menu Location (YYYY-MM-DD)</string>
+    <string name="menu_meal_type_breakfast_lunch_dinner">Menu Meal Type (Breakfast/Lunch/Dinner)</string>
+    <string name="menu_location">Menu Location</string>
+    <string name="menu_name">Menu Name</string>
+    <string name="menu_date_yyyy_mm_dd">Menu Date (YYYY-MM-DD)</string>
+    <string name="an_unexpected_error_occured">An Unexpected Error Occured</string>
+    <string name="delete_menu">Delete Menu</string>
 </resources>

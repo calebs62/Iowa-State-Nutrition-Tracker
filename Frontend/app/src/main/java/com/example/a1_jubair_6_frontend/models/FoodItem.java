@@ -1,63 +1,67 @@
 package com.example.a1_jubair_6_frontend.models;
 
+import com.google.gson.annotations.SerializedName;
+
 public class FoodItem {
-        private int id;
-        private String name;
-        private int calories;
-        private int totalFat;
-        private int sodium;
-        private int carbohydrate;
-        private int protein;
-        private String servingsize;
-        private String description;
-        private int quantity = 0;
+    @SerializedName("id")
+    private int idfooditem;
 
-        public FoodItem() {}
-        public FoodItem(String name, int calories, int totalFat, int sodium, int carbohydrate,
-                        int protein, String servingsize, String description) {
+    @SerializedName("name")
+    private String foodtype;
 
-            this.name = name;
-            this.calories = calories;
-            this.totalFat = totalFat;
-            this.sodium = sodium;
-            this.carbohydrate = carbohydrate;
-            this.protein = protein;
-            this.servingsize = servingsize;
-            this.description = description;
-        }
-        public void changeName(String newName) {
-            this.name = newName;
-        }
-        public String getName() { return name;}
-        public int getId() {return id;}
-        public int getCalories() {return calories;}
-        public int getTotalFat() {return totalFat;}
-        public int getSodium() {return sodium;}
-        public int getCarbohydrate() {return carbohydrate;}
-        public int getProtein() {return protein;}
-        public String getServingsize() {return servingsize;}
-        public String getDescription() {return description;};
-        public String toString() {
-            return "Id: " + id +
-                    "/nName: " + name +
-                    "/nCalories: " + calories +
-                    "/nTotal Fat: " + totalFat +
-                    "/nSodium: " + sodium +
-                    "/nTotal Carbohydrate: " + carbohydrate +
-                    "/nProtein: " + protein +
-                    "/nServing Size: " + servingsize +
-                    "/nDescription: " + description;
-        }
+    private int calories;
 
-        public int getQuantity() {
-            return this.quantity;
-        }
+    @SerializedName("totalFat")
+    private int totalfat;
 
-        public void setQuantity(int quantity){
-            this.quantity = quantity;
-        }
+    private int sodium;
+    private int carbohydrate;
+    private int protein;
+    private String servingsize;
+    private String description;
+    private int quantity = 0;
 
-        public void setId(int id){
-            this.id = id;
-        }
+    public FoodItem() {}
+
+    public FoodItem(String name, int calories, int totalFat, int sodium, int carbohydrate,
+                    int protein, String servingsize, String description) {
+        this.foodtype = name;
+        this.calories = calories;
+        this.totalfat = totalFat;
+        this.sodium = sodium;
+        this.carbohydrate = carbohydrate;
+        this.protein = protein;
+        this.servingsize = servingsize;
+        this.description = description;
+    }
+
+    // Getters
+    public String getName() { return foodtype; }
+    public int getId() { return idfooditem; }
+    public int getCalories() { return calories; }
+    public int getTotalFat() { return totalfat; }
+    public int getSodium() { return sodium; }
+    public int getCarbohydrate() { return carbohydrate; }
+    public int getProtein() { return protein; }
+    public String getServingsize() { return servingsize; }
+    public String getDescription() { return description; }
+    public int getQuantity() { return quantity; }
+
+    // Setters
+    public void setId(int id) { this.idfooditem = id; }
+    public void setName(String name) { this.foodtype = name; }
+    public void setCalories(int calories) { this.calories = calories; }
+    public void setTotalFat(int totalFat) { this.totalfat = totalFat; }
+    public void setSodium(int sodium) { this.sodium = sodium; }
+    public void setCarbohydrate(int carbohydrate) { this.carbohydrate = carbohydrate; }
+    public void setProtein(int protein) { this.protein = protein; }
+    public void setServingsize(String servingsize) { this.servingsize = servingsize; }
+    public void setDescription(String description) { this.description = description; }
+    public void setQuantity(int quantity) { this.quantity = quantity; }
+
+    @Override
+    public String toString() {
+        return String.format("FoodItem{id=%d, name='%s', calories=%d, totalFat=%d, sodium=%d, carbohydrate=%d, protein=%d, servingSize='%s', description='%s', quantity=%d}",
+                idfooditem, foodtype, calories, totalfat, sodium, carbohydrate, protein, servingsize, description, quantity);
+    }
 }

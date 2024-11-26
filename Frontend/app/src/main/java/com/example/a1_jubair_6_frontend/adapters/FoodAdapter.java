@@ -78,10 +78,14 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
     @Override
     public void onBindViewHolder(@NonNull FoodViewHolder holder, int position) {
         FoodItem foodItem = foodItemList.get(position);
-        holder.foodName.setText(foodItem.getName());
-        holder.calories.setText(String.format("%d Cal", foodItem.getCalories()));
+
+        String name = foodItem.getName() != null ? foodItem.getName() : "Unknown";
+        holder.foodName.setText(name);
+
+        String caloriesText = String.format("%d Cal", foodItem.getCalories());
+        holder.calories.setText(caloriesText);
+
         holder.quantity.setText(String.valueOf(foodItem.getQuantity()));
-        FoodEatenDataManager foodEatenManager = new FoodEatenDataManager(context);
 
         View adminActionsContainer = holder.itemView.findViewById(R.id.adminActionsContainer);
         adminActionsContainer.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
@@ -89,58 +93,18 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         holder.buttonIncrease.setOnClickListener(v -> {
             foodItem.setQuantity(foodItem.getQuantity() + 1);
             holder.quantity.setText(String.valueOf(foodItem.getQuantity()));
-
-            foodEatenManager.addFoodEaten(foodItem, new FoodEatenDataManager.FoodEatenCallback() {
-                @Override
-                public void onSuccess() {
-                    Toast.makeText(context, "Food added successfully", Toast.LENGTH_SHORT).show();
-
-                    // Add Food Eaten to Activity Feed
-                    int uid = profileDataManager.getId();
-
-                    // TODO: Make message to web socket with food information. Need Group ID
-                }
-
-                @Override
-                public void onError(String message) {
-                    // Revert the quantity if the server request fails
-                    foodItem.setQuantity(foodItem.getQuantity() - 1);
-                    holder.quantity.setText(String.valueOf(foodItem.getQuantity()));
-                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
-                }
-            });
         });
 
         holder.buttonDecrease.setOnClickListener(v -> {
             if (foodItem.getQuantity() > 0) {
                 foodItem.setQuantity(foodItem.getQuantity() - 1);
                 holder.quantity.setText(String.valueOf(foodItem.getQuantity()));
-
-                foodEatenManager.removeFoodEaten(foodItem, new FoodEatenDataManager.FoodEatenCallback() {
-                    @Override
-                    public void onSuccess() {
-                        Toast.makeText(context, "Food removed successfully", Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onError(String message) {
-                        // Revert the quantity if the server request fails
-                        foodItem.setQuantity(foodItem.getQuantity() + 1);
-                        holder.quantity.setText(String.valueOf(foodItem.getQuantity()));
-                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
-                    }
-                });
             }
         });
 
-        if(isAdmin){
-            holder.buttonEdit.setOnClickListener(v -> {
-                showEditDialog(position, foodItem);
-            });
-
-            holder.buttonDelete.setOnClickListener(v -> {
-                showDeleteConfirmationDialog(position);
-            });
+        if (isAdmin) {
+            holder.buttonEdit.setOnClickListener(v -> showEditDialog(position, foodItem));
+            holder.buttonDelete.setOnClickListener(v -> showDeleteConfirmationDialog(position));
         }
 
         holder.itemView.setOnClickListener(v -> showFoodDetailsDialog(foodItem));

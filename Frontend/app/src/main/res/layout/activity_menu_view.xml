@@ -29,6 +29,23 @@
             android:textStyle="bold"/>
     </RelativeLayout>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="150px"
+        android:orientation="vertical">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAddMenu"
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/Iowa_State_Red"
+            android:text="@string/add_menu"
+            android:textColor="@android:color/white"
+            app:layout_constraintStart_toStartOf="@+id/textViewMenuTitle"
+            app:layout_constraintTop_toBottomOf="@+id/textViewMenuTitle" />
+    </LinearLayout>
+
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -54,8 +71,17 @@
                 android:id="@+id/menuSpinner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="48dp"/>
+                style="@style/CustomSpinner"
+                android:layout_marginTop="8dp"/>
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/deleteMenuButton"
+                style="@style/Widget.MaterialComponents.Button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/delete_menu"
+                android:layout_gravity="end"
+                android:layout_marginTop="8dp"/>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
@@ -156,6 +182,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/addFoodButton"
+                style="@style/Widget.MaterialComponents.Button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/add_food_item"
@@ -167,6 +194,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/saveButton"
+        style="@style/Widget.MaterialComponents.Button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/save_changes"

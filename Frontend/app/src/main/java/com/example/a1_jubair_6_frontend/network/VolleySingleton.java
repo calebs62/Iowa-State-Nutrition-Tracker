@@ -6,10 +6,16 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.LruCache;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.Volley;
+
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 
 public class VolleySingleton {
@@ -50,19 +56,33 @@ public class VolleySingleton {
 
     public RequestQueue getRequestQueue() {
         if (requestQueue == null) {
-            // getApplicationContext() is key, it keeps you from leaking the
-            // Activity or BroadcastReceiver if someone passes one in.
-            requestQueue = Volley.newRequestQueue(ctx.getApplicationContext());
+            HurlStack hurlStack = new HurlStack() {
+                @Override
+                protected HttpURLConnection createConnection(URL url) throws IOException {
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                    connection.setInstanceFollowRedirects(true);
+
+                    connection.setRequestProperty("Accept", "application/json");
+                    connection.setRequestProperty("Content-Type", "application/json");
+
+                    return connection;
+                }
+            };
+
+            requestQueue = Volley.newRequestQueue(ctx.getApplicationContext(), hurlStack);
         }
         return requestQueue;
     }
 
     public <T> void addToRequestQueue(Request<T> req) {
+        req.setRetryPolicy(new DefaultRetryPolicy(
+                30000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         getRequestQueue().add(req);
     }
 
     public ImageLoader getImageLoader() {
         return imageLoader;
     }
-
 }
