@@ -1,6 +1,8 @@
 package coms309.controller;
 
 import coms309.entity.FoodEaten;
+import coms309.entity.FoodItem;
+import coms309.entity.User;
 import coms309.repository.FoodEatenRepository;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Tag(name = "Food Eaten", description = "Food Consumed APIs")
 @RestController
@@ -57,10 +60,30 @@ public class FoodEatenController {
     }
 
     @DeleteMapping("/eaten/{id}")
-    public FoodEaten delete(@PathVariable int id){
+    public Boolean delete(@PathVariable int id){
         FoodEaten eaten = eatenRepo.findById(id).orElse(null);
         if (eatenRepo.existsById(id)){
             eatenRepo.deleteById(id);
+        }
+        return !eatenRepo.existsById(id);   //Returns Success/Failure of deletion
+    }
+
+    @PutMapping("/eaten/update/{id}")
+    public FoodEaten update(@PathVariable int id, @RequestBody Map<String, Object> map){
+        FoodEaten eaten = eatenRepo.findById(id).orElse(null);
+        if (eaten != null) {
+            if (map.containsKey("date")){
+                eaten.setDate((Date) map.get("date"));
+            }
+            if (map.containsKey("servings")){
+                eaten.setServings((Integer) map.get("servings"));
+            }
+            if (map.containsKey("food")){
+                eaten.setFood((FoodItem) map.get("food"));
+            }
+            if (map.containsKey("user")){
+                eaten.setUser((User) map.get("user"));
+            }
         }
         return eaten;
     }
