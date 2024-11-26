@@ -36,16 +36,16 @@ public class Message {
 //    @JsonView(value = {Views.Message.class})
 //    private GroupMember member;
 
-    @OneToMany(mappedBy = "parent")
-    @JsonView(value = {Views.Message.class})
-    @JsonManagedReference
-    private Set<Message> replies = new HashSet<>();
-
-    @ManyToOne
-    @JoinColumn(name = "parent")
-    @JsonView(value = {Views.Message.class})
-    @JsonBackReference
-    private Message parent;
+//    @OneToMany(mappedBy = "parent")
+//    @JsonView(value = {Views.Message.class})
+//    @JsonManagedReference
+//    private Set<Message> replies = new HashSet<>();
+//
+//    @ManyToOne
+//    @JoinColumn(name = "parent")
+//    @JsonView(value = {Views.Message.class})
+//    @JsonBackReference
+//    private Message parent;
 
     public Message(){};
 
@@ -54,11 +54,11 @@ public class Message {
         this.content = content;
     }
 
-    public Message(String userName, String content, Message parent){
-        this.userName = userName;
-        this.content = content;
-        this.parent = parent;
-    }
+//    public Message(String userName, String content, Message parent){
+//        this.userName = userName;
+//        this.content = content;
+//        this.parent = parent;
+//    }
 
     public int getId(){return id;}
     public String getContent() {
@@ -70,12 +70,12 @@ public class Message {
     public Date getSent() {
         return sent;
     }
-    public Message getParent(){
-        return parent;
-    }
-    public Set<Message> getReplies(){
-        return replies;
-    }
+//    public Message getParent(){
+//        return parent;
+//    }
+//    public Set<Message> getReplies(){
+//        return replies;
+//    }
 
     public void setContent(String content) {
         this.content = content;
@@ -86,8 +86,8 @@ public class Message {
     public void setSent(Date sent) {
         this.sent = sent;
     }
-    public void setParent(Message parent){
-        this.parent = parent;
-    }
+//    public void setParent(Message parent){
+//        this.parent = parent;
+//    }
 
 }
