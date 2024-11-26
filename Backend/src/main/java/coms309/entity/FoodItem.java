@@ -2,6 +2,7 @@ package coms309.entity;
 
 import jakarta.persistence.*;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -34,8 +35,10 @@ public class FoodItem {
     private String description = "";
 
     @ManyToMany (mappedBy="foodItems")
-    private Set<Menu> menus;
+    private Set<Menu> menus = new HashSet<>();
 
+    @OneToMany(mappedBy = "food")
+    private Set<FoodEaten> eaten = new HashSet<>();
 
     public FoodItem() {}
 
@@ -61,6 +64,12 @@ public class FoodItem {
     public int getProtein() {return protein;}
     public String getServingsize() {return servingsize;}
     public String getDescription() {return description;};
+    public Set<FoodEaten> getEaten() {
+        return eaten;
+    }
+    public Set<Menu> getMenus() {
+        return menus;
+    }
 
     //Setters
     public void setName(String newName) {
@@ -73,6 +82,12 @@ public class FoodItem {
     public void setProtein(int protein) {this.protein = protein;}
     public void setServingSize(String ss) {this.servingsize = ss;}
     public void setDescription(String des) {this.description = des;}
+    public void setEaten(Set<FoodEaten> eaten) {
+        this.eaten = eaten;
+    }
+    public void setMenus(Set<Menu> menus) {
+        this.menus = menus;
+    }
 
     public void setAll(FoodItem other) {
         this.name = other.getName();

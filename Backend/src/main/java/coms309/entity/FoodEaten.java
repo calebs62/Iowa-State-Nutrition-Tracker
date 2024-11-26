@@ -3,7 +3,7 @@ package coms309.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
-import java.sql.Timestamp;
+import java.util.Date;
 
 
 @Entity
@@ -14,9 +14,9 @@ public class FoodEaten {
     @Column(name="id")
     private int id;
 
-
-    @Column(name = "timeConsumed")
-    private Timestamp time = new Timestamp(System.currentTimeMillis());
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "dateConsumed")
+    private Date date = new Date();
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -36,12 +36,12 @@ public class FoodEaten {
     public User getUser() {return user;};
     public FoodItem getFood() {return food;};
     public int getServings() {return servings;}
-    public Timestamp getTime() {return time;}
+    public Date getDate() {return date;}
 
     public void setUser(User user) {this.user = user;}
     public void setFood(FoodItem food) {this.food = food;}
     public void setServings(int servings) {this.servings = servings;}
-    public void setTime(Timestamp time) {this.time = time;}
+    public void setDate(Date date) {this.date = date;}
 
 
 }
