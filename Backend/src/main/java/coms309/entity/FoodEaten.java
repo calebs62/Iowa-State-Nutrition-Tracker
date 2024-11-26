@@ -32,6 +32,12 @@ public class FoodEaten {
 
     public FoodEaten() {}
 
+    public FoodEaten(User user, FoodItem foodItem, int servings) {
+        this.user = user;
+        this.food = foodItem;
+        this.servings = servings;
+    }
+
     public int getId() {return id;}
     public User getUser() {return user;};
     public FoodItem getFood() {return food;};

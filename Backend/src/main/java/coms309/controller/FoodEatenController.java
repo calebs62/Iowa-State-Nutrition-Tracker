@@ -4,6 +4,8 @@ import coms309.entity.FoodEaten;
 import coms309.entity.FoodItem;
 import coms309.entity.User;
 import coms309.repository.FoodEatenRepository;
+import coms309.repository.FoodItemRepository;
+import coms309.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +21,25 @@ import java.util.Map;
 public class FoodEatenController {
     @Autowired
     FoodEatenRepository eatenRepo;
+    @Autowired
+    UserRepository userRepo;
+    @Autowired
+    FoodItemRepository itemRepo;
 
     @PostMapping("/eaten")
-    public FoodEaten createFoodEaten(FoodEaten eaten){
+    public FoodEaten createFoodEaten(@RequestBody Map<String, Object> map){
+        Integer userId = (Integer) map.get("userId");
+        Integer foodId = (Integer) map.get("foodId");
+        Integer servings = (Integer) map.get("servings");
+
+        User user = userRepo.findById(userId).orElse(null);
+        FoodItem item = itemRepo.findById(foodId).orElse(null);
+        if (user == null || item == null || servings == null) {
+            return null;
+        }
+
+        FoodEaten eaten = new FoodEaten(user, item, servings);
+
         return eatenRepo.save(eaten);
     }
 
