@@ -1,7 +1,6 @@
 package coms309.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 
 import java.util.HashSet;
@@ -15,32 +14,42 @@ public class FoodItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "idfooditem")
+    @JsonView(Views.Public.class)
     private int id;
 
     @Column(name = "foodtype")
+    @JsonView(Views.Public.class)
     private String name;
 
     // Nutrition Info variables
     @Column(name = "calories")
+    @JsonView(Views.Public.class)
     private int calories = -1;
     @Column(name = "totalfat")
+    @JsonView(Views.Public.class)
     private int totalFat = -1;
     @Column(name = "sodium")
+    @JsonView(Views.Public.class)
     private int sodium = -1;
     @Column(name = "carbohydrate")
+    @JsonView(Views.Public.class)
     private int carbohydrate = -1;
     @Column(name = "protein")
+    @JsonView(Views.Public.class)
     private int protein = -1;
     @Column(name="servingsize")
+    @JsonView(Views.Public.class)
     private String servingsize = "";
     @Column(name="description")
+    @JsonView(Views.Public.class)
     private String description = "";
-    @ManyToMany(mappedBy="foodItems")
-    @JsonBackReference
+
+    @ManyToMany (mappedBy="foodItems")
+    @JsonView(Views.FoodItem.class)
     private Set<Menu> menus = new HashSet<>();
 
     @OneToMany(mappedBy = "food")
-    @JsonBackReference
+    @JsonView(Views.FoodItem.class)
     private Set<FoodEaten> eaten = new HashSet<>();
 
     public FoodItem() {}

@@ -28,7 +28,7 @@ public class User {
 
     @Column(name="profilepicture",
             columnDefinition="LONGTEXT")
-    @JsonView(value = {Views.Public.class})
+    @JsonView(value = {Views.User.class})
     private String img;
     @Column(name="fname")
     @JsonView(value = {Views.Public.class})

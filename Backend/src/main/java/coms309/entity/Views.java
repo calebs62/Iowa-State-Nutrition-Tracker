@@ -8,6 +8,9 @@ public class Views {
     public static class Message extends Public{}
     public static class Achievement extends Public{}
     public static class Earned extends Public{}
+    public static class FoodEaten extends Public{}
+    public static class FoodItem extends Public{}
+    public static class Menu extends Public{}
 
     public static class Public{}
     public static class Internal extends Public{}
