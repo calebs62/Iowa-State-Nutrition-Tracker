@@ -1,10 +1,16 @@
 package com.example.a1_jubair_6_frontend.managers;
 
 import android.content.Context;
+import android.util.Log;
 
+import com.android.volley.NetworkResponse;
+import com.android.volley.ParseError;
 import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.JsonRequest;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
 import com.example.a1_jubair_6_frontend.models.FoodEaten;
 import com.example.a1_jubair_6_frontend.models.FoodItem;
@@ -13,8 +19,13 @@ import com.google.gson.Gson;
 
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 public class FoodEatenDataManager {
     private static final String TAG = "FoodEatenDataManager";
@@ -40,19 +51,19 @@ public class FoodEatenDataManager {
         this.foodEatenList = new ArrayList<>();
     }
 
-    public void addFoodEaten(FoodItem foodItem, FoodEatenCallback callback) {
+    public void addFoodEaten(FoodItem foodItem, int servings, FoodEatenCallback callback) {
         if (profileDataManager.getId() == -1) {
             callback.onError("User not logged in");
             return;
         }
 
-        String url = AppConstants.SERVER_URL + "/foodEaten/add";
+        String url = AppConstants.SERVER_URL + "/eaten";
 
         try {
             JSONObject jsonBody = new JSONObject();
             jsonBody.put("userId", profileDataManager.getId());
             jsonBody.put("foodId", foodItem.getId());
-            jsonBody.put("servings", 1);
+            jsonBody.put("servings", servings);
 
             JsonObjectRequest request = new JsonObjectRequest(
                     Request.Method.POST,
@@ -75,41 +86,69 @@ public class FoodEatenDataManager {
         }
     }
 
-    public void removeFoodEaten(FoodItem foodItem, FoodEatenCallback callback) {
+    public void removeFoodEaten(int foodEatenId, FoodEatenCallback callback) {
         if (profileDataManager.getId() == -1) {
             callback.onError("User not logged in");
             return;
         }
 
-        String url = AppConstants.SERVER_URL + "/foodEaten/user/" + profileDataManager.getId() + "/recent/" + foodItem.getId();
+        String url = AppConstants.SERVER_URL + "/eaten/" + foodEatenId;
 
-        JsonObjectRequest request = new JsonObjectRequest(
+        Log.d(TAG, "Attempting to delete food eaten with ID: " + foodEatenId);
+        Log.d(TAG, "Delete URL: " + url);
+
+        JsonRequest<Boolean> request = new JsonRequest<Boolean>(
                 Request.Method.DELETE,
                 url,
                 null,
                 response -> {
-                    for (int i = foodEatenList.size() - 1; i >= 0; i--) {
-                        if (foodEatenList.get(i).getFood().getId() == foodItem.getId()) {
-                            foodEatenList.remove(i);
-                            break;
-                        }
-                    }
+                    Log.d(TAG, "Successfully deleted food eaten with ID: " + foodEatenId);
+                    foodEatenList.removeIf(item -> item.getId() == foodEatenId);
                     callback.onSuccess();
                 },
-                error -> callback.onError("Failed to remove food: " + error.getMessage())
-        );
+                error -> {
+                    Log.e(TAG, "Error deleting food: " + error.toString());
+                    if (error.networkResponse != null) {
+                        Log.e(TAG, "Error status code: " + error.networkResponse.statusCode);
+                        Log.e(TAG, "Error data: " + new String(error.networkResponse.data));
+                    }
+                    callback.onError("Failed to remove food: " + error.getMessage());
+                }
+        ) {
+            @Override
+            protected Response<Boolean> parseNetworkResponse(NetworkResponse response) {
+                try {
+                    String jsonString = new String(response.data,
+                            HttpHeaderParser.parseCharset(response.headers, PROTOCOL_CHARSET));
+                    return Response.success(Boolean.parseBoolean(jsonString),
+                            HttpHeaderParser.parseCacheHeaders(response));
+                } catch (UnsupportedEncodingException e) {
+                    return Response.error(new ParseError(e));
+                }
+            }
+
+            @Override
+            public String getBodyContentType() {
+                return "application/json";
+            }
+        };
 
         VolleySingleton.getInstance(context).addToRequestQueue(request);
     }
 
-    public void getFoodEatenForTimeRange(long startTime, long endTime, FoodEatenListCallback callback) {
+    public void getFoodEatenForTimeRange(Date startTime, Date endTime, FoodEatenListCallback callback) {
         if (profileDataManager.getId() == -1) {
             callback.onError("User not logged in");
             return;
         }
 
-        String url = AppConstants.SERVER_URL + "/foodEaten/user/" + profileDataManager.getId() +
-                "/range?start=" + startTime + "&end=" + endTime;
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.US);
+        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String startTimeStr = dateFormat.format(startTime);
+        String endTimeStr = dateFormat.format(endTime);
+
+        String url = AppConstants.SERVER_URL + "/eaten/user/" + profileDataManager.getId() +
+                "/time?startTime=" + startTimeStr + "&endTime=" + endTimeStr;
 
         JsonArrayRequest request = new JsonArrayRequest(
                 Request.Method.GET,
