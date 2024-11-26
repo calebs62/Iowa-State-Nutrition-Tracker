@@ -15,7 +15,8 @@ public class Menu {
         this.foodItems = new HashSet<>();
     }
 
-    public Menu(String location, String meal, String date) {
+    public Menu(String name, String location, String meal, String date) {
+        this.name = name;
         this.location = location;
         this.meal = meal;
         this.date = date;

@@ -11,8 +11,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -21,6 +23,7 @@ import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.adapters.MenuFoodItemAdapter;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
@@ -40,6 +43,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class MenuViewActivity extends AppCompatActivity {
@@ -50,6 +54,8 @@ public class MenuViewActivity extends AppCompatActivity {
     private RecyclerView foodItemsRecyclerView;
     private Button addFoodButton;
     private Button saveButton;
+    private Button addMenuButton;
+    private Button deleteMenuButton;
 
     private List<Menu> menus = new ArrayList<>();
     private List<FoodItem> availableFoodItems = new ArrayList<>();
@@ -72,7 +78,6 @@ public class MenuViewActivity extends AppCompatActivity {
     }
 
     private void initializeViews() {
-        // Existing view initializations
         menuSpinner = findViewById(R.id.menuSpinner);
         locationEdit = findViewById(R.id.locationEdit);
         mealTypeEdit = findViewById(R.id.mealTypeEdit);
@@ -80,6 +85,8 @@ public class MenuViewActivity extends AppCompatActivity {
         foodItemsRecyclerView = findViewById(R.id.foodItemsRecyclerView);
         addFoodButton = findViewById(R.id.addFoodButton);
         saveButton = findViewById(R.id.saveButton);
+        addMenuButton = findViewById(R.id.btnAddMenu);
+        deleteMenuButton = findViewById(R.id.deleteMenuButton);
 
         ImageView backArrow = findViewById(R.id.backArrow);
         backArrow.setOnClickListener(v -> finish());
@@ -106,6 +113,54 @@ public class MenuViewActivity extends AppCompatActivity {
         dateEdit.setOnClickListener(v -> showDatePicker());
         addFoodButton.setOnClickListener(v -> showAddDialog());
         saveButton.setOnClickListener(v -> saveMenuChanges());
+        addMenuButton.setOnClickListener(v -> showMenuAddDialog());
+        deleteMenuButton.setOnClickListener(v -> showDeleteConfirmationDialog());
+    }
+
+    private void showMenuAddDialog() {
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        View view = getLayoutInflater().inflate(R.layout.dialog_add_menu_item, null);
+
+        Button addButton = view.findViewById(R.id.createMenuButton);
+        EditText name = view.findViewById(R.id.menuNameEdit);
+        EditText location = view.findViewById(R.id.menuLocationEdit);
+        EditText mealType = view.findViewById(R.id.menuMealEdit);
+        EditText date = view.findViewById(R.id.menuDateEdit);
+        TextView formError = view.findViewById(R.id.tvFormError);
+
+        dialog.setContentView(view);
+        dialog.show();
+
+        addButton.setOnClickListener(v -> {
+            String menuName = name.getText().toString();
+            String menuLocation = location.getText().toString();
+            String menuMealType = mealType.getText().toString().toLowerCase();
+            String menuDateStr = date.getText().toString();
+
+            formError.setVisibility(View.GONE);
+
+            if (menuName.isEmpty() || menuLocation.isEmpty() || menuMealType.isEmpty() || menuDateStr.isEmpty()) {
+                formError.setText("All fields are required!");
+                formError.setVisibility(View.VISIBLE);
+                return;
+            }
+
+            if (!menuMealType.equals("breakfast") && !menuMealType.equals("lunch") && !menuMealType.equals("dinner")) {
+                formError.setText("Invalid meal type! Use breakfast, lunch, or dinner.");
+                formError.setVisibility(View.VISIBLE);
+                return;
+            }
+
+            try {
+                LocalDate menuDate = LocalDate.parse(menuDateStr, dateFormatter);
+                Menu newMenu = new Menu(menuName, menuLocation, menuMealType, menuDate.format(dateFormatter));
+                postNewMenuToServer(newMenu);
+                dialog.dismiss();
+            } catch (DateTimeParseException e) {
+                formError.setText("Invalid date format!");
+                formError.setVisibility(View.VISIBLE);
+            }
+        });
     }
 
     private void showDatePicker() {
@@ -253,6 +308,18 @@ public class MenuViewActivity extends AppCompatActivity {
         }
     }
 
+    private void showDeleteConfirmationDialog() {
+        String displayText = String.format("%s - %s",
+                currentMenu.getLocation(),
+                currentMenu.getDate() != null ? currentMenu.getDate() : "No Date");
+
+        new AlertDialog.Builder(this)
+                .setTitle("Delete Menu")
+                .setMessage("Are you sure you want to delete the menu " + displayText +"?")
+                .setPositiveButton("Delete", (dialog, which) -> deleteCurrentMenuFromServer())
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
 
     private void saveMenuChanges() {
         if (currentMenu == null) return;
@@ -402,5 +469,113 @@ public class MenuViewActivity extends AppCompatActivity {
         );
 
         VolleySingleton.getInstance(this).addToRequestQueue(request);
+    }
+
+    private void postNewMenuToServer(Menu newMenu) {
+        String url = AppConstants.SERVER_URL + "/menu";
+
+        try {
+            JSONObject jsonBody = new JSONObject();
+
+            String updatedMealType = newMenu.getMeal().substring(0, 1).toUpperCase() + newMenu.getMeal().substring(1);
+
+            jsonBody.put("name", newMenu.getName());
+            jsonBody.put("location", newMenu.getLocation());
+            jsonBody.put("meal", updatedMealType);
+            jsonBody.put("date", newMenu.getDate());
+
+            JsonObjectRequest request = new JsonObjectRequest(
+                    Request.Method.POST,
+                    url,
+                    jsonBody,
+                    response -> {
+                        Log.d("MenuView", "Menu added successfully: " + response.toString());
+                        Toast.makeText(this, "Menu added successfully", Toast.LENGTH_SHORT).show();
+                        fetchMenus();
+                    },
+                    error -> {
+                        String errorMessage = "Unknown error";
+                        if (error.networkResponse != null && error.networkResponse.data != null) {
+                            try {
+                                String errorResponse = new String(error.networkResponse.data, StandardCharsets.UTF_8);
+                                Log.e("MenuView", "Server error response: " + errorResponse);
+                                errorMessage = errorResponse;
+                            } catch (Exception e) {
+                                Log.e("MenuView", "Error parsing error response", e);
+                            }
+                        }
+                        Log.e("MenuView", "Error adding menu: " + errorMessage);
+                        Toast.makeText(this, "Error adding menu: " + errorMessage, Toast.LENGTH_LONG).show();
+                    }
+            ) {
+                @Override
+                public Map<String, String> getHeaders() {
+                    Map<String, String> headers = new HashMap<>();
+                    headers.put("Content-Type", "application/json");
+                    return headers;
+                }
+            };
+
+            request.setRetryPolicy(new DefaultRetryPolicy(
+                    30000,
+                    0,
+                    DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+            ));
+
+            VolleySingleton.getInstance(this).addToRequestQueue(request);
+        } catch (Exception e) {
+            Log.e("MenuView", "Error creating add request", e);
+            Toast.makeText(this, "Error preparing add request: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void deleteCurrentMenuFromServer() {
+        if (currentMenu == null) return;
+
+        String url = AppConstants.SERVER_URL + "/menu/" + currentMenu.getId();
+
+        try {
+            StringRequest request = new StringRequest(
+                    Request.Method.DELETE,
+                    url,
+                    response -> {
+                        Log.d("MenuView", "Menu deleted successfully: " + response.toString());
+                        Toast.makeText(this, "Menu deleted successfully", Toast.LENGTH_SHORT).show();
+                        fetchMenus();
+                    },
+                    error -> {
+                        String errorMessage = "Unknown error";
+                        if (error.networkResponse != null && error.networkResponse.data != null) {
+                            try {
+                                String errorResponse = new String(error.networkResponse.data, StandardCharsets.UTF_8);
+                                Log.e("MenuView", "Server error response: " + errorResponse);
+                                errorMessage = errorResponse;
+                            } catch (Exception e) {
+                                Log.e("MenuView", "Error parsing error response", e);
+                            }
+                        }
+                        Log.e("MenuView", "Error deleting menu: " + errorMessage);
+                        Toast.makeText(this, "Error deleting menu: " + errorMessage, Toast.LENGTH_LONG).show();
+                    }
+            ) {
+                @Override
+                public Map<String, String> getHeaders() {
+                    Map<String, String> headers = new HashMap<>();
+                    headers.put("Content-Type", "application/json");
+                    return headers;
+                }
+            };
+
+            request.setRetryPolicy(new DefaultRetryPolicy(
+                    30000,
+                    0,
+                    DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+            ));
+
+            VolleySingleton.getInstance(this).addToRequestQueue(request);
+        } catch (Exception e) {
+            Log.e("MenuView", "Error creating delete request", e);
+            Toast.makeText(this, "Error preparing delete request: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 }
