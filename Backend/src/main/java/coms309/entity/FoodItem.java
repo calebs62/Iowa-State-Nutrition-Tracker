@@ -1,5 +1,7 @@
 package coms309.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.HashSet;
@@ -16,7 +18,7 @@ public class FoodItem {
     private int id;
 
     @Column(name = "foodtype")
-    private String name = "";
+    private String name;
 
     // Nutrition Info variables
     @Column(name = "calories")
@@ -33,11 +35,12 @@ public class FoodItem {
     private String servingsize = "";
     @Column(name="description")
     private String description = "";
-
-    @ManyToMany (mappedBy="foodItems")
+    @ManyToMany(mappedBy="foodItems")
+    @JsonBackReference
     private Set<Menu> menus = new HashSet<>();
 
     @OneToMany(mappedBy = "food")
+    @JsonBackReference
     private Set<FoodEaten> eaten = new HashSet<>();
 
     public FoodItem() {}

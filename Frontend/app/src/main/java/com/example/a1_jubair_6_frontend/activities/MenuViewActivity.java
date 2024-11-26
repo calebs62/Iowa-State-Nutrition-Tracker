@@ -34,14 +34,12 @@ import com.google.gson.Gson;
 import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
-import java.sql.Date;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 public class MenuViewActivity extends AppCompatActivity {
@@ -58,6 +56,8 @@ public class MenuViewActivity extends AppCompatActivity {
     private MenuFoodItemAdapter foodAdapter;
     private Menu currentMenu;
     private Gson gson = new Gson();
+    private DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,8 +114,8 @@ public class MenuViewActivity extends AppCompatActivity {
                 .build();
 
         datePicker.addOnPositiveButtonClickListener(selection -> {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-            dateEdit.setText(sdf.format(new Date(selection)));
+            LocalDate selectedDate = LocalDate.ofEpochDay(selection / (24 * 60 * 60 * 1000));
+            dateEdit.setText(selectedDate.format(dateFormatter));
         });
 
         datePicker.show(getSupportFragmentManager(), "DATE_PICKER");
@@ -229,12 +229,30 @@ public class MenuViewActivity extends AppCompatActivity {
     }
 
     private void updateUIWithMenu(Menu menu) {
-        locationEdit.setText(menu.getLocation());
-        mealTypeEdit.setText(menu.getMeal());
-        dateEdit.setText(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                .format(menu.getDate()));
-        foodAdapter.updateFoodItems(new ArrayList<>(menu.getFoodItems()));
+        try {
+            locationEdit.setText(menu.getLocation());
+            mealTypeEdit.setText(menu.getMeal());
+
+            String dateStr = menu.getDate();
+            if (dateStr != null && !dateStr.isEmpty()) {
+                dateEdit.setText(dateStr);
+            } else {
+                dateEdit.setText("");
+            }
+
+            if (menu.getFoodItems() != null) {
+                foodAdapter.updateFoodItems(new ArrayList<>(menu.getFoodItems()));
+            } else {
+                foodAdapter.updateFoodItems(new ArrayList<>());
+            }
+
+            currentMenu = menu;
+        } catch (Exception e) {
+            Log.e("MenuView", "Error updating UI with menu", e);
+            Toast.makeText(this, "Error displaying menu details", Toast.LENGTH_SHORT).show();
+        }
     }
+
 
     private void saveMenuChanges() {
         if (currentMenu == null) return;
@@ -258,18 +276,15 @@ public class MenuViewActivity extends AppCompatActivity {
             jsonBody.put("location", locationEdit.getText().toString().trim());
             jsonBody.put("meal", mealTypeEdit.getText().toString().trim());
 
-            String dateStr = dateEdit.getText().toString();
-            try {
-
-                LocalDate.parse(dateStr);
-                jsonBody.put("date", dateStr);
-
-                Log.d("MenuView", "Sending update request: " + jsonBody.toString());
-
-            } catch (DateTimeParseException e) {
-                Log.e("MenuView", "Error parsing date: " + e.getMessage());
-                Toast.makeText(this, "Invalid date format. Use YYYY-MM-DD", Toast.LENGTH_SHORT).show();
-                return;
+            String dateStr = dateEdit.getText().toString().trim();
+            if (!dateStr.isEmpty()) {
+                try {
+                    LocalDate.parse(dateStr, dateFormatter);
+                    jsonBody.put("date", dateStr);
+                } catch (DateTimeParseException e) {
+                    Toast.makeText(this, "Invalid date format. Use YYYY-MM-DD", Toast.LENGTH_SHORT).show();
+                    return;
+                }
             }
 
             JsonObjectRequest request = new JsonObjectRequest(
@@ -312,8 +327,8 @@ public class MenuViewActivity extends AppCompatActivity {
 
             VolleySingleton.getInstance(this).addToRequestQueue(request);
         } catch (Exception e) {
-            Log.e("MenuView", "Error creating update request", e);
-            Toast.makeText(this, "Error preparing update request: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        Log.e("MenuView", "Error creating update request", e);
+        Toast.makeText(this, "Error preparing update request: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 

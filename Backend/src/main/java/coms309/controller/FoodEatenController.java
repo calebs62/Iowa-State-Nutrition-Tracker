@@ -9,6 +9,7 @@ import coms309.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -66,11 +67,14 @@ public class FoodEatenController {
     }
 
     @GetMapping("/eaten/user/{uid}/{startTime}/{endTime}")
-    public List<FoodEaten> getEatenByUserTime(@PathVariable(name = "uid") int uid, @PathVariable(name = "startTime") Date startTime, @PathVariable(name = "endTime") Date endTime){
+    public List<FoodEaten> getEatenByUserTime(
+            @PathVariable(name = "uid") int uid,
+            @PathVariable(name = "startTime") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date startTime,
+            @PathVariable(name = "endTime") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date endTime) {
         List<FoodEaten> userEaten = new ArrayList<>();
         List<FoodEaten> timeEaten = eatenRepo.findAllByDateBetween(startTime, endTime);
-        for (FoodEaten e: timeEaten){
-            if (e.getUser().getUid() == uid){
+        for (FoodEaten e : timeEaten) {
+            if (e.getUser().getUid() == uid) {
                 userEaten.add(e);
             }
         }
