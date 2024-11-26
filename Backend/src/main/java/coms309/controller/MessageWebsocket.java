@@ -46,7 +46,7 @@ public class MessageWebsocket {
         sessionMemberKeyMap.put(session, memberKey);
         memberKeySessionMap.put(memberKey, session);
 
-//        sendMessageToUser(member, getChatHistory());
+        sendMessageToUser(member, getChatHistory(member.getId().getGroupId()));
 
         String message = "User: " + member.getUser().getFName() + " has joined the Group " + member.getId().getGroupId() + " Chat";
         logger.info(message);
@@ -84,7 +84,7 @@ public class MessageWebsocket {
         }
 
         sendMessageToGroup(member.getGroup(), member.getUser().getFName() + ": " + message);
-        msgRepo.save(new Message(member.getUser().getFName(), message));
+        msgRepo.save(new Message(member, message));
     }
 
     @OnError
@@ -117,13 +117,15 @@ public class MessageWebsocket {
         });
     }
 
-    public String getChatHistory(){
+    public String getChatHistory(int groupId){
         List<Message> messages = msgRepo.findAll();
 
         StringBuilder sb = new StringBuilder();
         if (!messages.isEmpty()) {
             for (Message message : messages){
-                sb.append(message.getUserName() + ": " + message.getContent() + "\n");
+                if (message.getGroupId() == groupId || message.getGroupId() == -1){ //Message groupId -1 is broadcast
+                    sb.append(message.getUserName() + ": " + message.getContent() + "\n");
+                }
             }
         }
         return sb.toString();

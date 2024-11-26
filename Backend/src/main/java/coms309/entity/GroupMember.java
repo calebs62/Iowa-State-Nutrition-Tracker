@@ -42,9 +42,9 @@ public class GroupMember {
     @JsonView(value = {Views.Public.class})
     private Date joinDate = new Date();
 
-//    @OneToMany(mappedBy = "member")
-//    @JsonView(value = {Views.GroupMember.class})
-//    private List<Message> messages = new ArrayList<>();
+    @OneToMany(mappedBy = "member")
+    @JsonView(value = {Views.GroupMember.class})
+    private List<Message> messages = new ArrayList<>();
 
     public GroupMember() {}
 
@@ -60,7 +60,7 @@ public class GroupMember {
     public GroupMemberKey getId() {return id;}
     public int getPermissionLvl(){return permissionLvl.ordinal();}
     public Date getJoinDate() {return joinDate;}
-//    public List<Message> getMessages(){return messages;}
+    public List<Message> getMessages(){return messages;}
 
     public void setGroup(Group group) {this.group = group;}
     public void setUser(User user) {this.user = user;}

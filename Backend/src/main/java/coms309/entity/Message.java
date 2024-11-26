@@ -19,6 +19,10 @@ public class Message {
     @JsonView(value = {Views.Message.class})
     private String userName;
 
+    @Column
+    @JsonView(value = {Views.Message.class})
+    private int groupId;
+
     @Lob
     @JsonView(value = {Views.Message.class})
     private String content;
@@ -28,13 +32,10 @@ public class Message {
     @JsonView(value = {Views.Message.class})
     private Date sent = new Date();
 
-//    @ManyToOne
-//    @JoinColumns({
-//            @JoinColumn(name = "userId", referencedColumnName = "userId"),
-//            @JoinColumn(name = "groupId", referencedColumnName = "groupId")
-//    })
-//    @JsonView(value = {Views.Message.class})
-//    private GroupMember member;
+    @ManyToOne
+    @JoinColumns({@JoinColumn(name = "userId", insertable = false, updatable = false), @JoinColumn(name = "groupId", insertable = false, updatable = false)})
+    @JsonView(value = {Views.Message.class})
+    private GroupMember member;
 
 //    @OneToMany(mappedBy = "parent")
 //    @JsonView(value = {Views.Message.class})
@@ -49,8 +50,10 @@ public class Message {
 
     public Message(){};
 
-    public Message(String userName, String content){
-        this.userName = userName;
+    public Message(GroupMember member, String content){
+        this.member = member;
+        this.userName = member.getUser().getFName();
+        this.groupId = member.getId().getGroupId();
         this.content = content;
     }
 
@@ -70,6 +73,8 @@ public class Message {
     public Date getSent() {
         return sent;
     }
+    public GroupMember getMember(){return member;}
+    public int getGroupId(){return groupId;}
 //    public Message getParent(){
 //        return parent;
 //    }
@@ -86,6 +91,7 @@ public class Message {
     public void setSent(Date sent) {
         this.sent = sent;
     }
+    public void setMember(GroupMember member){this.member = member;}
 //    public void setParent(Message parent){
 //        this.parent = parent;
 //    }
