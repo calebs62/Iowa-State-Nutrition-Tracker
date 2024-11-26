@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 
 @Entity
@@ -19,7 +19,7 @@ public class FoodEaten {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "dateConsumed")
     @JsonView(value = {Views.Public.class})
-    private Date date = new Date();
+    private LocalDateTime date =LocalDateTime.now();
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -47,12 +47,12 @@ public class FoodEaten {
     public User getUser() {return user;};
     public FoodItem getFood() {return food;};
     public int getServings() {return servings;}
-    public Date getDate() {return date;}
+    public LocalDateTime getDate() {return date;}
 
     public void setUser(User user) {this.user = user;}
     public void setFood(FoodItem food) {this.food = food;}
     public void setServings(int servings) {this.servings = servings;}
-    public void setDate(Date date) {this.date = date;}
+    public void setDate(LocalDateTime date) {this.date = date;}
 
 
 }
