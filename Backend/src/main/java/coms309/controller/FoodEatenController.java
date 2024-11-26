@@ -1,8 +1,10 @@
 package coms309.controller;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import coms309.entity.FoodEaten;
 import coms309.entity.FoodItem;
 import coms309.entity.User;
+import coms309.entity.Views;
 import coms309.repository.FoodEatenRepository;
 import coms309.repository.FoodItemRepository;
 import coms309.repository.UserRepository;
@@ -27,6 +29,7 @@ public class FoodEatenController {
     FoodItemRepository itemRepo;
 
     @PostMapping("/eaten")
+    @JsonView(value = {Views.FoodEaten.class})
     public FoodEaten createFoodEaten(@RequestBody Map<String, Object> map){
         Integer userId = (Integer) map.get("userId");
         Integer foodId = (Integer) map.get("foodId");
@@ -44,16 +47,19 @@ public class FoodEatenController {
     }
 
     @GetMapping("/eaten/{id}")
+    @JsonView(value = {Views.FoodEaten.class})
     public FoodEaten getEatenById(@PathVariable int id){
         return eatenRepo.findById(id).orElse(null);
     }
 
     @GetMapping("/allEaten")
+    @JsonView(value = {Views.FoodEaten.class})
     public List<FoodEaten> getAllEaten(){
         return eatenRepo.findAll();
     }
 
     @GetMapping("/eaten/user/{uid}")
+    @JsonView(value = {Views.FoodEaten.class})
     public List<FoodEaten> getEatenByUser(@PathVariable int uid){
         List<FoodEaten> eatenList = eatenRepo.findAll();
         List<FoodEaten> userEaten = new ArrayList<>();
@@ -65,12 +71,15 @@ public class FoodEatenController {
         return userEaten;
     }
 
-    @GetMapping("/eaten/user/{uid}/{startTime}/{endTime}")
-    public List<FoodEaten> getEatenByUserTime(@PathVariable(name = "uid") int uid, @PathVariable(name = "startTime") Date startTime, @PathVariable(name = "endTime") Date endTime){
+    @GetMapping("/eaten/user/{uid}/time")
+    @JsonView(value = {Views.FoodEaten.class})
+    public List<FoodEaten> getEatenByUserTime(@PathVariable(name = "uid") int uid, @RequestBody Map<String, Object> map) {
+        Date startTime = (Date) map.getOrDefault("startTime", new Date(new Date().getTime() - 24 * 60 * 60 * 1000)); //Default to yesterday
+        Date endTime = (Date) map.getOrDefault("endTime", new Date()); //Default to now
         List<FoodEaten> userEaten = new ArrayList<>();
         List<FoodEaten> timeEaten = eatenRepo.findAllByDateBetween(startTime, endTime);
-        for (FoodEaten e: timeEaten){
-            if (e.getUser().getUid() == uid){
+        for (FoodEaten e : timeEaten) {
+            if (e.getUser().getUid() == uid) {
                 userEaten.add(e);
             }
         }
@@ -78,6 +87,7 @@ public class FoodEatenController {
     }
 
     @DeleteMapping("/eaten/{id}")
+    @JsonView(value = {Views.FoodEaten.class})
     public Boolean delete(@PathVariable int id){
         FoodEaten eaten = eatenRepo.findById(id).orElse(null);
         if (eatenRepo.existsById(id)){
@@ -87,6 +97,7 @@ public class FoodEatenController {
     }
 
     @PutMapping("/eaten/update/{id}")
+    @JsonView(value = {Views.FoodEaten.class})
     public FoodEaten update(@PathVariable int id, @RequestBody Map<String, Object> map){
         FoodEaten eaten = eatenRepo.findById(id).orElse(null);
         if (eaten != null) {
