@@ -13,8 +13,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -73,9 +73,10 @@ public class FoodEatenController {
 
     @GetMapping("/eaten/user/{uid}/time")
     @JsonView(value = {Views.FoodEaten.class})
-    public List<FoodEaten> getEatenByUserTime(@PathVariable(name = "uid") int uid, @RequestBody Map<String, Object> map) {
-        Date startTime = (Date) map.getOrDefault("startTime", new Date(new Date().getTime() - 24 * 60 * 60 * 1000)); //Default to yesterday
-        Date endTime = (Date) map.getOrDefault("endTime", new Date()); //Default to now
+    public List<FoodEaten> getEatenByUserTime(@PathVariable(name = "uid") int uid, @RequestParam(required = false) String start, @RequestParam(required = false) String end) {
+        LocalDateTime startTime = start != null ? LocalDateTime.parse(start): LocalDateTime.now().minusMonths(1);   //Default to last month
+        LocalDateTime endTime = start != null ? LocalDateTime.parse(end): LocalDateTime.now(); //Default to now
+
         List<FoodEaten> userEaten = new ArrayList<>();
         List<FoodEaten> timeEaten = eatenRepo.findAllByDateBetween(startTime, endTime);
         for (FoodEaten e : timeEaten) {
@@ -102,7 +103,7 @@ public class FoodEatenController {
         FoodEaten eaten = eatenRepo.findById(id).orElse(null);
         if (eaten != null) {
             if (map.containsKey("date")){
-                eaten.setDate((Date) map.get("date"));
+                eaten.setDate((LocalDateTime) map.get("date"));
             }
             if (map.containsKey("servings")){
                 eaten.setServings((Integer) map.get("servings"));
