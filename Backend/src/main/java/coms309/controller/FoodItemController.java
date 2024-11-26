@@ -1,5 +1,7 @@
 package coms309.controller;
 
+import com.fasterxml.jackson.annotation.JsonView;
+import coms309.entity.Views;
 import coms309.repository.FoodItemRepository;
 import coms309.entity.FoodItem;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,6 +26,7 @@ public class FoodItemController {
             description="Create  fooditem object from request body."
     )
     @PostMapping("/item")
+    @JsonView(value = {Views.FoodItem.class})
     public FoodItem saveFoodItem(@RequestBody FoodItem foodItem){
         return foodRepo.save(foodItem);
     }
@@ -35,6 +38,7 @@ public class FoodItemController {
             description="Get food item based on id"
     )
     @GetMapping("/item/{id}")
+    @JsonView(value = {Views.FoodItem.class})
     public FoodItem getFoodItemById(@Parameter(description="Id of food item to be returned.")@PathVariable int id) {
         return foodRepo.findById(id).get();
     }
@@ -45,6 +49,7 @@ public class FoodItemController {
             description="Update food item based on id"
     )
     @PutMapping("/item/update/{id}")
+    @JsonView(value = {Views.FoodItem.class})
     public FoodItem updateFoodItem(@Parameter(description="Id of food item to be updated.")@PathVariable int id, @Parameter(description="Map containing certain key value pairs corrosponding to fields to be changed.")@RequestBody Map<String, Object> foodItem) {
         FoodItem item = foodRepo.findById(id).orElse(null);
         if (item != null) {
@@ -83,6 +88,7 @@ public class FoodItemController {
                description="Delete food item based on id"
        )
     @DeleteMapping("/item/{id}")
+       @JsonView(value = {Views.FoodItem.class})
     public FoodItem delete(@Parameter(description="Id of food item to be deleted.")@PathVariable int id) {
         FoodItem val = foodRepo.findById(id).orElse(null);
         if (foodRepo.existsById(id)) {
@@ -99,6 +105,7 @@ public class FoodItemController {
     )
     // List all items
     @GetMapping("/item")
+    @JsonView(value = {Views.FoodItem.class})
     public List<FoodItem> getAllFoodItems(@Parameter(description="Map containing search criteria to filter search results by")@RequestBody(required = false) Map<String, Object> searchTerms) {
         /*
             Map will contain search terms if values have been entered

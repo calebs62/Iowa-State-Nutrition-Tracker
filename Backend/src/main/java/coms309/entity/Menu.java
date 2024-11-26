@@ -1,5 +1,6 @@
 package coms309.entity;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -13,18 +14,23 @@ public class Menu {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="idmenu")
+    @JsonView(Views.Public.class)
     private int id;
 
     @Column(name = "name")
+    @JsonView(Views.Public.class)
     private String name;
 
     @Column(name = "location")
+    @JsonView(Views.Public.class)
     private String location;
 
     @Column(name = "meal")
+    @JsonView(Views.Public.class)
     private String meal; //Breakfast/Lunch/Dinner
 
     @Column(name = "date")
+    @JsonView(Views.Public.class)
     private LocalDate date;
 
     @ManyToMany(cascade = {
@@ -33,6 +39,7 @@ public class Menu {
     @JoinTable(name = "menu_food",
             joinColumns = {@JoinColumn(name = "menu_id")},
             inverseJoinColumns = {@JoinColumn(name = "fooditem_id")})
+    @JsonView(Views.Menu.class)
     private Set<FoodItem> foodItems = new HashSet<>();
 
     public Menu() {}
