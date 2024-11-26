@@ -117,6 +117,7 @@
 
     <Button
         android:id="@+id/btnConfirm"
+        style="@style/Widget.MaterialComponents.Button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Confirm"
@@ -135,6 +136,7 @@
     <!-- Goal buttons stacked vertically -->
     <Button
         android:id="@+id/btnLoseWeight"
+        style="@style/Widget.MaterialComponents.Button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="To lose weight"
@@ -142,6 +144,7 @@
 
     <Button
         android:id="@+id/btnGainWeight"
+        style="@style/Widget.MaterialComponents.Button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="To gain weight"
@@ -149,6 +152,7 @@
 
     <Button
         android:id="@+id/btnGainMuscle"
+        style="@style/Widget.MaterialComponents.Button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="To gain muscle"

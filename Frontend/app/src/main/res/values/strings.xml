@@ -88,4 +88,5 @@
     <string name="carbs_format">Carbs: %d g</string>
     <string name="fat_format">Fat: %d g</string>
     <string name="sodium_format">Sodium: %d mg</string>
+    <string name="add_menu">Add Menu</string>
 </resources>
