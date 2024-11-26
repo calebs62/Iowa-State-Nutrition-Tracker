@@ -23,12 +23,9 @@ public class MessageWebsocket {
     private static GroupMemberRepository memberRepo;
     private static MessageRepository msgRepo;
     @Autowired
-    public void setMsgRepo(MessageRepository repo){
-        msgRepo = repo;
-    }
-    @Autowired
-    public void setMemberRepo(GroupMemberRepository repo){
-        memberRepo = repo;
+    public void setRepos(MessageRepository msRepo, GroupMemberRepository memRepo){
+        msgRepo = msRepo;
+        memberRepo = memRepo;
     }
 
     private static Map<Session, GroupMemberKey> sessionMemberKeyMap = new Hashtable<>();
@@ -51,9 +48,9 @@ public class MessageWebsocket {
 
 //        sendMessageToUser(member, getChatHistory());
 
-        String message = "User: " + member.getUser().getFName() + " has joined the Chat";
+        String message = "User: " + member.getUser().getFName() + " has joined the Group " + member.getId().getGroupId() + " Chat";
         logger.info(message);
-//        sendMessageToGroup(member.getGroup(), message);
+        sendMessageToGroup(member.getGroup(), message);
     }
 
     @OnClose
@@ -72,7 +69,7 @@ public class MessageWebsocket {
 
         if (member != null) {
             String message = member.getUser().getFName() + " disconnected";
-//            sendMessageToGroup(member.getGroup(), message);
+            sendMessageToGroup(member.getGroup(), message);
         }
     }
 
@@ -86,13 +83,8 @@ public class MessageWebsocket {
             return;
         }
 
-        if (message.startsWith("r:")){
-            //TODO - this is a reply
-            //msgRepo.save(new Message(member.getUser().getFName(), message, null)); //TODO - allow replies
-        } else {
-            sendMessageToGroup(member.getGroup(), member.getUser().getFName() + ": " + message);
-            msgRepo.save(new Message(member.getUser().getFName(), message, null)); //TODO - allow replies
-        }
+        sendMessageToGroup(member.getGroup(), member.getUser().getFName() + ": " + message);
+        msgRepo.save(new Message(member.getUser().getFName(), message));
     }
 
     @OnError
@@ -113,13 +105,9 @@ public class MessageWebsocket {
     private void broadcast(String message){}
 
     private void sendMessageToGroup(Group group, String message){
-        Set<GroupMember> groupMembers = group.getMembers();
-        Set<GroupMemberKey> memberKeys = new HashSet<>();
-        for(GroupMember mem : groupMembers){
-            memberKeys.add(mem.getId());    //TODO - Error on mem.getId() - can't lazily enter into member to retrieve.
-        }
+        int groupId = group.getId();
         sessionMemberKeyMap.forEach((session, groupMemberKey)->{
-            if (memberKeys.contains(groupMemberKey)){
+            if (groupMemberKey.getGroupId() == groupId){
                 try {
                     session.getBasicRemote().sendText(message);
                 } catch (IOException e){
@@ -133,7 +121,7 @@ public class MessageWebsocket {
         List<Message> messages = msgRepo.findAll();
 
         StringBuilder sb = new StringBuilder();
-        if (messages != null && messages.size() != 0) {
+        if (!messages.isEmpty()) {
             for (Message message : messages){
                 sb.append(message.getUserName() + ": " + message.getContent() + "\n");
             }

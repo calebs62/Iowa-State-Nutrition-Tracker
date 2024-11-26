@@ -49,6 +49,11 @@ public class Message {
 
     public Message(){};
 
+    public Message(String userName, String content){
+        this.userName = userName;
+        this.content = content;
+    }
+
     public Message(String userName, String content, Message parent){
         this.userName = userName;
         this.content = content;
