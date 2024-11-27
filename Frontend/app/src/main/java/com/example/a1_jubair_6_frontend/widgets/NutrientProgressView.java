@@ -1,5 +1,6 @@
 package com.example.a1_jubair_6_frontend.widgets;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
@@ -8,6 +9,7 @@ import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
 
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
@@ -19,11 +21,12 @@ import java.util.List;
 
 public class NutrientProgressView extends View {
 
-    private static final float OUTER_CIRCLE_RADIUS_PERCENT = 0.8f;
-    private static final float CENTER_CIRCLE_RADIUS_PERCENT = 0.35f;
-    private static final float STROKE_WIDTH = 25f;
-    private static final float CIRCLE_SPACING = 15f;
-    private static final float FLAME_ICON_SIZE_PERCENT = 0.4f;
+    private static final float OUTER_CIRCLE_RADIUS_PERCENT = 0.7f;
+    private static final float CENTER_CIRCLE_RADIUS_PERCENT = 0.3f;
+    private static final float STROKE_WIDTH = 20f;
+    private static final float CIRCLE_SPACING = 12f;
+    private static final float FLAME_ICON_SIZE_PERCENT = 0.35f;
+    private static final long ANIMATION_DURATION = 1000;
 
     private List<NutrientData> nutrients;
     private Paint paint;
@@ -36,8 +39,12 @@ public class NutrientProgressView extends View {
     private Paint bulletPaint;
     private float bulletRadius = 8f; // Size of bullet point
     private float textStartPadding = 24f; // Padding after bullet point
-    private float legendSpacing = 50f; // Spacing between legend items
-    private float legendTextSize = 36f; // Legend text size
+    private float legendSpacing = 40f; // Spacing between legend items
+    private float legendTextSize = 30f; // Legend text size
+
+    private ValueAnimator progressAnimator;
+    private List<Float> currentProgress;
+    private List<Float> targetProgress;
 
     public NutrientProgressView(Context context) {
         super(context);
@@ -88,6 +95,22 @@ public class NutrientProgressView extends View {
         textPaint.setColor(Color.BLACK);
         textPaint.setTextAlign(Paint.Align.LEFT);
         textPaint.setTextSize(legendTextSize);
+
+        currentProgress = new ArrayList<>();
+        targetProgress = new ArrayList<>();
+
+        progressAnimator = ValueAnimator.ofFloat(0f, 1f);
+        progressAnimator.setDuration(ANIMATION_DURATION);
+        progressAnimator.setInterpolator(new DecelerateInterpolator());
+        progressAnimator.addUpdateListener(animation -> {
+            float fraction = (float) animation.getAnimatedValue();
+            for (int i = 0; i < nutrients.size(); i++) {
+                float target = targetProgress.get(i);
+                float current = currentProgress.get(i);
+                nutrients.get(i).setCurrent(current + (target - current) * fraction);
+            }
+            invalidate();
+        });
     }
 
     @Override
@@ -162,13 +185,28 @@ public class NutrientProgressView extends View {
 
         // Draw center text
         String calorieText = (int)nutrients.get(0).getCurrent() + "/" + (int)nutrients.get(0).getMax();
+        textPaint.setTextSize(centerAreaRadius * 0.25f);
         String kcalText = "kcal";
+        float kcalWidth = textPaint.measureText(kcalText);
+
+        String currentCal = String.valueOf((int)nutrients.get(0).getCurrent());
+        String maxCal = String.valueOf((int)nutrients.get(0).getMax());
 
         textPaint.setTextSize(centerAreaRadius * 0.4f);
-        canvas.drawText(calorieText, centerX * 0.8f, centerY + centerAreaRadius * 0.2f, textPaint);
+        float slashWidth = textPaint.measureText("/");
+        float currentWidth = textPaint.measureText(currentCal);
+        float maxWidth = textPaint.measureText(maxCal);
+
+        float slashX = centerX;
+        float currentX = slashX - slashWidth/2 - currentWidth;
+        float maxX = slashX + slashWidth/2;
+
+        canvas.drawText(currentCal, currentX, centerY + centerAreaRadius * 0.2f, textPaint);
+        canvas.drawText("/", slashX - slashWidth/2, centerY + centerAreaRadius * 0.2f, textPaint);
+        canvas.drawText(maxCal, maxX, centerY + centerAreaRadius * 0.2f, textPaint);
+        canvas.drawText(kcalText, centerX - kcalWidth, centerY + centerAreaRadius * 0.6f, textPaint);
 
         textPaint.setTextSize(centerAreaRadius * 0.25f);
-        canvas.drawText(kcalText, centerX * 0.95f, centerY + centerAreaRadius * 0.6f, textPaint);
 
         drawLegend(canvas);
     }
@@ -182,11 +220,38 @@ public class NutrientProgressView extends View {
     }
 
     public void updateAllNutrients(List<NutrientData> newData) {
-        if (newData != null) {
+        if (newData == null) return;
+
+        currentProgress.clear();
+        targetProgress.clear();
+
+        if (nutrients.isEmpty()) {
             nutrients.clear();
             nutrients.addAll(newData);
+            for (NutrientData nutrient : newData) {
+                currentProgress.add(nutrient.getCurrent());
+                targetProgress.add(nutrient.getCurrent());
+            }
             invalidate();
+            return;
         }
+
+        for (int i = 0; i < newData.size(); i++) {
+            float currentValue = i < nutrients.size() ? nutrients.get(i).getCurrent() : 0f;
+            currentProgress.add(currentValue);
+            targetProgress.add(newData.get(i).getCurrent());
+        }
+
+        nutrients.clear();
+        nutrients.addAll(newData);
+        for (int i = 0; i < nutrients.size(); i++) {
+            nutrients.get(i).setCurrent(currentProgress.get(i));
+        }
+
+        if (progressAnimator.isRunning()) {
+            progressAnimator.cancel();
+        }
+        progressAnimator.start();
     }
 
     public static class NutrientData {
@@ -213,7 +278,7 @@ public class NutrientProgressView extends View {
 
     private void drawLegend(Canvas canvas) {
         float startX = 10f;
-        float startY = centerY + radius + 60f;
+        float startY = centerY + radius + 40f;
 
         // For each nutrient (except calories which is index 0)
         for (int i = 1; i < nutrients.size(); i++) {
@@ -236,18 +301,12 @@ public class NutrientProgressView extends View {
         }
     }
 
-    public void setLegendTextSize(float size) {
-        legendTextSize = size;
-        invalidate();
-    }
-
-    public void setBulletRadius(float radius) {
-        bulletRadius = radius;
-        invalidate();
-    }
-
-    public void setLegendSpacing(float spacing) {
-        legendSpacing = spacing;
-        invalidate();
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        if (progressAnimator != null) {
+            progressAnimator.cancel();
+            progressAnimator = null;
+        }
     }
 }

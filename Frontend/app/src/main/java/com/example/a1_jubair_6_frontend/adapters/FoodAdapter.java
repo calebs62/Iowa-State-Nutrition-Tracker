@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -52,6 +53,8 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
     private boolean isAdmin;
     Menu currentMenu;
     ProfileDataManager profileDataManager;
+    private FoodEatenDataManager foodEatenDataManager;
+    private boolean isFromMenus;
 
     /**
      * Constructs a new FoodAdapter with the specified list of food items and admin status.
@@ -59,9 +62,10 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
      * @param foodItemList List of FoodItem objects to be displayed
      * @param isAdmin Boolean indicating whether the user has admin privileges
      */
-    public FoodAdapter(List<FoodItem> foodItemList, boolean isAdmin) {
+    public FoodAdapter(List<FoodItem> foodItemList, boolean isAdmin, boolean isFromMenus) {
         this.foodItemList = foodItemList;
         this.isAdmin = isAdmin;
+        this.isFromMenus = isFromMenus;
     }
 
     @NonNull
@@ -72,6 +76,7 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
                 .inflate(R.layout.food_item, parent, false);
 
         profileDataManager = new ProfileDataManager(context);
+        foodEatenDataManager = new FoodEatenDataManager(context);
         return new FoodViewHolder(view);
     }
 
@@ -85,22 +90,12 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         String caloriesText = String.format("%d Cal", foodItem.getCalories());
         holder.calories.setText(caloriesText);
 
-        holder.quantity.setText(String.valueOf(foodItem.getQuantity()));
-
         View adminActionsContainer = holder.itemView.findViewById(R.id.adminActionsContainer);
-        adminActionsContainer.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
 
-        holder.buttonIncrease.setOnClickListener(v -> {
-            foodItem.setQuantity(foodItem.getQuantity() + 1);
-            holder.quantity.setText(String.valueOf(foodItem.getQuantity()));
-        });
+        if (isAdmin && !isFromMenus)
+            adminActionsContainer.setVisibility(View.VISIBLE);
 
-        holder.buttonDecrease.setOnClickListener(v -> {
-            if (foodItem.getQuantity() > 0) {
-                foodItem.setQuantity(foodItem.getQuantity() - 1);
-                holder.quantity.setText(String.valueOf(foodItem.getQuantity()));
-            }
-        });
+        holder.buttonEat.setOnClickListener(v -> showServingsDialog(foodItem));
 
         if (isAdmin) {
             holder.buttonEdit.setOnClickListener(v -> showEditDialog(position, foodItem));
@@ -108,6 +103,26 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         }
 
         holder.itemView.setOnClickListener(v -> showFoodDetailsDialog(foodItem));
+    }
+
+    private void showServingsDialog(FoodItem foodItem) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_servings, null);
+
+        NumberPicker servingsPicker = dialogView.findViewById(R.id.servingsPicker);
+        servingsPicker.setMinValue(1);
+        servingsPicker.setMaxValue(10);
+        servingsPicker.setValue(1);
+
+        builder.setView(dialogView)
+                .setPositiveButton("Eat", (dialog, which) -> {
+                    int servings = servingsPicker.getValue();
+                    addFoodEaten(foodItem, servings);
+                })
+                .setNegativeButton("Cancel", null);
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
     /**
@@ -136,9 +151,7 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
     public static class FoodViewHolder extends RecyclerView.ViewHolder {
         TextView foodName;
         TextView calories;
-        TextView quantity;
-        Button buttonDecrease;
-        Button buttonIncrease;
+        Button buttonEat;
         Button buttonEdit;
         Button buttonDelete;
 
@@ -151,9 +164,7 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
             super(itemView);
             foodName = itemView.findViewById(R.id.foodName);
             calories = itemView.findViewById(R.id.calories);
-            quantity = itemView.findViewById(R.id.quantity);
-            buttonDecrease = itemView.findViewById(R.id.buttonDecrease);
-            buttonIncrease = itemView.findViewById(R.id.buttonIncrease);
+            buttonEat = itemView.findViewById(R.id.btnEat);
             buttonEdit = itemView.findViewById(R.id.btnEdit);
             buttonDelete = itemView.findViewById(R.id.btnDelete);
         }
@@ -449,6 +460,24 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         );
 
         VolleySingleton.getInstance(context).addToRequestQueue(request);
+    }
+
+    private void addFoodEaten(FoodItem foodItem, int servings) {
+        foodEatenDataManager.addFoodEaten(foodItem, servings, new FoodEatenDataManager.FoodEatenCallback() {
+            @Override
+            public void onSuccess() {
+                Toast.makeText(context,
+                        String.format("Added %d serving(s) of %s", servings, foodItem.getName()),
+                        Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onError(String message) {
+                Toast.makeText(context,
+                        "Failed to add food: " + message,
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
 

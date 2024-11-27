@@ -35,7 +35,7 @@
             android:textSize="16sp"
             app:layout_constraintStart_toEndOf="@id/foodIcon"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/quantityContainer" />
+            app:layout_constraintEnd_toStartOf="@id/btnEat" />
 
         <TextView
             android:id="@+id/calories"
@@ -48,48 +48,16 @@
             app:layout_constraintStart_toStartOf="@id/foodName"
             app:layout_constraintTop_toBottomOf="@id/foodName" />
 
-        <LinearLayout
-            android:id="@+id/quantityContainer"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnEat"
+            style="@style/Widget.MaterialComponents.Button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:background="@drawable/quantity_background"
-            android:padding="4dp"
+            android:text="Eat"
+            android:textColor="@color/white"
+            app:backgroundTint="@color/Iowa_State_Red"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/buttonDecrease"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:text="–"
-                android:textSize="18sp"
-                android:textColor="@color/Iowa_State_Red" />
-
-            <TextView
-                android:id="@+id/quantity"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0"
-                android:textSize="16sp"
-                android:layout_gravity="center"
-                android:layout_marginHorizontal="8dp"
-                android:textColor="@android:color/black" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/buttonIncrease"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:text="+"
-                android:textSize="18sp"
-                android:textColor="@color/Iowa_State_Red" />
-        </LinearLayout>
+            app:layout_constraintTop_toTopOf="parent" />
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/adminActionsContainer"

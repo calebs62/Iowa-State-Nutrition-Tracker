@@ -8,7 +8,6 @@ import coms309.entity.Views;
 import coms309.repository.FoodEatenRepository;
 import coms309.repository.FoodItemRepository;
 import coms309.repository.UserRepository;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
