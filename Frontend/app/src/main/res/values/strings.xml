@@ -97,4 +97,5 @@
     <string name="menu_date_yyyy_mm_dd">Menu Date (YYYY-MM-DD)</string>
     <string name="an_unexpected_error_occured">An Unexpected Error Occured</string>
     <string name="delete_menu">Delete Menu</string>
+    <string name="member_count">%d members</string>
 </resources>

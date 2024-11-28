@@ -16,6 +16,9 @@ import com.example.a1_jubair_6_frontend.models.FoodEaten;
 import com.example.a1_jubair_6_frontend.models.FoodItem;
 import com.example.a1_jubair_6_frontend.network.VolleySingleton;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonParseException;
 
 import org.json.JSONObject;
 
@@ -47,7 +50,26 @@ public class FoodEatenDataManager {
     public FoodEatenDataManager(Context context) {
         this.context = context;
         this.profileDataManager = new ProfileDataManager(context);
-        this.gson = new Gson();
+
+        this.gson = new GsonBuilder()
+                .registerTypeAdapter(Date.class, (JsonDeserializer<Date>) (json, typeOfT, jsonContext) -> {
+                    try {
+                        if (json.isJsonNull()) {
+                            return null;
+                        }
+                        String dateStr = json.getAsString();
+                        Date parsedDate = FoodEaten.parseDate(dateStr);
+                        if (parsedDate == null) {
+                            throw new JsonParseException("Unable to parse date: " + dateStr);
+                        }
+                        return parsedDate;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        throw new JsonParseException("Error parsing date", e);
+                    }
+                })
+                .create();
+
         this.foodEatenList = new ArrayList<>();
     }
 
@@ -159,11 +181,16 @@ public class FoodEatenDataManager {
                         List<FoodEaten> foods = new ArrayList<>();
                         for (int i = 0; i < response.length(); i++) {
                             FoodEaten food = gson.fromJson(response.getJSONObject(i).toString(), FoodEaten.class);
+                            if (food.getTime() == null) {
+                                Log.e("FoodEatenDataManager", "Parsed food has null date: " + response.getJSONObject(i).toString());
+                                continue;
+                            }
                             foods.add(food);
                         }
                         foodEatenList = foods;
                         callback.onSuccess(foods);
                     } catch (Exception e) {
+                        Log.e("FoodEatenDataManager", "Error parsing response: " + e.getMessage());
                         callback.onError("Error parsing response: " + e.getMessage());
                     }
                 },

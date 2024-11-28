@@ -21,6 +21,10 @@ public class User {
         ADMINISTRATOR
     }
 
+    public User(int id) {
+        this.id = id;
+    }
+
     public User(int id, String username, String password, String fname, String lname, int height, int weight, Account accounttype) {
         this.id = id;
         this.username = username;
@@ -45,8 +49,16 @@ public class User {
         return fname;
     }
 
+    public void setFname(String fname) {
+        this.fname = fname;
+    }
+
     public String getLname() {
         return lname;
+    }
+
+    public void setLname(String lname) {
+        this.lname = lname;
     }
 
     public int getHeight() {

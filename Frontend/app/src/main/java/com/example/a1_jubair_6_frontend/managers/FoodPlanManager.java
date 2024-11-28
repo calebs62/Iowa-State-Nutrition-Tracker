@@ -1,15 +1,17 @@
 package com.example.a1_jubair_6_frontend.managers;
-
 import android.content.Context;
+import android.util.Log;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
 import com.example.a1_jubair_6_frontend.models.FoodPlan;
 import com.example.a1_jubair_6_frontend.network.VolleySingleton;
 import com.google.gson.Gson;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -20,6 +22,8 @@ public class FoodPlanManager {
     private final Context context;
     private final Gson gson;
     private FoodPlan currentPlan;
+    private ProfileDataManager profileDataManager;
+    private static final int REQUEST_TIMEOUT_MS = 10000;
 
     public interface FoodPlanCallback {
         void onSuccess(FoodPlan plan);
@@ -29,6 +33,7 @@ public class FoodPlanManager {
     public FoodPlanManager(Context context) {
         this.context = context;
         this.gson = new Gson();
+        this.profileDataManager = new ProfileDataManager(context);
     }
 
     public void createFoodPlan(FoodPlan plan, FoodPlanCallback callback) {
@@ -100,36 +105,62 @@ public class FoodPlanManager {
         VolleySingleton.getInstance(context).addToRequestQueue(request);
     }
 
-    public void getAllPlans(String keyword, FoodPlanCallback callback) {
-        String url = AppConstants.SERVER_URL + "/allPlans?keyword=" + keyword;
+    public void getFoodPlanFromGroup(FoodPlanCallback callback) {
+        Log.d(TAG, "Starting getFoodPlanFromGroup request");
+        String url = AppConstants.SERVER_URL + "/group/user/" + profileDataManager.getId();
 
-        JsonArrayRequest request = new JsonArrayRequest(
+        StringRequest request = new StringRequest(
                 Request.Method.GET,
                 url,
-                null,
                 response -> {
                     try {
-                        List<FoodPlan> plans = new ArrayList<>();
-                        for (int i = 0; i < response.length(); i++) {
-                            FoodPlan plan = gson.fromJson(response.getJSONObject(i).toString(), FoodPlan.class);
-                            plans.add(plan);
+                        JSONObject groupJson = new JSONObject(response);
+                        Log.d(TAG, "Group response: " + groupJson.toString());
+
+                        if (groupJson.isNull("plan")) {
+                            Log.d(TAG, "No plan found in group data");
+                            callback.onSuccess(null);
+                            return;
                         }
 
-                        callback.onSuccess(plans.isEmpty() ? null : plans.get(0));
-                    } catch (Exception e) {
-                        callback.onError("Error processing plans: " + e.getMessage());
+                        JSONObject planJson = groupJson.getJSONObject("plan");
+                        Log.d(TAG, "Found plan data: " + planJson.toString());
+
+                        FoodPlan plan = createFoodPlanFromJson(planJson);
+                        currentPlan = plan;
+                        callback.onSuccess(plan);
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing food plan: " + e.getMessage());
+                        callback.onError("Error parsing food plan data");
                     }
                 },
                 error -> {
-                    String message = error.getMessage() != null ? error.getMessage() : "Unknown error occurred";
-                    callback.onError("Failed to get plans: " + message);
+                    Log.e(TAG, "Network error: " + error.toString());
+                    callback.onError("Failed to get food plan");
                 }
         );
 
         VolleySingleton.getInstance(context).addToRequestQueue(request);
     }
 
+    private FoodPlan createFoodPlanFromJson(JSONObject planJson) throws JSONException {
+        FoodPlan plan = new FoodPlan();
+        plan.setId(planJson.getInt("id"));
+        plan.setName(planJson.getString("name"));
+        plan.setCalories(planJson.getInt("calories"));
+        plan.setProtein(planJson.getInt("protein"));
+        plan.setCarbohydrate(planJson.getInt("carbohydrate"));
+        plan.setTotalFat(planJson.getInt("totalFat"));
+        plan.setSodium(planJson.getInt("sodium"));
+        Log.d(TAG, "Created food plan: " + plan.toString());
+        return plan;
+    }
+
     public FoodPlan getCurrentPlan() {
         return currentPlan;
+    }
+
+    public void clearCurrentPlan() {
+        currentPlan = null;
     }
 }

@@ -46,6 +46,8 @@ public class NutrientProgressView extends View {
     private List<Float> currentProgress;
     private List<Float> targetProgress;
 
+    private boolean isAttached = false;
+
     public NutrientProgressView(Context context) {
         super(context);
         init();
@@ -103,6 +105,7 @@ public class NutrientProgressView extends View {
         progressAnimator.setDuration(ANIMATION_DURATION);
         progressAnimator.setInterpolator(new DecelerateInterpolator());
         progressAnimator.addUpdateListener(animation -> {
+            if (!isAttached) return;
             float fraction = (float) animation.getAnimatedValue();
             for (int i = 0; i < nutrients.size(); i++) {
                 float target = targetProgress.get(i);
@@ -220,38 +223,26 @@ public class NutrientProgressView extends View {
     }
 
     public void updateAllNutrients(List<NutrientData> newData) {
-        if (newData == null) return;
+        if (!isAttached || newData == null) return;
 
         currentProgress.clear();
         targetProgress.clear();
 
-        if (nutrients.isEmpty()) {
-            nutrients.clear();
-            nutrients.addAll(newData);
-            for (NutrientData nutrient : newData) {
-                currentProgress.add(nutrient.getCurrent());
-                targetProgress.add(nutrient.getCurrent());
-            }
-            invalidate();
-            return;
-        }
-
-        for (int i = 0; i < newData.size(); i++) {
-            float currentValue = i < nutrients.size() ? nutrients.get(i).getCurrent() : 0f;
-            currentProgress.add(currentValue);
-            targetProgress.add(newData.get(i).getCurrent());
-        }
-
         nutrients.clear();
         nutrients.addAll(newData);
-        for (int i = 0; i < nutrients.size(); i++) {
-            nutrients.get(i).setCurrent(currentProgress.get(i));
+
+        for (NutrientData nutrient : nutrients) {
+            currentProgress.add(0f);
+            targetProgress.add(nutrient.getCurrent());
+            nutrient.setCurrent(0f);
         }
 
-        if (progressAnimator.isRunning()) {
-            progressAnimator.cancel();
+        if (progressAnimator != null) {
+            if (progressAnimator.isRunning()) {
+                progressAnimator.cancel();
+            }
+            progressAnimator.start();
         }
-        progressAnimator.start();
     }
 
     public static class NutrientData {
@@ -304,9 +295,15 @@ public class NutrientProgressView extends View {
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
+        isAttached = false;
         if (progressAnimator != null) {
             progressAnimator.cancel();
-            progressAnimator = null;
         }
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        isAttached = true;
     }
 }
