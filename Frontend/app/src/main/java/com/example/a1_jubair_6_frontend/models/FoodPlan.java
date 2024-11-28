@@ -19,6 +19,7 @@ public class FoodPlan {
     public int getCarbohydrate() {return carbohydrate;}
     public int getProtein() {return protein;}
 
+    public void setId(int id) {this.id = id;}
     public void setName(String name) {this.name = name;}
     public void setCalories(int val) {this.calories = val;}
     public void setTotalFat(int val) {this.totalFat = val;}

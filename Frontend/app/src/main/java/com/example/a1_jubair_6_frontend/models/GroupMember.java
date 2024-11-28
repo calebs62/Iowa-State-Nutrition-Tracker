@@ -30,6 +30,18 @@ public class GroupMember {
     public int getPermissionLvl() { return permissionLvl; }
     public void setPermissionLvl(int permissionLvl) { this.permissionLvl = permissionLvl; }
 
+    public String getPermissionLvlString() {
+        if (getPermissionLvl() == 1) {
+            return "Moderator";
+        }
+        else if (getPermissionLvl() == 2) {
+            return "Owner";
+        }
+        else {
+            return "User";
+        }
+    }
+
     public Timestamp getJoinDate() { return joinDate; }
     public void setJoinDate(Timestamp joinDate) { this.joinDate = joinDate; }
 }

@@ -1,6 +1,8 @@
 package coms309.entity;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import coms309.repository.GroupRepository;
+import coms309.repository.UserRepository;
 import jakarta.persistence.*;
 
 import java.util.*;
@@ -22,7 +24,7 @@ public class Group {
     @JsonView(value = {Views.Public.class})
     private int ownerId;
 
-    @OneToMany(mappedBy = "group")
+    @OneToMany(mappedBy = "group", cascade = CascadeType.REMOVE)
     @JsonView(value = {Views.Group.class})
     private Set<GroupMember> members = new HashSet<>();
 
@@ -61,27 +63,32 @@ public class Group {
     }
 
     public GroupMember findMember(int uid){
+        if (members == null) return null;
+
         for(GroupMember mem : members){
             User memUser = mem.getUser();
             if (memUser.getUid() == uid){
                 return mem;
             }
         }
-        return  null;
+        return null;
     }
 
     public Boolean isOwnerLevel(String sessionToken){
-        String[] array = sessionToken.split(":", 3);
-        int accType = Integer.parseInt(array[1].trim());
-        int uid = Integer.parseInt(array[2].trim());
-        if (accType == 2) {
-            return true;
+        try {
+            String[] array = sessionToken.split(":", 3);
+            int accType = Integer.parseInt(array[1].trim());
+            int uid = Integer.parseInt(array[2].trim());
+
+            GroupMember mem = findMember(uid);
+            if (mem != null && mem.getPermissionLvl() == 2) {
+                return true;
+            }
+
+            return accType == 2;
+        } catch (Exception e) {
+            return false;
         }
-        GroupMember mem = findMember(uid);
-        if (mem != null && mem.getPermissionLvl() == 2){
-            return true;
-        }
-        return false;
     }
 
     public Boolean isModLevel(String sessionToken){
@@ -94,6 +101,26 @@ public class Group {
         GroupMember mem = findMember(uid);
         if (mem != null && mem.getPermissionLvl() >= 1){
             return true;
+        }
+        return false;
+    }
+
+    public static boolean isUserInAnyGroup(UserRepository userRepo, GroupRepository groupRepo, int userId) {
+        List<Group> allGroups = groupRepo.findAll();
+        for (Group group : allGroups) {
+            if (group.findMember(userId) != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean isUserOwnerOfAnyGroup(GroupRepository groupRepo, int userId) {
+        List<Group> allGroups = groupRepo.findAll();
+        for (Group group : allGroups) {
+            if (group.getOwnerId() == userId) {
+                return true;
+            }
         }
         return false;
     }

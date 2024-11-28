@@ -369,6 +369,21 @@ public class ProfileDataManager {
         }
     }
 
+    public String getSessionToken() {
+        return "1:" + getAccountTypeInt() + ":" + getId();
+    }
+
+    private int getAccountTypeInt(){
+        String accountType = getAccountType();
+
+        if (accountType.equals("CONTRIBUTOR"))
+            return 1;
+        else if (accountType.equals("ADMINISTRATOR"))
+            return 2;
+        else
+            return 0;
+    }
+
     public interface UpdateCallback {
         void onSuccess();
         void onError(String error);

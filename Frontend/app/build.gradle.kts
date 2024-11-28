@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.androidx.work.runtime)
     implementation(libs.androidx.swiperefreshlayout)
+    implementation(libs.lottie)
 
     androidTestImplementation(libs.androidx.junit)
 

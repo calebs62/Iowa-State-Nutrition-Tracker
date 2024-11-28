@@ -2,10 +2,7 @@ package coms309.controller;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import coms309.entity.*;
-import coms309.repository.FoodPlanRepository;
-import coms309.repository.GroupMemberRepository;
-import coms309.repository.GroupRepository;
-import coms309.repository.UserRepository;
+import coms309.repository.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Tag(name = "Groups", description = "Group API")
 @RestController
@@ -26,6 +24,9 @@ public class GroupController {
     GroupMemberRepository memberRepo;
     @Autowired
     FoodPlanRepository planRepo;
+
+    @Autowired
+    ActivityFeedRepository activityFeedRepo;
 
     // Create
     @Operation(
@@ -149,17 +150,24 @@ public class GroupController {
     )
     @PutMapping("/group/{id}/join")
     @JsonView(value = {Views.Group.class})
-    public Boolean memberJoin(@Parameter(description = "Group id")@PathVariable int id, @Parameter(description = "String holding sessionToken of user.")@RequestBody String sessionToken){
+    public Boolean memberJoin(@PathVariable int id, @RequestBody String sessionToken) {
         Group currGroup = groupRepo.findById(id).orElse(null);
         String[] array = sessionToken.split(":");
         int uid = Integer.parseInt(array[2].trim());
         User currUser = userRepo.findById(uid).orElse(null);
-        if (currGroup != null && currUser != null) {
-            GroupMember groupMember = new GroupMember(currGroup, currUser);
-            memberRepo.save(groupMember);
-            return true;
+
+        if (currGroup == null || currUser == null) {
+            return false;
         }
-        return false;
+
+        if (Group.isUserInAnyGroup(userRepo, groupRepo, uid) ||
+                Group.isUserOwnerOfAnyGroup(groupRepo, uid)) {
+            return false;
+        }
+
+        GroupMember groupMember = new GroupMember(currGroup, currUser);
+        memberRepo.save(groupMember);
+        return true;
     }
 
     // User leave
@@ -169,14 +177,18 @@ public class GroupController {
     )
     @PutMapping("/group/{id}/leave")
     @JsonView(value = {Views.Group.class})
-    public Boolean memberLeave(@Parameter(description = "Group id")@PathVariable int id, @Parameter(description = "String holding sessionToken of user.")@RequestBody String sessionToken){
+    public Boolean memberLeave(@PathVariable int id, @RequestBody String sessionToken) {
         Group currGroup = groupRepo.findById(id).orElse(null);
         String[] array = sessionToken.split(":");
         int uid = Integer.parseInt(array[2]);
         User currUser = userRepo.findById(uid).orElse(null);
+
         if (currGroup != null && currUser != null) {
             GroupMember groupMember = currGroup.findMember(uid);
             if (groupMember != null) {
+                if (currGroup.getOwnerId() == uid) {
+                    return false;
+                }
                 memberRepo.delete(groupMember);
                 return true;
             }
@@ -257,19 +269,27 @@ public class GroupController {
     )
     @PutMapping("/group/{id}/makeOwner")
     @JsonView(value = {Views.GroupMember.class})
-    public GroupMember makeOwner(@Parameter(description = "Group id")@PathVariable int id, @Parameter(description = "Map containing key value pairs. Requires sessionToken and uid.")@RequestBody Map<String, Object> map){
+    public GroupMember makeOwner(@PathVariable int id, @RequestBody Map<String, Object> map) {
         Group currGroup = groupRepo.findById(id).orElse(null);
         if (currGroup != null && currGroup.isOwnerLevel((String) map.get("sessionToken"))) {
-            GroupMember member = currGroup.findMember((int) map.get("uid"));
+            int newOwnerId = (int) map.get("uid");
+
+            if (Group.isUserOwnerOfAnyGroup(groupRepo, newOwnerId)) {
+                return null;
+            }
+
+            GroupMember member = currGroup.findMember(newOwnerId);
             if (member == null || member.getPermissionLvl() == 2) {
                 return null;
             }
-            int ownerId = currGroup.getOwnerId();
-            GroupMember owner = currGroup.findMember(ownerId);
-            if (owner != null) {
-                owner.setPermissionMod();
-                memberRepo.save(owner);
+
+            int currentOwnerId = currGroup.getOwnerId();
+            GroupMember currentOwner = currGroup.findMember(currentOwnerId);
+            if (currentOwner != null) {
+                currentOwner.setPermissionMod();
+                memberRepo.save(currentOwner);
             }
+
             member.setPermissionOwner();
             currGroup.setOwnerId(member.getUser().getUid());
             memberRepo.save(member);
@@ -286,10 +306,18 @@ public class GroupController {
     )
     @DeleteMapping("/group/{id}")
     @JsonView(value = {Views.Group.class})
-    public Group delete(@Parameter(description = "Group id")@PathVariable int id, @Parameter(description = "String holding sessionToken of user")@RequestBody String sessionToken){
+    public Group delete(@PathVariable int id, @RequestParam String sessionToken) {  // Change to @RequestParam
         Group group = groupRepo.findById(id).orElse(null);
-        if (group != null && group.isOwnerLevel(sessionToken)){
-            groupRepo.delete(group);
+        if (group != null && group.isOwnerLevel(sessionToken)) {
+            try {
+                activityFeedRepo.deleteAll(
+                        activityFeedRepo.findByGroup(group)
+                );
+
+                groupRepo.delete(group);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to delete group: " + e.getMessage());
+            }
         }
         return group;
     }
@@ -311,19 +339,19 @@ public class GroupController {
     )
     @GetMapping("/searchGroups")
     @JsonView(value = {Views.Group.class})
-    public List<Group> searchGroups(@Parameter(description = "String keyword to search by")@RequestParam(defaultValue = "") String keyword){
+    public List<Group> searchGroups(@RequestParam(defaultValue = "") String keyword) {
         List<Group> groups = groupRepo.findAll();
-        if (keyword.isEmpty()){
+        if (keyword.isEmpty()) {
             return groups;
         }
+
         String key = keyword.toLowerCase();
-        for (Group group : groups) {
-            String name = group.getGroupName().toLowerCase();
-            if (!(name.contains(key))){
-                groups.remove(group);
-            }
-        }
-        return groups;
+        return groups.stream()
+                .filter(group -> {
+                    String groupName = group.getGroupName();
+                    return groupName != null && groupName.toLowerCase().contains(key); // Null check added
+                })
+                .collect(Collectors.toList());
     }
 
     @Operation(
@@ -340,4 +368,21 @@ public class GroupController {
         return group.getPlan();
     }
 
+    @Operation(
+            summary="Get User's Group",
+            description="Returns the group a user belongs to based on user id."
+    )
+    @GetMapping("/group/user/{userId}")
+    @JsonView(value = {Views.Group.class})
+    public Group getGroupByUserId(@Parameter(description = "User id")@PathVariable int userId) {
+        List<Group> allGroups = groupRepo.findAll();
+        for (Group group : allGroups) {
+            for (GroupMember member : group.getMembers()) {
+                if (member.getUser().getUid() == userId) {
+                    return group;
+                }
+            }
+        }
+        return null;
+    }
 }

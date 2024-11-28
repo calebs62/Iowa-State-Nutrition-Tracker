@@ -1,76 +1,52 @@
 package com.example.a1_jubair_6_frontend.models;
 
-import androidx.annotation.NonNull;
+import com.google.gson.annotations.SerializedName;
 
-import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 
 public class FoodEaten {
     private int id;
-    private Timestamp time;
+
+    @SerializedName("date")
+    private Date time;
+
     private User user;
     private FoodItem food;
-    private int servings;
+    private float servings;
 
-    public FoodEaten() {
-        this.time = new Timestamp(System.currentTimeMillis());
+    private static final SimpleDateFormat ISO_FORMAT;
+    private static final TimeZone CST_TIMEZONE = TimeZone.getTimeZone("America/Chicago");
+
+    static {
+        ISO_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        ISO_FORMAT.setTimeZone(CST_TIMEZONE);  // Set to CST since that's what the server uses
     }
 
-    public FoodEaten(User user, FoodItem food, int servings) {
-        this.time = new Timestamp(System.currentTimeMillis());
-        this.user = user;
-        this.food = food;
-        this.servings = servings;
+    public static Date parseDate(String dateStr) {
+        try {
+            return ISO_FORMAT.parse(dateStr);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return new Date();
+        }
     }
 
-    public int getId() {
-        return id;
-    }
+    // Getters and setters
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    public Timestamp getTime() {
-        return time;
-    }
+    public Date getTime() { return time; }
+    public void setTime(Date time) { this.time = time; }
 
-    public User getUser() {
-        return user;
-    }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
 
-    public FoodItem getFood() {
-        return food;
-    }
+    public FoodItem getFood() { return food; }
+    public void setFood(FoodItem food) { this.food = food; }
 
-    public int getServings() {
-        return servings;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public void setTime(Timestamp time) {
-        this.time = time;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public void setFood(FoodItem food) {
-        this.food = food;
-    }
-
-    public void setServings(int servings) {
-        this.servings = servings;
-    }
-
-    @NonNull
-    @Override
-    public String toString() {
-        return "FoodEaten{" +
-                "id=" + id +
-                ", time=" + time +
-                ", user=" + user +
-                ", food=" + food +
-                ", servings=" + servings +
-                '}';
-    }
+    public float getServings() { return servings; }
+    public void setServings(float servings) { this.servings = servings; }
 }

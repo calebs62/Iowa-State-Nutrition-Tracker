@@ -1,6 +1,8 @@
 package coms309.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.sql.Timestamp;
 
@@ -33,6 +35,7 @@ public class ActivityFeed implements Comparable<ActivityFeed>{
     private String additionalData;
     @ManyToOne
     @JoinColumn(name = "group_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Group group;
 
     public ActivityFeed() {

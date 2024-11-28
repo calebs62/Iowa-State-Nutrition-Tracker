@@ -16,4 +16,7 @@
     <color name="activity_goal">#FFF3E0</color>
     <color name="activity_default">#FFFFFF</color>
     <color name="background">#F5F5F5</color>
+    <color name="gray_100">#F3F4F6</color>
+    <color name="gray_600">#4B5563</color>
+    <color name="gray_800">#1F2937</color>
 </resources>
