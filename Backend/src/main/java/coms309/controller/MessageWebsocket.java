@@ -118,14 +118,20 @@ public class MessageWebsocket {
     }
 
     public String getChatHistory(int groupId){
-        List<Message> messages = msgRepo.findAll();
+        List<Message> groupMessages = msgRepo.findByGroupId(groupId);
+        List<Message> broadcastMsgs = msgRepo.findByGroupId(-1);
 
         StringBuilder sb = new StringBuilder();
-        if (!messages.isEmpty()) {
-            for (Message message : messages){
-                if (message.getGroupId() == groupId || message.getGroupId() == -1){ //Message groupId -1 is broadcast
-                    sb.append(message.getUserName() + ": " + message.getContent() + "\n");
-                }
+        if (!broadcastMsgs.isEmpty()) {
+            sb.append("Broadcast Messages:\n");
+            for (Message message: broadcastMsgs){
+                sb.append(message.getUserName() + ": " + message.getContent() + "\n");
+            }
+        }
+        if (!groupMessages.isEmpty()) {
+            sb.append("User Messages:\n");
+            for (Message message: groupMessages){
+                sb.append(message.getUserName() + ": " + message.getContent() + "\n");
             }
         }
         return sb.toString();
