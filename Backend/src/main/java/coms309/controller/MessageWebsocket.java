@@ -102,7 +102,15 @@ public class MessageWebsocket {
         }
     }
 
-    private void broadcast(String message){}
+    private void broadcast(String message){
+        sessionMemberKeyMap.forEach((session, groupMemberKey)->{
+                try {
+                    session.getBasicRemote().sendText(message);
+                } catch (IOException e){
+                    logger.info("[Broadcast Exception] " + e.getMessage());
+                }
+        });
+    }
 
     private void sendMessageToGroup(Group group, String message){
         int groupId = group.getId();
