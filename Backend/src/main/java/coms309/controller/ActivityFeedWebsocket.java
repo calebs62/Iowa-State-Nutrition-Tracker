@@ -37,6 +37,7 @@ public class ActivityFeedWebsocket {
         groupRepo = grepo;
         memberRepo = memRepo;
         privacyRepo = privRepo;
+
     }
 
     private static Map<Session, Integer> sessionUserMap = new Hashtable<>();
@@ -144,6 +145,22 @@ public class ActivityFeedWebsocket {
 
     public ActivityFeed createAndBroadcastActivity(String message, String type, User user,
                                                    String additionalData, Group group) {
+        ActivityFeed activity = new ActivityFeed(
+                message,
+                type,
+                user,
+                new Timestamp(System.currentTimeMillis()),
+                additionalData,
+                group
+        );
+        feedRepo.save(activity);
+        broadcastActivity(activity);
+        return activity;
+    }
+
+    public ActivityFeed createAndBroadcastActivity(String message, String type, User user,
+                                                   String additionalData, Group group,
+                                                   Set<ImageGallery> img) {
         ActivityFeed activity = new ActivityFeed(
                 message,
                 type,
