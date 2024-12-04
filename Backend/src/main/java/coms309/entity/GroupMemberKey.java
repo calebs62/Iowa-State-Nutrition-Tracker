@@ -5,6 +5,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 @Embeddable
 public class GroupMemberKey implements Serializable {
@@ -37,5 +38,18 @@ public class GroupMemberKey implements Serializable {
                 "userId=" + userId +
                 ", groupId=" + groupId +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GroupMemberKey that = (GroupMemberKey) o;
+        return userId == that.userId && groupId == that.groupId;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(userId, groupId);
     }
 }
