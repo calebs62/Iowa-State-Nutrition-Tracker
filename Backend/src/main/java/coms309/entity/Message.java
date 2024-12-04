@@ -33,7 +33,8 @@ public class Message {
     private Date sent = new Date();
 
     @ManyToOne
-    @JoinColumns({@JoinColumn(name = "userId", insertable = false, updatable = false), @JoinColumn(name = "groupId", insertable = false, updatable = false)})
+//    @JoinColumns({@JoinColumn(name = "userId", insertable = false, updatable = false), @JoinColumn(name = "groupId", insertable = false, updatable = false)})
+    @JoinColumn(name = "groupmemberid")
     @JsonView(value = {Views.Message.class})
     private GroupMember member;
 
