@@ -1,0 +1,547 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NotificationsFragment.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.fragments.profile</a> &gt; <span class="el_source">NotificationsFragment.java</span></div><h1>NotificationsFragment.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.fragments.profile;
+
+import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+
+import android.preference.PreferenceManager;
+import android.telephony.SmsManager;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.managers.NotificationDataManager;
+import com.example.a1_jubair_6_frontend.models.User;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.google.android.material.textfield.TextInputEditText;
+
+import java.util.ArrayList;
+
+
+<span class="fc" id="L46">public class NotificationsFragment extends Fragment {</span>
+    private static final String TAG = &quot;NotificationsFragment&quot;;
+    private NotificationDataManager notificationManager;
+    private ImageView backArrow;
+    private SwitchMaterial switchSystemNotifications;
+    private SwitchMaterial switchPushNotifications;
+    private SwitchMaterial switchReminders;
+<span class="fc" id="L53">    private boolean isSystemToggling = false;</span>
+    private SwitchMaterial switchSMSNotifications;
+    private SwitchMaterial switchEmailNotifications;
+    private MaterialCardView notificationTesterCard;
+    private TextInputEditText notificationTitle;
+    private TextInputEditText notificationMessage;
+    private RadioGroup notificationTypeGroup;
+    private MaterialButton testNotificationButton;
+    private static final String CHANNEL_ID = &quot;notification_test_channel&quot;;
+<span class="fc" id="L62">    private int notificationId = 0;</span>
+    private ActivityResultLauncher&lt;String&gt; requestPermissionLauncher;
+    private static final int SMS_PERMISSION_REQUEST_CODE = 100;
+
+    private static final String EMULATOR_TEST_NUMBER = &quot;5554&quot;;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+<span class="fc" id="L70">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L71">        notificationManager = new NotificationDataManager(requireContext());</span>
+
+<span class="fc" id="L73">        requestPermissionLauncher = registerForActivityResult(</span>
+                new ActivityResultContracts.RequestPermission(),
+                isGranted -&gt; {
+<span class="nc bnc" id="L76" title="All 2 branches missed.">                    if (isGranted) {</span>
+<span class="nc" id="L77">                        sendTestNotification();</span>
+                    } else {
+<span class="nc" id="L79">                        showToast(&quot;Notification permission denied&quot;);</span>
+                    }
+<span class="nc" id="L81">                }</span>
+        );
+<span class="fc" id="L83">    }</span>
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+<span class="fc" id="L89">        return inflater.inflate(R.layout.fragment_notifications, container, false);</span>
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+<span class="fc" id="L94">        super.onViewCreated(view, savedInstanceState);</span>
+
+<span class="fc" id="L96">        initializeViews(view);</span>
+<span class="fc" id="L97">        setupToolbar();</span>
+<span class="fc" id="L98">        initializeSwitches();</span>
+<span class="fc" id="L99">        loadSettings();</span>
+<span class="fc" id="L100">        setupNotificationTester();</span>
+<span class="fc" id="L101">        createNotificationChannel();</span>
+
+        // Get latest settings from server
+<span class="fc" id="L104">        notificationManager.fetchNotificationSettings();</span>
+<span class="fc" id="L105">    }</span>
+
+    private void initializeViews(View view) {
+<span class="fc" id="L108">        backArrow = view.findViewById(R.id.backArrow);</span>
+<span class="fc" id="L109">        switchSystemNotifications = view.findViewById(R.id.switchSystemNotifications);</span>
+<span class="fc" id="L110">        switchPushNotifications = view.findViewById(R.id.switchPushNotifications);</span>
+<span class="fc" id="L111">        switchReminders = view.findViewById(R.id.switchReminders);</span>
+<span class="fc" id="L112">        switchSMSNotifications = view.findViewById(R.id.switchSMSNotifications);</span>
+<span class="fc" id="L113">        switchEmailNotifications = view.findViewById(R.id.switchEmailNotifs);</span>
+<span class="fc" id="L114">        notificationTesterCard = view.findViewById(R.id.notificationTesterCard);</span>
+<span class="fc" id="L115">        notificationTitle = view.findViewById(R.id.notificationTitle);</span>
+<span class="fc" id="L116">        notificationMessage = view.findViewById(R.id.notificationMessage);</span>
+<span class="fc" id="L117">        notificationTypeGroup = view.findViewById(R.id.notificationTypeGroup);</span>
+<span class="fc" id="L118">        testNotificationButton = view.findViewById(R.id.testNotificationButton);</span>
+<span class="fc" id="L119">    }</span>
+
+    private void setupToolbar() {
+<span class="pc" id="L122">        backArrow.setOnClickListener(v -&gt; requireActivity().onBackPressed());</span>
+<span class="fc" id="L123">    }</span>
+
+    private void initializeSwitches() {
+        // System notifications switch
+<span class="fc" id="L127">        switchSystemNotifications.setOnCheckedChangeListener((buttonView, isChecked) -&gt; {</span>
+<span class="fc" id="L128">            isSystemToggling = true;</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">            if (!isChecked) {</span>
+<span class="fc" id="L130">                switchPushNotifications.setChecked(false);</span>
+<span class="fc" id="L131">                switchReminders.setChecked(false);</span>
+<span class="fc" id="L132">                showToast(&quot;All notifications disabled&quot;);</span>
+            } else {
+<span class="fc" id="L134">                showToast(&quot;System notifications enabled&quot;);</span>
+            }
+<span class="fc" id="L136">            notificationManager.toggleSystemNotifications();</span>
+<span class="fc" id="L137">            updateDependentSwitches(isChecked);</span>
+<span class="fc" id="L138">            isSystemToggling = false;</span>
+<span class="fc" id="L139">        });</span>
+
+        // Push notifications switch
+<span class="fc" id="L142">        switchPushNotifications.setOnCheckedChangeListener((buttonView, isChecked) -&gt; {</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">            if (!isSystemToggling) {</span>
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">                if (!switchSystemNotifications.isChecked()) {</span>
+<span class="nc" id="L145">                    buttonView.setChecked(false);</span>
+<span class="nc" id="L146">                    showToast(&quot;System notifications must be enabled first&quot;);</span>
+<span class="nc" id="L147">                    return;</span>
+                }
+<span class="fc" id="L149">                notificationManager.toggleTimeNotifications();</span>
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">                showToast(isChecked ? &quot;Push notifications enabled&quot; : &quot;Push notifications disabled&quot;);</span>
+            }
+<span class="fc" id="L152">        });</span>
+
+        // Reminders switch
+<span class="fc" id="L155">        switchReminders.setOnCheckedChangeListener((buttonView, isChecked) -&gt; {</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">            if (!isSystemToggling) {</span>
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">                if (!switchSystemNotifications.isChecked()) {</span>
+<span class="nc" id="L158">                    buttonView.setChecked(false);</span>
+<span class="nc" id="L159">                    showToast(&quot;System notifications must be enabled first&quot;);</span>
+<span class="nc" id="L160">                    return;</span>
+                }
+<span class="fc" id="L162">                notificationManager.toggleReminderNotifications();</span>
+<span class="pc bpc" id="L163" title="1 of 2 branches missed.">                showToast(isChecked ? &quot;Reminders enabled&quot; : &quot;Reminders disabled&quot;);</span>
+            }
+<span class="fc" id="L165">        });</span>
+
+        // SMS switch
+<span class="fc" id="L168">        switchSMSNotifications.setOnCheckedChangeListener((buttonView, isChecked) -&gt; {</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">            if (isChecked) {</span>
+<span class="nc" id="L170">                checkAndRequestSMSPermission();</span>
+            }
+<span class="nc" id="L172">            notificationManager.toggleSMSNotifications();</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">            showToast(isChecked ? &quot;SMS notifications enabled&quot; : &quot;SMS notifications disabled&quot;);</span>
+<span class="nc" id="L174">        });</span>
+
+        // Email switch
+<span class="fc" id="L177">        switchEmailNotifications.setOnCheckedChangeListener((buttonView, isChecked) -&gt; {</span>
+<span class="nc" id="L178">            notificationManager.toggleEmailNotifications();</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">            showToast(isChecked ? &quot;Email notifications enabled&quot; : &quot;Email notifications disabled&quot;);</span>
+<span class="nc" id="L180">        });</span>
+<span class="fc" id="L181">    }</span>
+
+    private void loadSettings() {
+<span class="fc" id="L184">        boolean systemEnabled = notificationManager.getSystemNotificationsEnabled();</span>
+<span class="fc" id="L185">        boolean timeEnabled = notificationManager.getTimeNotificationsEnabled();</span>
+<span class="fc" id="L186">        boolean reminderEnabled = notificationManager.getReminderNotificationsEnabled();</span>
+<span class="fc" id="L187">        boolean smsEnabled = notificationManager.getSMSNotificationsEnabled();</span>
+<span class="fc" id="L188">        boolean emailEnabled = notificationManager.getEmailNotificationsEnabled();</span>
+
+<span class="fc" id="L190">        switchSystemNotifications.setOnCheckedChangeListener(null);</span>
+<span class="fc" id="L191">        switchPushNotifications.setOnCheckedChangeListener(null);</span>
+<span class="fc" id="L192">        switchReminders.setOnCheckedChangeListener(null);</span>
+<span class="fc" id="L193">        switchSMSNotifications.setOnCheckedChangeListener(null);</span>
+<span class="fc" id="L194">        switchEmailNotifications.setOnCheckedChangeListener(null);</span>
+
+<span class="fc" id="L196">        switchSystemNotifications.setChecked(systemEnabled);</span>
+<span class="fc" id="L197">        switchPushNotifications.setChecked(timeEnabled);</span>
+<span class="fc" id="L198">        switchReminders.setChecked(reminderEnabled);</span>
+<span class="fc" id="L199">        switchSMSNotifications.setChecked(smsEnabled);</span>
+<span class="fc" id="L200">        switchEmailNotifications.setChecked(emailEnabled);</span>
+
+<span class="fc" id="L202">        updateDependentSwitches(systemEnabled);</span>
+
+<span class="fc" id="L204">        initializeSwitches();</span>
+<span class="fc" id="L205">    }</span>
+
+    private void updateDependentSwitches(boolean systemEnabled) {
+<span class="fc" id="L208">        switchPushNotifications.setEnabled(systemEnabled);</span>
+<span class="fc" id="L209">        switchReminders.setEnabled(systemEnabled);</span>
+<span class="fc" id="L210">    }</span>
+
+    private void setupNotificationTester() {
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">        if (notificationManager.getProfileDataManager().getUser().getAccounttype() == User.Account.ADMINISTRATOR ||</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">                notificationManager.getProfileDataManager().getUser().getAccounttype() == User.Account.CONTRIBUTOR) {</span>
+<span class="fc" id="L215">            notificationTesterCard.setVisibility(View.VISIBLE);</span>
+
+<span class="pc bpc" id="L217" title="1 of 2 branches missed.">            if (isEmulator()) {</span>
+<span class="fc" id="L218">                TextView emulatorInfo = new TextView(requireContext());</span>
+<span class="fc" id="L219">                emulatorInfo.setText(R.string.emulator_mode_sms_will_be_sent_to_this_device);</span>
+<span class="fc" id="L220">                emulatorInfo.setTextColor(ContextCompat.getColor(requireContext(),</span>
+                        com.google.android.material.R.color.design_default_color_secondary));
+<span class="fc" id="L222">                emulatorInfo.setPadding(0, 16, 0, 16);</span>
+
+<span class="fc" id="L224">                ViewGroup radioGroupParent = (ViewGroup) notificationTypeGroup.getParent();</span>
+
+<span class="fc" id="L226">                int radioGroupIndex = radioGroupParent.indexOfChild(notificationTypeGroup);</span>
+<span class="pc bpc" id="L227" title="1 of 2 branches missed.">                if (radioGroupIndex != -1) {</span>
+<span class="fc" id="L228">                    radioGroupParent.addView(emulatorInfo, radioGroupIndex + 1);</span>
+                }
+
+<span class="fc" id="L231">                RadioButton smsRadio = getView().findViewById(R.id.radioSMS);</span>
+<span class="pc bpc" id="L232" title="1 of 2 branches missed.">                if (smsRadio != null) {</span>
+<span class="fc" id="L233">                    smsRadio.setText(R.string.sms_notification_emulator_self_test);</span>
+                }
+            }
+        }
+
+<span class="fc" id="L238">        testNotificationButton.setOnClickListener(v -&gt; checkAndRequestNotificationPermission());</span>
+<span class="fc" id="L239">    }</span>
+
+    private void createNotificationChannel() {
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">        if (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.O) {</span>
+<span class="fc" id="L243">            CharSequence name = &quot;Notification Test Channel&quot;;</span>
+<span class="fc" id="L244">            String description = &quot;Channel for testing notifications&quot;;</span>
+<span class="fc" id="L245">            int importance = NotificationManager.IMPORTANCE_DEFAULT;</span>
+<span class="fc" id="L246">            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);</span>
+<span class="fc" id="L247">            channel.setDescription(description);</span>
+
+<span class="fc" id="L249">            NotificationManager notificationManager =</span>
+<span class="fc" id="L250">                    requireContext().getSystemService(NotificationManager.class);</span>
+<span class="fc" id="L251">            notificationManager.createNotificationChannel(channel);</span>
+        }
+<span class="fc" id="L253">    }</span>
+
+    private void sendTestNotification() {
+<span class="pc bpc" id="L256" title="1 of 2 branches missed.">        String title = notificationTitle.getText() != null ?</span>
+<span class="pc" id="L257">                notificationTitle.getText().toString().trim() : &quot;Test Notification&quot;;</span>
+<span class="pc bpc" id="L258" title="1 of 2 branches missed.">        String message = notificationMessage.getText() != null ?</span>
+<span class="pc" id="L259">                notificationMessage.getText().toString().trim() : &quot;Test Message&quot;;</span>
+
+<span class="pc bpc" id="L261" title="2 of 4 branches missed.">        if (title.isEmpty() || message.isEmpty()) {</span>
+<span class="nc" id="L262">            showToast(&quot;Please enter both title and message&quot;);</span>
+<span class="nc" id="L263">            return;</span>
+        }
+
+<span class="fc" id="L266">        int selectedId = notificationTypeGroup.getCheckedRadioButtonId();</span>
+<span class="pc bpc" id="L267" title="1 of 2 branches missed.">        if (selectedId == -1) {</span>
+<span class="nc" id="L268">            showToast(&quot;Please select a notification type&quot;);</span>
+<span class="nc" id="L269">            return;</span>
+        }
+
+<span class="pc bpc" id="L272" title="1 of 2 branches missed.">        if (selectedId == R.id.radioSMS) {</span>
+<span class="nc" id="L273">            Log.d(&quot;SMSTest&quot;, &quot;SMS Radio button selected&quot;);</span>
+<span class="nc" id="L274">            Log.d(&quot;SMSTest&quot;, &quot;Is Emulator: &quot; + isEmulator());</span>
+
+<span class="nc bnc" id="L276" title="All 2 branches missed.">            if (isEmulator()) {</span>
+<span class="nc" id="L277">                Log.d(&quot;SMSTest&quot;, &quot;Detected as emulator, proceeding with emulator SMS&quot;);</span>
+
+<span class="nc bnc" id="L279" title="All 2 branches missed.">                if (ContextCompat.checkSelfPermission(requireContext(),</span>
+                        Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) {
+<span class="nc" id="L281">                    sendEmulatorSMS(title, message);</span>
+                } else {
+<span class="nc" id="L283">                    requestPermissions(new String[]{Manifest.permission.SEND_SMS},</span>
+                            SMS_PERMISSION_REQUEST_CODE);
+                }
+            } else {
+<span class="nc" id="L287">                Log.d(&quot;SMSTest&quot;, &quot;Detected as real device, proceeding with real device SMS&quot;);</span>
+<span class="nc" id="L288">                sendRealDeviceSMS(title, message);</span>
+            }
+<span class="pc bpc" id="L290" title="1 of 2 branches missed.">        } else if (selectedId == R.id.radioEmail) {</span>
+<span class="fc" id="L291">            sendTestEmail(title, message);</span>
+        } else {
+<span class="nc" id="L293">            sendSystemNotification(title, message);</span>
+        }
+<span class="fc" id="L295">    }</span>
+
+    private void sendSystemNotification(String title, String message) {
+<span class="nc" id="L298">        NotificationCompat.Builder builder = new NotificationCompat.Builder(requireContext(), CHANNEL_ID)</span>
+<span class="nc" id="L299">                .setSmallIcon(R.drawable.notifications_icon)</span>
+<span class="nc" id="L300">                .setContentTitle(title)</span>
+<span class="nc" id="L301">                .setContentText(message)</span>
+<span class="nc" id="L302">                .setPriority(NotificationCompat.PRIORITY_DEFAULT)</span>
+<span class="nc" id="L303">                .setAutoCancel(true);</span>
+
+        try {
+<span class="nc" id="L306">            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(requireContext());</span>
+<span class="nc" id="L307">            notificationManager.notify(notificationId++, builder.build());</span>
+<span class="nc" id="L308">            showToast(&quot;Test notification sent&quot;);</span>
+<span class="nc" id="L309">        } catch (SecurityException e) {</span>
+<span class="nc" id="L310">            showToast(&quot;Failed to send notification: &quot; + e.getMessage());</span>
+<span class="nc" id="L311">        }</span>
+<span class="nc" id="L312">    }</span>
+
+    private void sendEmulatorSMS(String title, String message) {
+<span class="nc bnc" id="L315" title="All 2 branches missed.">        if (ContextCompat.checkSelfPermission(requireContext(),</span>
+                Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
+<span class="nc" id="L317">            requestPermissions(new String[]{Manifest.permission.SEND_SMS},</span>
+                    SMS_PERMISSION_REQUEST_CODE);
+<span class="nc" id="L319">            return;</span>
+        }
+
+        try {
+<span class="nc" id="L323">            SmsManager smsManager = SmsManager.getDefault();</span>
+<span class="nc" id="L324">            String fullMessage = title + &quot;\n&quot; + message;</span>
+
+<span class="nc" id="L326">            smsManager.sendTextMessage(</span>
+                    EMULATOR_TEST_NUMBER,
+                    null,
+                    fullMessage,
+                    null,
+                    null
+            );
+
+<span class="nc" id="L334">            showToast(&quot;Test SMS sent to emulator&quot;);</span>
+<span class="nc" id="L335">            Log.d(&quot;SMS_TEST&quot;, &quot;Sent SMS to emulator:\nTitle: &quot; + title + &quot;\nMessage: &quot; + message);</span>
+<span class="nc" id="L336">        } catch (Exception e) {</span>
+<span class="nc" id="L337">            showToast(&quot;Failed to send SMS: &quot; + e.getMessage());</span>
+<span class="nc" id="L338">            Log.e(&quot;SMS_TEST&quot;, &quot;Error sending SMS to emulator&quot;, e);</span>
+<span class="nc" id="L339">        }</span>
+<span class="nc" id="L340">    }</span>
+
+    private void sendRealDeviceSMS(String title, String message) {
+<span class="nc" id="L343">        Log.d(&quot;SMSTest&quot;, &quot;Entering sendRealDeviceSMS&quot;);</span>
+<span class="nc" id="L344">        Log.d(&quot;SMSTest&quot;, &quot;Is Emulator (double-check): &quot; + isEmulator());</span>
+
+<span class="nc bnc" id="L346" title="All 2 branches missed.">        if (isEmulator()) {</span>
+<span class="nc" id="L347">            Log.d(&quot;SMSTest&quot;, &quot;Redirecting to emulator SMS from sendRealDeviceSMS&quot;);</span>
+<span class="nc" id="L348">            sendEmulatorSMS(title, message);</span>
+<span class="nc" id="L349">            return;</span>
+        }
+
+<span class="nc" id="L352">        String phoneNumber = notificationManager.getProfileDataManager().getPhoneNumber();</span>
+
+<span class="nc bnc" id="L354" title="All 4 branches missed.">        if (phoneNumber == null || phoneNumber.isEmpty()) {</span>
+<span class="nc" id="L355">            showToast(&quot;Please set up your phone number in personal info first&quot;);</span>
+<span class="nc" id="L356">            return;</span>
+        }
+
+<span class="nc bnc" id="L359" title="All 2 branches missed.">        if (ContextCompat.checkSelfPermission(requireContext(),</span>
+                Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
+<span class="nc" id="L361">            requestPermissions(new String[]{Manifest.permission.SEND_SMS},</span>
+                    SMS_PERMISSION_REQUEST_CODE);
+<span class="nc" id="L363">            return;</span>
+        }
+
+        // Check rate limiting
+<span class="nc" id="L367">        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());</span>
+<span class="nc" id="L368">        long lastSMSTime = prefs.getLong(&quot;last_test_sms_time&quot;, 0);</span>
+<span class="nc" id="L369">        long currentTime = System.currentTimeMillis();</span>
+
+<span class="nc bnc" id="L371" title="All 2 branches missed.">        if (currentTime - lastSMSTime &lt; 60000) {</span>
+<span class="nc" id="L372">            showToast(&quot;Please wait a minute between test SMS messages&quot;);</span>
+<span class="nc" id="L373">            return;</span>
+        }
+
+<span class="nc" id="L376">        new MaterialAlertDialogBuilder(requireContext())</span>
+<span class="nc" id="L377">                .setTitle(&quot;Send Test SMS&quot;)</span>
+<span class="nc" id="L378">                .setMessage(&quot;This will send a real SMS message to &quot; + phoneNumber +</span>
+                        &quot;. Carrier charges may apply. Do you want to continue?&quot;)
+<span class="nc" id="L380">                .setPositiveButton(&quot;Send&quot;, (dialog, which) -&gt; {</span>
+                    try {
+<span class="nc" id="L382">                        SmsManager smsManager = SmsManager.getDefault();</span>
+<span class="nc" id="L383">                        String fullMessage = &quot;Test Notification\n&quot; + title + &quot;\n&quot; + message;</span>
+<span class="nc" id="L384">                        ArrayList&lt;String&gt; parts = smsManager.divideMessage(fullMessage);</span>
+
+<span class="nc" id="L386">                        smsManager.sendMultipartTextMessage(</span>
+                                phoneNumber,
+                                null,
+                                parts,
+                                null,
+                                null
+                        );
+
+<span class="nc" id="L394">                        prefs.edit().putLong(&quot;last_test_sms_time&quot;, currentTime).apply();</span>
+<span class="nc" id="L395">                        Log.d(&quot;SMS_TEST&quot;, &quot;SMS sent successfully to &quot; + phoneNumber);</span>
+<span class="nc" id="L396">                        showToast(&quot;Test SMS sent successfully&quot;);</span>
+
+<span class="nc" id="L398">                    } catch (Exception e) {</span>
+<span class="nc" id="L399">                        Log.e(&quot;SMS_TEST&quot;, &quot;Failed to send SMS&quot;, e);</span>
+<span class="nc" id="L400">                        showToast(&quot;Failed to send SMS: &quot; + e.getMessage());</span>
+<span class="nc" id="L401">                        e.printStackTrace();</span>
+<span class="nc" id="L402">                    }</span>
+<span class="nc" id="L403">                })</span>
+<span class="nc" id="L404">                .setNegativeButton(&quot;Cancel&quot;, (dialog, which) -&gt; {</span>
+<span class="nc" id="L405">                    showToast(&quot;SMS test cancelled&quot;);</span>
+<span class="nc" id="L406">                })</span>
+<span class="nc" id="L407">                .setCancelable(false)</span>
+<span class="nc" id="L408">                .show();</span>
+<span class="nc" id="L409">    }</span>
+
+    private void sendTestEmail(String title, String message) {
+<span class="fc" id="L412">        String email = notificationManager.getProfileDataManager().getEmail();</span>
+
+<span class="pc bpc" id="L414" title="2 of 4 branches missed.">        if (email == null || email.isEmpty()) {</span>
+<span class="nc" id="L415">            showToast(&quot;No email address available&quot;);</span>
+<span class="nc" id="L416">            return;</span>
+        }
+
+        try {
+<span class="fc" id="L420">            Intent emailIntent = new Intent(Intent.ACTION_SENDTO);</span>
+<span class="fc" id="L421">            emailIntent.setData(Uri.parse(&quot;mailto:&quot;));</span>
+<span class="fc" id="L422">            emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{email});</span>
+<span class="fc" id="L423">            emailIntent.putExtra(Intent.EXTRA_SUBJECT, title);</span>
+<span class="fc" id="L424">            emailIntent.putExtra(Intent.EXTRA_TEXT, message);</span>
+
+<span class="pc bpc" id="L426" title="1 of 2 branches missed.">            if (emailIntent.resolveActivity(requireContext().getPackageManager()) != null) {</span>
+<span class="nc" id="L427">                startActivity(emailIntent);</span>
+<span class="nc" id="L428">                showToast(&quot;Email app opened&quot;);</span>
+            } else {
+<span class="fc" id="L430">                showToast(&quot;No email app found&quot;);</span>
+            }
+<span class="nc" id="L432">        } catch (Exception e) {</span>
+<span class="nc" id="L433">            showToast(&quot;Failed to launch email: &quot; + e.getMessage());</span>
+<span class="nc" id="L434">            e.printStackTrace();</span>
+<span class="fc" id="L435">        }</span>
+<span class="fc" id="L436">    }</span>
+
+    private void checkAndRequestNotificationPermission() {
+<span class="pc bpc" id="L439" title="1 of 2 branches missed.">        if (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.TIRAMISU) {</span>
+<span class="pc bpc" id="L440" title="1 of 2 branches missed.">            if (ContextCompat.checkSelfPermission(</span>
+<span class="fc" id="L441">                    requireContext(),</span>
+                    Manifest.permission.POST_NOTIFICATIONS) !=
+                    PackageManager.PERMISSION_GRANTED) {
+
+<span class="nc" id="L445">                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);</span>
+            } else {
+<span class="fc" id="L447">                sendTestNotification();</span>
+            }
+        } else {
+<span class="nc" id="L450">            sendTestNotification();</span>
+        }
+<span class="fc" id="L452">    }</span>
+
+    private void checkAndRequestSMSPermission() {
+<span class="nc bnc" id="L455" title="All 2 branches missed.">        if (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.M) {</span>
+<span class="nc bnc" id="L456" title="All 2 branches missed.">            if (ContextCompat.checkSelfPermission(requireContext(),</span>
+                    Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
+<span class="nc" id="L458">                requestPermissions(new String[]{Manifest.permission.SEND_SMS},</span>
+                        SMS_PERMISSION_REQUEST_CODE);
+            }
+        }
+<span class="nc" id="L462">    }</span>
+
+    private void showToast(String message) {
+<span class="pc bpc" id="L465" title="1 of 2 branches missed.">        if (isAdded()) {</span>
+<span class="fc" id="L466">            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();</span>
+        }
+<span class="fc" id="L468">    }</span>
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+<span class="nc" id="L473">        super.onRequestPermissionsResult(requestCode, permissions, grantResults);</span>
+
+<span class="nc bnc" id="L475" title="All 2 branches missed.">        if (requestCode == SMS_PERMISSION_REQUEST_CODE) {</span>
+<span class="nc bnc" id="L476" title="All 4 branches missed.">            if (grantResults.length &gt; 0 &amp;&amp; grantResults[0] == PackageManager.PERMISSION_GRANTED) {</span>
+                // Permission granted, retry sending SMS if it was a test
+<span class="nc bnc" id="L478" title="All 2 branches missed.">                if (notificationTypeGroup.getCheckedRadioButtonId() == R.id.radioSMS) {</span>
+<span class="nc bnc" id="L479" title="All 2 branches missed.">                    String title = notificationTitle.getText() != null ?</span>
+<span class="nc" id="L480">                            notificationTitle.getText().toString().trim() : &quot;Test Notification&quot;;</span>
+<span class="nc bnc" id="L481" title="All 2 branches missed.">                    String message = notificationMessage.getText() != null ?</span>
+<span class="nc" id="L482">                            notificationMessage.getText().toString().trim() : &quot;Test Message&quot;;</span>
+
+<span class="nc bnc" id="L484" title="All 2 branches missed.">                    if (isEmulator()) {</span>
+<span class="nc" id="L485">                        sendEmulatorSMS(title, message);</span>
+                    } else {
+<span class="nc" id="L487">                        sendRealDeviceSMS(title, message);</span>
+                    }
+                }
+<span class="nc" id="L490">                showToast(&quot;SMS permission granted&quot;);</span>
+            } else {
+<span class="nc" id="L492">                showToast(&quot;SMS permission denied. Cannot send test SMS.&quot;);</span>
+<span class="nc" id="L493">                switchSMSNotifications.setChecked(false);</span>
+            }
+        }
+<span class="nc" id="L496">    }</span>
+
+    private boolean isEmulator() {
+<span class="pc bpc" id="L499" title="1 of 2 branches missed.">        boolean fingerprint = Build.FINGERPRINT.startsWith(&quot;generic&quot;)</span>
+<span class="pc bpc" id="L500" title="1 of 2 branches missed.">                || Build.FINGERPRINT.startsWith(&quot;unknown&quot;);</span>
+<span class="pc bpc" id="L501" title="1 of 2 branches missed.">        boolean model = Build.MODEL.contains(&quot;google_sdk&quot;)</span>
+<span class="pc bpc" id="L502" title="1 of 2 branches missed.">                || Build.MODEL.contains(&quot;Emulator&quot;)</span>
+<span class="pc bpc" id="L503" title="1 of 2 branches missed.">                || Build.MODEL.contains(&quot;Android SDK built for x86&quot;)</span>
+<span class="pc bpc" id="L504" title="1 of 2 branches missed.">                || Build.MODEL.toLowerCase().contains(&quot;sdk&quot;);</span>
+<span class="pc bpc" id="L505" title="1 of 2 branches missed.">        boolean product = Build.PRODUCT.contains(&quot;sdk&quot;)</span>
+<span class="nc bnc" id="L506" title="All 2 branches missed.">                || Build.PRODUCT.contains(&quot;generic&quot;)</span>
+<span class="pc bnc" id="L507" title="All 2 branches missed.">                || Build.PRODUCT.contains(&quot;sdk_gphone&quot;);</span>
+<span class="pc bpc" id="L508" title="1 of 2 branches missed.">        boolean brand = Build.BRAND.contains(&quot;generic&quot;)</span>
+<span class="pc bpc" id="L509" title="1 of 2 branches missed.">                || Build.BRAND.contains(&quot;google&quot;);</span>
+<span class="pc bpc" id="L510" title="1 of 2 branches missed.">        boolean hardware = Build.HARDWARE.contains(&quot;goldfish&quot;)</span>
+<span class="pc bpc" id="L511" title="1 of 2 branches missed.">                || Build.HARDWARE.contains(&quot;ranchu&quot;);</span>
+<span class="fc" id="L512">        boolean manufacturer = Build.MANUFACTURER.contains(&quot;Google&quot;);</span>
+
+<span class="pc bpc" id="L514" title="10 of 12 branches missed.">        boolean isEmulator = fingerprint || model || product || brand || hardware || manufacturer;</span>
+
+<span class="fc" id="L516">        Log.d(&quot;EmulatorDetection&quot;, String.format(</span>
+                &quot;Emulator Check:\n&quot; +
+                        &quot;Fingerprint: %s (%b)\n&quot; +
+                        &quot;Model: %s (%b)\n&quot; +
+                        &quot;Product: %s (%b)\n&quot; +
+                        &quot;Brand: %s (%b)\n&quot; +
+                        &quot;Hardware: %s (%b)\n&quot; +
+                        &quot;Manufacturer: %s (%b)\n&quot; +
+                        &quot;Final result: %b&quot;,
+<span class="fc" id="L525">                Build.FINGERPRINT, fingerprint,</span>
+<span class="fc" id="L526">                Build.MODEL, model,</span>
+<span class="fc" id="L527">                Build.PRODUCT, product,</span>
+<span class="fc" id="L528">                Build.BRAND, brand,</span>
+<span class="fc" id="L529">                Build.HARDWARE, hardware,</span>
+<span class="fc" id="L530">                Build.MANUFACTURER, manufacturer,</span>
+<span class="fc" id="L531">                isEmulator</span>
+        ));
+
+<span class="fc" id="L534">        return isEmulator;</span>
+    }
+
+    @Override
+    public void onDestroyView() {
+<span class="fc" id="L539">        super.onDestroyView();</span>
+<span class="fc" id="L540">        notificationTesterCard = null;</span>
+<span class="fc" id="L541">        notificationTitle = null;</span>
+<span class="fc" id="L542">        notificationMessage = null;</span>
+<span class="fc" id="L543">        notificationTypeGroup = null;</span>
+<span class="fc" id="L544">        testNotificationButton = null;</span>
+<span class="fc" id="L545">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

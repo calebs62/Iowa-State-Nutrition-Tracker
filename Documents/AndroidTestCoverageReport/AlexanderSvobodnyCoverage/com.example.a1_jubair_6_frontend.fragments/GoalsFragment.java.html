@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GoalsFragment.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.fragments</a> &gt; <span class="el_source">GoalsFragment.java</span></div><h1>GoalsFragment.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.fragments;
+
+import android.os.Bundle;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Toast;
+import android.widget.TextView;
+
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.activities.ChatActivity;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+
+
+<span class="nc" id="L34">public class GoalsFragment extends Fragment {</span>
+
+    private ProfileDataManager profileDataManager;
+    private TextView consecLoginGoal;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+<span class="nc" id="L41">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L42">        profileDataManager = new ProfileDataManager(requireContext());</span>
+<span class="nc" id="L43">    }</span>
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+<span class="nc" id="L47">        return inflater.inflate(R.layout.fragment_goals, container, false);</span>
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+<span class="nc" id="L52">        int id = profileDataManager.getId();</span>
+
+<span class="nc" id="L54">        consecLoginGoal = view.findViewById(R.id.consecLoginGoal);</span>
+<span class="nc" id="L55">        getUserInfo(view, id);</span>
+
+<span class="nc" id="L57">    }</span>
+
+    public void getUserInfo(View view, int id) {
+<span class="nc" id="L60">        String requestUrl = AppConstants.SERVER_URL + &quot;/user/&quot; + id;</span>
+
+<span class="nc" id="L62">        JsonObjectRequest groupRequest = new JsonObjectRequest(</span>
+                Request.Method.GET,
+                requestUrl,
+                null,
+<span class="nc" id="L66">                new Response.Listener&lt;JSONObject&gt;() {</span>
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+<span class="nc" id="L70">                            String lastLogin = response.getString(&quot;lastLogin&quot;);</span>
+<span class="nc" id="L71">                            consecLoginGoal(lastLogin);</span>
+
+<span class="nc" id="L73">                        } catch (JSONException e) {</span>
+<span class="nc" id="L74">                            Log.e(&quot;JSON Error&quot;, &quot;Failed to parse user data: &quot; + e.getMessage());</span>
+<span class="nc" id="L75">                            Toast.makeText(requireContext(), &quot;Failed to load user data.&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L76">                        }</span>
+<span class="nc" id="L77">                    }</span>
+                },
+<span class="nc" id="L79">                new Response.ErrorListener() {</span>
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+<span class="nc" id="L82">                        Log.e(&quot;Volley Error&quot;, &quot;User data retrieval failed: &quot; + error.getMessage());</span>
+<span class="nc" id="L83">                        Toast.makeText(requireContext(), &quot;User data retrieval failed.&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L84">                    }</span>
+                }
+        );
+<span class="nc" id="L87">        VolleySingleton.getInstance(getContext()).addToRequestQueue(groupRequest);</span>
+<span class="nc" id="L88">    }</span>
+
+    public void consecLoginGoal(String info) {
+<span class="nc" id="L91">        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd'T'HH:mm:ss.SSSXXX&quot;);</span>
+
+        // Parse the last login date from the string
+<span class="nc" id="L94">        LocalDate lastLoginDate = LocalDate.parse(info, formatter);</span>
+<span class="nc" id="L95">        LocalDate currentDate = LocalDate.now();</span>
+<span class="nc" id="L96">        String lastLog = lastLoginDate.toString();</span>
+<span class="nc" id="L97">        String curDate = currentDate.toString();</span>
+
+<span class="nc" id="L99">        Log.i(&quot;Dates: cur, last&quot;, currentDate.toString() + &quot; &quot; + lastLoginDate.toString());</span>
+
+<span class="nc" id="L101">        int loginCount = profileDataManager.getConsecutiveLoginCount();</span>
+
+        // Check if the last login date is before the current date
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        if (!(lastLog.equals(curDate))) {</span>
+
+<span class="nc" id="L106">            loginCount += 1;</span>
+
+<span class="nc" id="L108">            Log.i(&quot;Login count: &quot;, String.valueOf(loginCount));</span>
+
+            // Update the displayed goal count and save the new count and login date
+<span class="nc" id="L111">            consecLoginGoal.setText(loginCount + &quot;/5&quot;);</span>
+<span class="nc" id="L112">            profileDataManager.setConsecutiveLoginCount(loginCount);</span>
+<span class="nc" id="L113">            profileDataManager.setLastLoginDate(currentDate.toString());</span>
+        }
+        else {
+<span class="nc" id="L116">            consecLoginGoal.setText(loginCount + &quot;/5&quot;);</span>
+        }
+<span class="nc" id="L118">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PersonalInfoFragment.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.fragments.profile</a> &gt; <span class="el_source">PersonalInfoFragment.java</span></div><h1>PersonalInfoFragment.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.fragments.profile;
+
+import android.app.Dialog;
+import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.os.Bundle;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
+import android.telephony.PhoneNumberFormattingTextWatcher;
+import android.text.InputType;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.activities.LoginSignupActivity;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
+
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+
+<span class="nc" id="L40">public class PersonalInfoFragment extends Fragment {</span>
+
+    private static final String TAG = &quot;PersonalInfoFragment&quot;;
+    ProfileDataManager profileDataManager;
+
+    TextView email;
+    TextView phoneNumber;
+    TextView weight;
+    TextView height;
+
+    Button editPhoneNumber;
+    Button editWeight;
+    Button editHeight;
+    Button deleteAccount;
+
+    ImageView backArrow;
+
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+<span class="nc" id="L60">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L61">        profileDataManager = new ProfileDataManager(requireContext());</span>
+<span class="nc" id="L62">    }</span>
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+<span class="nc" id="L68">        return inflater.inflate(R.layout.fragment_personal_info, container, false);</span>
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstancesState){
+<span class="nc" id="L73">        super.onViewCreated(view, savedInstancesState);</span>
+
+<span class="nc" id="L75">        backArrow = view.findViewById(R.id.backArrow);</span>
+
+<span class="nc" id="L77">        email = view.findViewById(R.id.emailText);</span>
+<span class="nc" id="L78">        phoneNumber = view.findViewById(R.id.phoneNumberText);</span>
+<span class="nc" id="L79">        weight = view.findViewById(R.id.weightText);</span>
+<span class="nc" id="L80">        height = view.findViewById(R.id.heightText);</span>
+
+<span class="nc" id="L82">        editPhoneNumber = view.findViewById(R.id.btnEditPhoneNumber);</span>
+<span class="nc" id="L83">        editWeight = view.findViewById(R.id.btnEditWeight);</span>
+<span class="nc" id="L84">        editHeight = view.findViewById(R.id.btnEditHeight);</span>
+<span class="nc" id="L85">        deleteAccount = view.findViewById(R.id.btnDeleteAccount);</span>
+
+<span class="nc" id="L87">        deleteAccount.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L88">            showDeleteAccountDialog();</span>
+<span class="nc" id="L89">        });</span>
+
+<span class="nc" id="L91">        refreshPersonalInfoValues();</span>
+<span class="nc" id="L92">        setupEditButtons();</span>
+
+<span class="nc" id="L94">        backArrow.setOnClickListener(v -&gt; goBack());</span>
+<span class="nc" id="L95">    }</span>
+
+    private void setupEditButtons(){
+<span class="nc" id="L98">        editPhoneNumber.setOnClickListener(v -&gt; showEditDialog(&quot;Phone Number&quot;, &quot;Enter phone number&quot;, InputType.TYPE_CLASS_PHONE));</span>
+<span class="nc" id="L99">        editWeight.setOnClickListener(v -&gt; showEditDialog(&quot;Weight&quot;, &quot;Enter weight in lbs&quot;, InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL));</span>
+<span class="nc" id="L100">        editHeight.setOnClickListener(v -&gt; showEditDialog(&quot;Height&quot;, &quot;Enter height in ft&quot;, InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL));</span>
+<span class="nc" id="L101">    }</span>
+
+    private void showEditDialog(String title, String hint, int inputType) {
+<span class="nc" id="L104">        Dialog dialog = new Dialog(requireContext());</span>
+<span class="nc" id="L105">        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);</span>
+<span class="nc" id="L106">        dialog.setContentView(R.layout.edit_dialog);</span>
+
+<span class="nc" id="L108">        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));</span>
+
+<span class="nc" id="L110">        WindowManager.LayoutParams params = dialog.getWindow().getAttributes();</span>
+<span class="nc" id="L111">        params.width = WindowManager.LayoutParams.MATCH_PARENT;</span>
+<span class="nc" id="L112">        dialog.getWindow().setAttributes(params);</span>
+
+<span class="nc" id="L114">        TextView dialogTitle = dialog.findViewById(R.id.dialogTitle);</span>
+<span class="nc" id="L115">        EditText editTextField = dialog.findViewById(R.id.editTextField);</span>
+<span class="nc" id="L116">        Button btnCancel = dialog.findViewById(R.id.btnCancel);</span>
+<span class="nc" id="L117">        Button btnSave = dialog.findViewById(R.id.btnSave);</span>
+
+<span class="nc" id="L119">        dialogTitle.setText(String.format(&quot;Edit %s&quot;, title));</span>
+<span class="nc" id="L120">        editTextField.setHint(hint);</span>
+<span class="nc" id="L121">        editTextField.setInputType(inputType);</span>
+
+<span class="nc bnc" id="L123" title="All 2 branches missed.">        if (title.equals(&quot;Phone Number&quot;)) {</span>
+<span class="nc" id="L124">            editTextField.addTextChangedListener(new PhoneNumberFormattingTextWatcher());</span>
+        }
+
+<span class="nc" id="L127">        btnCancel.setOnClickListener(v -&gt; dialog.dismiss());</span>
+<span class="nc" id="L128">        btnSave.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L129">            String newValue = editTextField.getText().toString();</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">            if (newValue.isEmpty()) {</span>
+<span class="nc" id="L131">                editTextField.setError(&quot;This field cannot be empty&quot;);</span>
+<span class="nc bnc" id="L132" title="All 4 branches missed.">            } else if (title.equals(&quot;Phone Number&quot;) &amp;&amp; !isValidPhoneNumber(newValue)) {</span>
+<span class="nc" id="L133">                editTextField.setError(&quot;Please enter a valid phone number&quot;);</span>
+            } else {
+<span class="nc" id="L135">                saveNewValue(title, newValue);</span>
+<span class="nc" id="L136">                refreshPersonalInfoValues();</span>
+<span class="nc" id="L137">                dialog.dismiss();</span>
+            }
+<span class="nc" id="L139">        });</span>
+
+<span class="nc" id="L141">        dialog.show();</span>
+<span class="nc" id="L142">    }</span>
+
+    private void saveNewValue(String field, String value) {
+<span class="nc bnc" id="L145" title="All 4 branches missed.">        switch (field) {</span>
+            case &quot;Phone Number&quot;:
+<span class="nc" id="L147">                profileDataManager.setPhoneNumber(value);</span>
+                // TODO: Update Phone Number to Server
+<span class="nc" id="L149">                break;</span>
+            case &quot;Weight&quot;:
+                try {
+<span class="nc" id="L152">                    int weightVal = Integer.parseInt(value);</span>
+<span class="nc" id="L153">                    profileDataManager.setWeight(weightVal);</span>
+<span class="nc" id="L154">                    updateWeightToServer(weightVal);</span>
+<span class="nc" id="L155">                } catch (NumberFormatException e) {</span>
+<span class="nc" id="L156">                    Toast.makeText(getContext(), &quot;Please enter a valid number for weight&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L157">                }</span>
+<span class="nc" id="L158">                break;</span>
+            case &quot;Height&quot;:
+                try {
+<span class="nc" id="L161">                    int heightVal = Integer.parseInt(value);</span>
+<span class="nc" id="L162">                    profileDataManager.setHeight(heightVal);</span>
+<span class="nc" id="L163">                    updateHeightToServer(heightVal);</span>
+<span class="nc" id="L164">                } catch (NumberFormatException e) {</span>
+<span class="nc" id="L165">                    Toast.makeText(getContext(), &quot;Please enter a valid number for height&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L166">                }</span>
+                break;
+        }
+<span class="nc" id="L169">    }</span>
+
+    public void refreshPersonalInfoValues(){
+<span class="nc" id="L172">        int weightVal = profileDataManager.getWeight();</span>
+<span class="nc" id="L173">        int heightVal = profileDataManager.getHeight();</span>
+
+<span class="nc" id="L175">        email.setText(String.format(&quot;%s&quot;, profileDataManager.getEmail()));</span>
+
+<span class="nc bnc" id="L177" title="All 2 branches missed.">        if (profileDataManager.getPhoneNumber() != null)</span>
+<span class="nc" id="L178">            phoneNumber.setText(String.format(&quot;%s&quot;, profileDataManager.getPhoneNumber()));</span>
+        else
+<span class="nc" id="L180">            phoneNumber.setText(&quot; -- &quot;);</span>
+
+<span class="nc bnc" id="L182" title="All 2 branches missed.">        if ((weightVal != -1)) {</span>
+<span class="nc" id="L183">            weight.setText(String.format(&quot;%d lbs&quot;, weightVal));</span>
+        } else {
+<span class="nc" id="L185">            weight.setText(R.string.weight_lbs);</span>
+        }
+
+<span class="nc bnc" id="L188" title="All 2 branches missed.">        if ((heightVal != -1)) {</span>
+<span class="nc" id="L189">            height.setText(String.format(&quot;%d ft&quot;, heightVal));</span>
+        } else {
+<span class="nc" id="L191">            height.setText(R.string.height_ft);</span>
+        }
+<span class="nc" id="L193">    }</span>
+
+    public void showDeleteAccountDialog() {
+<span class="nc" id="L196">        Dialog dialog = new Dialog(requireContext());</span>
+<span class="nc" id="L197">        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);</span>
+<span class="nc" id="L198">        dialog.setContentView(R.layout.delete_user_dialog);</span>
+
+<span class="nc" id="L200">        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));</span>
+
+<span class="nc" id="L202">        WindowManager.LayoutParams params = dialog.getWindow().getAttributes();</span>
+<span class="nc" id="L203">        params.width = WindowManager.LayoutParams.MATCH_PARENT;</span>
+<span class="nc" id="L204">        dialog.getWindow().setAttributes(params);</span>
+
+<span class="nc" id="L206">        EditText editTextField = dialog.findViewById(R.id.editTextField);</span>
+<span class="nc" id="L207">        Button btnCancel = dialog.findViewById(R.id.btnCancel);</span>
+<span class="nc" id="L208">        Button btnSave = dialog.findViewById(R.id.btnSave);</span>
+
+<span class="nc" id="L210">        editTextField.setInputType(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);</span>
+
+<span class="nc" id="L212">        btnCancel.setOnClickListener(v -&gt; dialog.dismiss());</span>
+<span class="nc" id="L213">        btnSave.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L214">            String emailValue = editTextField.getText().toString();</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">            if (emailValue.isEmpty()) {</span>
+<span class="nc" id="L216">                editTextField.setError(&quot;This field cannot be empty&quot;);</span>
+            }
+<span class="nc bnc" id="L218" title="All 2 branches missed.">            else if(!emailValue.equals(profileDataManager.getEmail())){</span>
+<span class="nc" id="L219">                editTextField.setError(&quot;Entered email does not match account email&quot;);</span>
+            }
+            else{
+<span class="nc" id="L222">                deleteUserFromServer();</span>
+<span class="nc" id="L223">                dialog.dismiss();</span>
+            }
+<span class="nc" id="L225">        });</span>
+
+<span class="nc" id="L227">        dialog.show();</span>
+<span class="nc" id="L228">    }</span>
+
+    public void  deleteUserFromServer(){
+<span class="nc" id="L231">        String url = AppConstants.SERVER_URL + &quot;/deleteUser/&quot; + profileDataManager.getId();</span>
+
+<span class="nc" id="L233">        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(</span>
+            Request.Method.DELETE,
+            url,
+            null,
+            response -&gt; {
+<span class="nc" id="L238">                profileDataManager.clearUserData();</span>
+<span class="nc" id="L239">                Intent intent = new Intent(getActivity(), LoginSignupActivity.class);</span>
+                // Clear the back stack to prevent the user from going back to the personal info screen
+<span class="nc" id="L241">                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);</span>
+<span class="nc" id="L242">                startActivity(intent);</span>
+<span class="nc" id="L243">            },</span>
+            error -&gt; {
+<span class="nc" id="L245">                Toast.makeText(getContext(), &quot;Error deleting account, please try again&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L246">                Log.e(TAG, error.toString());</span>
+<span class="nc" id="L247">        });</span>
+<span class="nc" id="L248">    }</span>
+
+    public void updateWeightToServer(int weight){
+        try {
+<span class="nc" id="L252">            JSONObject requestBody = new JSONObject();</span>
+<span class="nc" id="L253">            requestBody.put(&quot;weight&quot;, weight);</span>
+
+<span class="nc" id="L255">            String url = AppConstants.SERVER_URL + &quot;/user/update/&quot; + profileDataManager.getId();</span>
+
+<span class="nc" id="L257">            JsonObjectRequest request = new JsonObjectRequest(</span>
+                    Request.Method.PUT,
+                    url,
+                    requestBody,
+                    response -&gt; {
+<span class="nc" id="L262">                        Toast.makeText(getContext(), &quot;Weight updated successfully&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L263">                    },</span>
+                    error -&gt; {
+<span class="nc" id="L265">                        Log.e(TAG, &quot;Upload error: &quot; + error.toString());</span>
+<span class="nc" id="L266">                        Toast.makeText(getContext(), &quot;Failed to update weight&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L267">                    }</span>
+<span class="nc" id="L268">            ){</span>
+                @Override
+                public Map&lt;String, String&gt; getHeaders(){
+<span class="nc" id="L271">                    Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L272">                    headers.put(&quot;Content-Type&quot;, &quot;application/json&quot;);</span>
+<span class="nc" id="L273">                    return headers;</span>
+                }
+            };
+
+<span class="nc" id="L277">            VolleySingleton.getInstance(getContext()).addToRequestQueue(request);</span>
+<span class="nc" id="L278">        } catch (Exception e) {</span>
+<span class="nc" id="L279">            Log.e(TAG, &quot;Error preparing upload: &quot; + e.getMessage());</span>
+<span class="nc" id="L280">            Toast.makeText(getContext(), &quot;Error preparing weight upload&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L281">        }</span>
+<span class="nc" id="L282">    }</span>
+
+    public void updateHeightToServer(int height){
+        try {
+<span class="nc" id="L286">            JSONObject requestBody = new JSONObject();</span>
+<span class="nc" id="L287">            requestBody.put(&quot;height&quot;, height);</span>
+
+<span class="nc" id="L289">            String url = AppConstants.SERVER_URL + &quot;/user/update/&quot; + profileDataManager.getId();</span>
+
+<span class="nc" id="L291">            JsonObjectRequest request = new JsonObjectRequest(</span>
+                    Request.Method.PUT,
+                    url,
+                    requestBody,
+                    response -&gt; {
+<span class="nc" id="L296">                        Toast.makeText(getContext(), &quot;Height updated successfully&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L297">                    },</span>
+                    error -&gt; {
+<span class="nc" id="L299">                        Log.e(TAG, &quot;Upload error: &quot; + error.toString());</span>
+<span class="nc" id="L300">                        Toast.makeText(getContext(), &quot;Failed to update height&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L301">                    }</span>
+<span class="nc" id="L302">            ){</span>
+                @Override
+                public Map&lt;String, String&gt; getHeaders(){
+<span class="nc" id="L305">                    Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L306">                    headers.put(&quot;Content-Type&quot;, &quot;application/json&quot;);</span>
+<span class="nc" id="L307">                    return headers;</span>
+                }
+            };
+
+<span class="nc" id="L311">            VolleySingleton.getInstance(getContext()).addToRequestQueue(request);</span>
+<span class="nc" id="L312">        } catch (Exception e) {</span>
+<span class="nc" id="L313">            Log.e(TAG, &quot;Error preparing upload: &quot; + e.getMessage());</span>
+<span class="nc" id="L314">            Toast.makeText(getContext(), &quot;Error preparing height upload&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L315">        }</span>
+<span class="nc" id="L316">    }</span>
+
+    private boolean isValidPhoneNumber(String phoneNumber) {
+<span class="nc" id="L319">        String digits = phoneNumber.replaceAll(&quot;[^0-9]&quot;, &quot;&quot;);</span>
+
+<span class="nc bnc" id="L321" title="All 2 branches missed.">        return digits.length() == 10;</span>
+    }
+
+    public void goBack(){
+<span class="nc" id="L325">        Fragment profileFragment = new ProfileFragment();</span>
+
+<span class="nc" id="L327">        getParentFragmentManager().beginTransaction()</span>
+<span class="nc" id="L328">                .setCustomAnimations(R.anim.slide_in_right,</span>
+                        R.anim.slide_out_right,
+                        R.anim.slide_in_left,
+                        R.anim.slide_out_left)
+<span class="nc" id="L332">                .replace(R.id.container, profileFragment)</span>
+<span class="nc" id="L333">                .addToBackStack(null)</span>
+<span class="nc" id="L334">                .commit();</span>
+<span class="nc" id="L335">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

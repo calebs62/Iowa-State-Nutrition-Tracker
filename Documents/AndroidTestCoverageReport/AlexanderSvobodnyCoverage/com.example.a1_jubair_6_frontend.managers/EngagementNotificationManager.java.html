@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EngagementNotificationManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.managers</a> &gt; <span class="el_source">EngagementNotificationManager.java</span></div><h1>EngagementNotificationManager.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.managers;
+
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.Build;
+
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.utils.EngagementWorker;
+
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * Manages user engagement notifications for the application.
+ * This class handles the scheduling, creation, and sending of notifications
+ * to encourage user engagement based on their last access time.
+ * It supports different message types for various periods of inactivity
+ * (daily, weekly, and monthly).
+ *
+ * @author Alexander Svobodny, Caleb Sanchez
+ */
+public class EngagementNotificationManager {
+    /** Shared preferences file name for storing engagement data */
+    private static final String PREF_NAME = &quot;EngagementPreferences&quot;;
+
+    /** Key for storing the last access timestamp */
+    private static final String KEY_LAST_ACCESS = &quot;last_access_time&quot;;
+
+    /** Notification channel ID for engagement notifications */
+    private static final String CHANNEL_ID = &quot;engagement_channel&quot;;
+
+    /** Unique identifier for engagement notifications */
+    private static final int NOTIFICATION_ID = 1001;
+
+    /** Tag for WorkManager engagement check tasks */
+    private static final String WORK_TAG = &quot;engagement_check&quot;;
+
+    /** Application context */
+    private final Context context;
+
+    /** SharedPreferences instance for storing engagement data */
+    private final SharedPreferences preferences;
+
+    /** Random number generator for message selection */
+    private final Random random;
+
+    /** Array of notification messages for daily engagement */
+<span class="fc" id="L56">    private final String[] dayMessages = {</span>
+            &quot;We miss you! Come check your calories for today! 📱&quot;,
+            &quot;Don't break your streak! Log your meals today 🍽️&quot;,
+            &quot;One day without tracking? Let's get back on track! 💪&quot;,
+            &quot;Your health journey is waiting! Come back and log your progress 🎯&quot;
+    };
+
+    /** Array of notification messages for weekly engagement */
+<span class="fc" id="L64">    private final String[] weekMessages = {</span>
+            &quot;It's been a week! Don't forget about your health goals 🎯&quot;,
+            &quot;A week goes by fast! Let's resume your progress 📈&quot;,
+            &quot;Missing your food tracking routine? We're here to help! 🍎&quot;,
+            &quot;One week without updates - come back and stay on track! 💪&quot;
+    };
+
+    /** Array of notification messages for monthly engagement */
+<span class="fc" id="L72">    private final String[] monthMessages = {</span>
+            &quot;A month is too long! Let's restart your health journey 🌟&quot;,
+            &quot;New month, new goals! Return and set your targets 🎯&quot;,
+            &quot;Your health matters! Come back and track your progress 💪&quot;,
+            &quot;Missing your progress updates? Let's get back to it! 📱&quot;
+    };
+
+    /**
+     * Constructs a new EngagementNotificationManager.
+     * Initializes the notification channel and schedules periodic engagement checks.
+     *
+     * @param context The application context used for accessing system services
+     */
+<span class="fc" id="L85">    public EngagementNotificationManager(Context context) {</span>
+<span class="fc" id="L86">        this.context = context;</span>
+<span class="fc" id="L87">        this.preferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);</span>
+<span class="fc" id="L88">        this.random = new Random();</span>
+<span class="fc" id="L89">        createNotificationChannel();</span>
+<span class="fc" id="L90">        scheduleEngagementCheck();</span>
+<span class="fc" id="L91">    }</span>
+
+    /**
+     * Updates the timestamp of the user's last access to the application.
+     * This timestamp is used to calculate periods of inactivity.
+     */
+    public void updateLastAccessTime() {
+<span class="fc" id="L98">        preferences.edit()</span>
+<span class="fc" id="L99">                .putLong(KEY_LAST_ACCESS, System.currentTimeMillis())</span>
+<span class="fc" id="L100">                .apply();</span>
+<span class="fc" id="L101">    }</span>
+
+    /**
+     * Creates a notification channel for engagement notifications on Android O and above.
+     * This is required for displaying notifications on newer Android versions.
+     */
+    private void createNotificationChannel() {
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">        if (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.O) {</span>
+<span class="fc" id="L109">            NotificationChannel channel = new NotificationChannel(</span>
+                    CHANNEL_ID,
+                    &quot;Engagement Notifications&quot;,
+                    NotificationManager.IMPORTANCE_DEFAULT
+            );
+<span class="fc" id="L114">            channel.setDescription(&quot;Notifications to encourage app engagement&quot;);</span>
+
+<span class="fc" id="L116">            NotificationManager notificationManager =</span>
+<span class="fc" id="L117">                    context.getSystemService(NotificationManager.class);</span>
+<span class="fc" id="L118">            notificationManager.createNotificationChannel(channel);</span>
+        }
+<span class="fc" id="L120">    }</span>
+
+    /**
+     * Schedules periodic checks for user engagement using WorkManager.
+     * Sets up a periodic work request that runs every 24 hours to check
+     * user activity and send notifications if needed.
+     */
+    public void scheduleEngagementCheck() {
+        // Create a periodic work request that runs every 24 hours
+<span class="fc" id="L129">        PeriodicWorkRequest engagementWorkRequest =</span>
+                new PeriodicWorkRequest.Builder(EngagementWorker.class,
+                        24, TimeUnit.HOURS)
+<span class="fc" id="L132">                        .addTag(WORK_TAG)</span>
+<span class="fc" id="L133">                        .build();</span>
+
+        // queue the work request
+<span class="fc" id="L136">        WorkManager.getInstance(context)</span>
+<span class="fc" id="L137">                .enqueueUniquePeriodicWork(</span>
+                        WORK_TAG,
+                        ExistingPeriodicWorkPolicy.KEEP,
+                        engagementWorkRequest
+                );
+<span class="fc" id="L142">    }</span>
+
+    /**
+     * Checks the user's last access time and sends an appropriate notification
+     * if the user has been inactive for a significant period.
+     * Different messages are selected based on the duration of inactivity:
+     * &lt;ul&gt;
+     *     &lt;li&gt;30+ days: Monthly messages&lt;/li&gt;
+     *     &lt;li&gt;7+ days: Weekly messages&lt;/li&gt;
+     *     &lt;li&gt;1+ days: Daily messages&lt;/li&gt;
+     * &lt;/ul&gt;
+     */
+    public void checkAndSendEngagementNotification() {
+<span class="fc" id="L155">        long lastAccess = preferences.getLong(KEY_LAST_ACCESS, 0);</span>
+<span class="fc" id="L156">        long currentTime = System.currentTimeMillis();</span>
+<span class="fc" id="L157">        long timeDiff = currentTime - lastAccess;</span>
+
+<span class="fc" id="L159">        long daysElapsed = timeDiff / (1000 * 60 * 60 * 24);</span>
+
+        String message;
+        String title;
+
+<span class="pc bpc" id="L164" title="1 of 2 branches missed.">        if (daysElapsed &gt;= 30) {</span>
+<span class="nc" id="L165">            title = &quot;We Really Miss You!&quot;;</span>
+<span class="nc" id="L166">            message = monthMessages[random.nextInt(monthMessages.length)];</span>
+<span class="pc bpc" id="L167" title="1 of 2 branches missed.">        } else if (daysElapsed &gt;= 7) {</span>
+<span class="nc" id="L168">            title = &quot;It's Been a While!&quot;;</span>
+<span class="nc" id="L169">            message = weekMessages[random.nextInt(weekMessages.length)];</span>
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">        } else if (daysElapsed &gt;= 1) {</span>
+<span class="nc" id="L171">            title = &quot;Come Back!&quot;;</span>
+<span class="nc" id="L172">            message = dayMessages[random.nextInt(dayMessages.length)];</span>
+        } else {
+<span class="fc" id="L174">            return;</span>
+        }
+
+<span class="nc" id="L177">        sendNotification(title, message);</span>
+<span class="nc" id="L178">    }</span>
+
+    /**
+     * Sends a notification with the specified title and message.
+     * Handles the actual creation and display of the notification using
+     * the NotificationCompat.Builder.
+     *
+     * @param title The title to display in the notification
+     * @param message The message body to display in the notification
+     */
+    private void sendNotification(String title, String message) {
+<span class="nc" id="L189">        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)</span>
+<span class="nc" id="L190">                .setSmallIcon(R.drawable.notifications_icon)</span>
+<span class="nc" id="L191">                .setContentTitle(title)</span>
+<span class="nc" id="L192">                .setContentText(message)</span>
+<span class="nc" id="L193">                .setPriority(NotificationCompat.PRIORITY_DEFAULT)</span>
+<span class="nc" id="L194">                .setAutoCancel(true);</span>
+
+        try {
+<span class="nc" id="L197">            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);</span>
+<span class="nc" id="L198">            notificationManager.notify(NOTIFICATION_ID, builder.build());</span>
+<span class="nc" id="L199">        } catch (SecurityException e) {</span>
+<span class="nc" id="L200">            e.printStackTrace();</span>
+<span class="nc" id="L201">        }</span>
+<span class="nc" id="L202">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

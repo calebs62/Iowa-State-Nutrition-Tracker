@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ActivityFeedAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.adapters</a> &gt; <span class="el_source">ActivityFeedAdapter.java</span></div><h1>ActivityFeedAdapter.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.adapters;
+
+import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.models.ActivityFeedItem;
+import com.google.android.material.card.MaterialCardView;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class ActivityFeedAdapter extends RecyclerView.Adapter&lt;ActivityFeedAdapter.ViewHolder&gt; {
+    private static final int ITEMS_PER_PAGE = 10;
+<span class="nc" id="L26">    private List&lt;ActivityFeedItem&gt; allActivityItems = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L27">    private List&lt;ActivityFeedItem&gt; filteredActivityItems = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L28">    private List&lt;ActivityFeedItem&gt; displayedItems = new ArrayList&lt;&gt;();</span>
+    private Context context;
+<span class="nc" id="L30">    private boolean showFood = true;</span>
+<span class="nc" id="L31">    private boolean showGroups = true;</span>
+<span class="nc" id="L32">    private boolean showAchievements = true;</span>
+<span class="nc" id="L33">    private boolean showGoals = true;</span>
+<span class="nc" id="L34">    private int currentPage = 0;</span>
+<span class="nc" id="L35">    private boolean isLoading = false;</span>
+
+    private OnLoadMoreListener loadMoreListener;
+
+    public interface OnLoadMoreListener {
+        void onLoadMore();
+    }
+
+    public void setOnLoadMoreListener(OnLoadMoreListener listener) {
+<span class="nc" id="L44">        this.loadMoreListener = listener;</span>
+<span class="nc" id="L45">    }</span>
+
+<span class="nc" id="L47">    public ActivityFeedAdapter(Context context) {</span>
+<span class="nc" id="L48">        this.context = context;</span>
+<span class="nc" id="L49">    }</span>
+
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+<span class="nc" id="L54">        View view = LayoutInflater.from(parent.getContext())</span>
+<span class="nc" id="L55">                .inflate(R.layout.item_activity_feed, parent, false);</span>
+<span class="nc" id="L56">        return new ViewHolder(view);</span>
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+<span class="nc" id="L61">        ActivityFeedItem item = displayedItems.get(position);</span>
+<span class="nc" id="L62">        holder.bind(item);</span>
+
+        // Use post to avoid layout/scroll conflicts
+<span class="nc bnc" id="L65" title="All 4 branches missed.">        if (!isLoading &amp;&amp; position &gt;= displayedItems.size() - 3 &amp;&amp;</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">                displayedItems.size() &lt; filteredActivityItems.size()) {</span>
+<span class="nc" id="L67">            new Handler(Looper.getMainLooper()).post(this::loadMoreItems);</span>
+        }
+<span class="nc" id="L69">    }</span>
+
+    @Override
+    public int getItemCount() {
+<span class="nc" id="L73">        return displayedItems.size();</span>
+    }
+
+    public void addItem(ActivityFeedItem item) {
+<span class="nc" id="L77">        allActivityItems.add(item);</span>
+<span class="nc" id="L78">        allActivityItems.sort((item1, item2) -&gt;</span>
+<span class="nc" id="L79">                item2.getTimestamp().compareTo(item1.getTimestamp())</span>
+        );
+
+<span class="nc bnc" id="L82" title="All 2 branches missed.">        if (shouldShowItem(item)) {</span>
+<span class="nc" id="L83">            new Handler(Looper.getMainLooper()).post(() -&gt;</span>
+<span class="nc" id="L84">                    applyFilters(showFood, showGroups, showAchievements, showGoals)</span>
+            );
+        }
+<span class="nc" id="L87">    }</span>
+
+    public void setItems(List&lt;ActivityFeedItem&gt; items) {
+<span class="nc" id="L90">        allActivityItems = new ArrayList&lt;&gt;(items);</span>
+<span class="nc" id="L91">        allActivityItems.sort((item1, item2) -&gt;</span>
+<span class="nc" id="L92">                item2.getTimestamp().compareTo(item1.getTimestamp())</span>
+        );
+<span class="nc" id="L94">        currentPage = 0;</span>
+<span class="nc" id="L95">        applyFilters(showFood, showGroups, showAchievements, showGoals);</span>
+<span class="nc" id="L96">    }</span>
+
+    public void applyFilters(boolean showFood, boolean showGroups,
+                             boolean showAchievements, boolean showGoals) {
+<span class="nc" id="L100">        this.showFood = showFood;</span>
+<span class="nc" id="L101">        this.showGroups = showGroups;</span>
+<span class="nc" id="L102">        this.showAchievements = showAchievements;</span>
+<span class="nc" id="L103">        this.showGoals = showGoals;</span>
+
+        // Create new filtered list
+<span class="nc" id="L106">        List&lt;ActivityFeedItem&gt; newFilteredItems = allActivityItems.stream()</span>
+<span class="nc" id="L107">                .filter(this::shouldShowItem)</span>
+<span class="nc" id="L108">                .collect(Collectors.toList());</span>
+
+        // Sort the filtered items
+<span class="nc" id="L111">        newFilteredItems.sort((item1, item2) -&gt;</span>
+<span class="nc" id="L112">                item2.getTimestamp().compareTo(item1.getTimestamp())</span>
+        );
+
+<span class="nc" id="L115">        filteredActivityItems = newFilteredItems;</span>
+<span class="nc" id="L116">        displayedItems.clear();</span>
+<span class="nc" id="L117">        currentPage = 0;</span>
+<span class="nc" id="L118">        isLoading = false;</span>
+
+<span class="nc" id="L120">        new Handler(Looper.getMainLooper()).post(() -&gt; {</span>
+<span class="nc" id="L121">            notifyDataSetChanged();</span>
+<span class="nc" id="L122">            loadMoreItems();</span>
+<span class="nc" id="L123">        });</span>
+<span class="nc" id="L124">    }</span>
+
+    public void loadMoreItems() {
+<span class="nc bnc" id="L127" title="All 2 branches missed.">        if (isLoading) return;</span>
+<span class="nc" id="L128">        isLoading = true;</span>
+
+<span class="nc" id="L130">        int startPosition = currentPage * ITEMS_PER_PAGE;</span>
+<span class="nc" id="L131">        int endPosition = Math.min(startPosition + ITEMS_PER_PAGE, filteredActivityItems.size());</span>
+
+<span class="nc bnc" id="L133" title="All 2 branches missed.">        if (startPosition &lt; filteredActivityItems.size()) {</span>
+
+<span class="nc" id="L135">            List&lt;ActivityFeedItem&gt; newItems = new ArrayList&lt;&gt;(</span>
+<span class="nc" id="L136">                    filteredActivityItems.subList(startPosition, endPosition)</span>
+            );
+
+<span class="nc" id="L139">            new Handler(Looper.getMainLooper()).post(() -&gt; {</span>
+<span class="nc" id="L140">                int insertPosition = displayedItems.size();</span>
+<span class="nc" id="L141">                displayedItems.addAll(newItems);</span>
+<span class="nc" id="L142">                notifyItemRangeInserted(insertPosition, newItems.size());</span>
+<span class="nc" id="L143">                currentPage++;</span>
+<span class="nc" id="L144">                isLoading = false;</span>
+
+<span class="nc bnc" id="L146" title="All 2 branches missed.">                if (loadMoreListener != null) {</span>
+<span class="nc" id="L147">                    loadMoreListener.onLoadMore();</span>
+                }
+<span class="nc" id="L149">            });</span>
+<span class="nc" id="L150">        } else {</span>
+<span class="nc" id="L151">            isLoading = false;</span>
+        }
+<span class="nc" id="L153">    }</span>
+
+    public void resetPagination() {
+<span class="nc" id="L156">        currentPage = 0;</span>
+<span class="nc" id="L157">        displayedItems.clear();</span>
+<span class="nc" id="L158">        isLoading = false;</span>
+<span class="nc" id="L159">        new Handler(Looper.getMainLooper()).post(() -&gt; {</span>
+<span class="nc" id="L160">            notifyDataSetChanged();</span>
+<span class="nc" id="L161">            loadMoreItems();</span>
+<span class="nc" id="L162">        });</span>
+<span class="nc" id="L163">    }</span>
+
+
+    private boolean shouldShowItem(ActivityFeedItem item) {
+<span class="nc bnc" id="L167" title="All 5 branches missed.">        switch (item.getType()) {</span>
+            case FOOD_EATEN:
+<span class="nc" id="L169">                return showFood;</span>
+            case GROUP_UPDATE:
+<span class="nc" id="L171">                return showGroups;</span>
+            case ACHIEVEMENT:
+<span class="nc" id="L173">                return showAchievements;</span>
+            case GOAL_UPDATE:
+<span class="nc" id="L175">                return showGoals;</span>
+            default:
+<span class="nc" id="L177">                return true;</span>
+        }
+    }
+
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        ImageView activityTypeIcon;
+        TextView activityTypeLabel;
+        TextView timestampText;
+        TextView activityMessage;
+        TextView activityDetails;
+        MaterialCardView detailsCard;
+
+        ViewHolder(View itemView) {
+<span class="nc" id="L190">            super(itemView);</span>
+<span class="nc" id="L191">            activityTypeIcon = itemView.findViewById(R.id.activityTypeIcon);</span>
+<span class="nc" id="L192">            activityTypeLabel = itemView.findViewById(R.id.activityTypeLabel);</span>
+<span class="nc" id="L193">            timestampText = itemView.findViewById(R.id.timestampText);</span>
+<span class="nc" id="L194">            activityMessage = itemView.findViewById(R.id.activityMessage);</span>
+<span class="nc" id="L195">            activityDetails = itemView.findViewById(R.id.activityDetails);</span>
+<span class="nc" id="L196">            detailsCard = itemView.findViewById(R.id.detailsCard);</span>
+<span class="nc" id="L197">        }</span>
+
+        void bind(ActivityFeedItem item) {
+            int iconRes;
+            String typeLabel;
+<span class="nc bnc" id="L202" title="All 5 branches missed.">            switch (item.getType()) {</span>
+                case FOOD_EATEN:
+<span class="nc" id="L204">                    iconRes = R.drawable.ic_food;</span>
+<span class="nc" id="L205">                    typeLabel = &quot;Food Activity&quot;;</span>
+<span class="nc" id="L206">                    break;</span>
+                case GROUP_UPDATE:
+<span class="nc" id="L208">                    iconRes = R.drawable.ic_group;</span>
+<span class="nc" id="L209">                    typeLabel = &quot;Group Update&quot;;</span>
+<span class="nc" id="L210">                    break;</span>
+                case ACHIEVEMENT:
+<span class="nc" id="L212">                    iconRes = R.drawable.ic_achievement;</span>
+<span class="nc" id="L213">                    typeLabel = &quot;Achievement&quot;;</span>
+<span class="nc" id="L214">                    break;</span>
+                case GOAL_UPDATE:
+<span class="nc" id="L216">                    iconRes = R.drawable.goals_icon;</span>
+<span class="nc" id="L217">                    typeLabel = &quot;Goal Update&quot;;</span>
+<span class="nc" id="L218">                    break;</span>
+                default:
+<span class="nc" id="L220">                    iconRes = R.drawable.ic_default;</span>
+<span class="nc" id="L221">                    typeLabel = &quot;Activity&quot;;</span>
+            }
+
+<span class="nc" id="L224">            activityTypeIcon.setImageResource(iconRes);</span>
+<span class="nc" id="L225">            activityTypeLabel.setText(typeLabel);</span>
+<span class="nc" id="L226">            timestampText.setText(item.getTimestamp().toString());</span>
+<span class="nc" id="L227">            activityMessage.setText(item.getMessage());</span>
+
+<span class="nc bnc" id="L229" title="All 4 branches missed.">            if (item.getAdditionalData() != null &amp;&amp; !item.getAdditionalData().isEmpty()) {</span>
+<span class="nc" id="L230">                activityDetails.setText(item.getAdditionalData());</span>
+<span class="nc" id="L231">                detailsCard.setVisibility(View.VISIBLE);</span>
+            } else {
+<span class="nc" id="L233">                detailsCard.setVisibility(View.GONE);</span>
+            }
+<span class="nc" id="L235">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>
