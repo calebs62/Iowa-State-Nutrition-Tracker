@@ -1,7 +1,5 @@
 package coms309.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 
@@ -25,6 +23,7 @@ public class Message {
 
     @Lob
     @JsonView(value = {Views.Message.class})
+    @Column
     private String content;
 
     @Temporal(TemporalType.TIMESTAMP)
@@ -32,22 +31,17 @@ public class Message {
     @JsonView(value = {Views.Message.class})
     private Date sent = new Date();
 
+    //Since we are only letting a user join one group this is fine.
+    // If we wanted to allow users in multiple groups we would have to
+    // get the two column on embedded id to work.
     @ManyToOne
-//    @JoinColumns({@JoinColumn(name = "userId", insertable = false, updatable = false), @JoinColumn(name = "groupId", insertable = false, updatable = false)})
-    @JoinColumn(name = "groupmemberid")
+//    @JoinColumns({
+//            @JoinColumn(name = "userId", referencedColumnName = "user_id"),
+//            @JoinColumn(name = "groupId", referencedColumnName = "group_id")
+//    })
+    @JoinColumn(name = "userId", referencedColumnName = "user_id")
     @JsonView(value = {Views.Message.class})
     private GroupMember member;
-
-//    @OneToMany(mappedBy = "parent")
-//    @JsonView(value = {Views.Message.class})
-//    @JsonManagedReference
-//    private Set<Message> replies = new HashSet<>();
-//
-//    @ManyToOne
-//    @JoinColumn(name = "parent")
-//    @JsonView(value = {Views.Message.class})
-//    @JsonBackReference
-//    private Message parent;
 
     public Message(){};
 
@@ -57,12 +51,6 @@ public class Message {
         this.groupId = member.getId().getGroupId();
         this.content = content;
     }
-
-//    public Message(String userName, String content, Message parent){
-//        this.userName = userName;
-//        this.content = content;
-//        this.parent = parent;
-//    }
 
     public int getId(){return id;}
     public String getContent() {
@@ -76,12 +64,6 @@ public class Message {
     }
     public GroupMember getMember(){return member;}
     public int getGroupId(){return groupId;}
-//    public Message getParent(){
-//        return parent;
-//    }
-//    public Set<Message> getReplies(){
-//        return replies;
-//    }
 
     public void setContent(String content) {
         this.content = content;
@@ -93,8 +75,5 @@ public class Message {
         this.sent = sent;
     }
     public void setMember(GroupMember member){this.member = member;}
-//    public void setParent(Message parent){
-//        this.parent = parent;
-//    }
 
 }
