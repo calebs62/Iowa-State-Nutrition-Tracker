@@ -48,4 +48,5 @@ androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "a
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+jacoco = { id = "org.jacoco.core", version = "0.8.11" }
 
