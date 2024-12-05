@@ -5,6 +5,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @Entity
 @Table(name = "activity_feed")
@@ -37,6 +38,8 @@ public class ActivityFeed implements Comparable<ActivityFeed>{
     @JoinColumn(name = "group_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Group group;
+    @OneToMany
+    private List<ImageGallery> images;
 
     public ActivityFeed() {
         type = null;
