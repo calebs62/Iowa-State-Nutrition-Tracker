@@ -1,7 +1,6 @@
 package coms309.controller;
 
 import com.fasterxml.jackson.annotation.JsonView;
-import coms309.entity.FoodItem;
 import coms309.entity.Views;
 import coms309.repository.UserRepository;
 import coms309.entity.User;
