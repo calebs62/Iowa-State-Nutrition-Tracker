@@ -73,5 +73,7 @@ public class User {
         return accounttype;
     }
 
+    public void setAccountType(Account accounttype) { this.accounttype = accounttype; }
+
     public int getId() {return id; }
 }

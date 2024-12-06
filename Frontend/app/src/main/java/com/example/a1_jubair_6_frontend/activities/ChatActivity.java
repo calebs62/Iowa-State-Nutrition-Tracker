@@ -13,7 +13,9 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
 import com.example.a1_jubair_6_frontend.fragments.HomePageFragment;
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
 import com.example.a1_jubair_6_frontend.network.WebSocketClient;
 
 import org.json.JSONException;
@@ -27,13 +29,16 @@ public class ChatActivity extends AppCompatActivity {
     private EditText msgEtx;
     private TextView chatMessages;
     private WebSocketClient webSocketClient;
-    private final String username = "username";  // Hardcoded username
+    private String username;
     private final String groupChatId = "1";      // Hardcoded groupId
     private boolean isTyping = false;
+    private ProfileDataManager profileDataManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        profileDataManager = new ProfileDataManager(this);
+        username = profileDataManager.getFirstname();
         setContentView(R.layout.activity_chat);
 
         ImageView backButton = findViewById(R.id.backButton);
@@ -80,7 +85,7 @@ public class ChatActivity extends AppCompatActivity {
         });
 
         //This will be the real string once its finished String url = AppConstants.SERVER_URL + "/chat/" + username + "/" + profileDataManager.getId() + "/" + groupChatId;
-        String url = "wss://ws.postman-echo.com/raw";  // Replace with your backend URL when ready
+        String url = AppConstants.WEBSOCKET_MESSAGE_SERVER_URL + username + "/" + profileDataManager.getId() + "/" + groupChatId;
         webSocketClient.connect(url);
 
         msgEtx.setOnKeyListener((v, keyCode, event) -> {

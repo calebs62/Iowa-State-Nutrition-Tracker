@@ -60,6 +60,24 @@
                             style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
 
                         <com.google.android.material.button.MaterialButton
+                            android:id="@+id/addMemberButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Add Member"
+                            android:layout_marginTop="8dp"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:visibility="gone"/>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/kickMemberButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Kick Member"
+                            android:layout_marginTop="8dp"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:visibility="gone"/>
+
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/deleteGroupButton"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -68,6 +86,7 @@
                             style="@style/Widget.MaterialComponents.Button"
                             android:backgroundTint="@android:color/holo_red_light"
                             android:visibility="gone"/>
+
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 

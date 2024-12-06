@@ -133,7 +133,6 @@ public class LoginSignupActivity extends AppCompatActivity {
                     int height = response.getInt("height");
                     int weight = response.getInt("weight");
                     String accountType = response.getString("accounttype");
-
                     Log.i("User Info", "Logged in user: " + username + ", " + fname + " " + lname);
 
                     if(response.has("img") && !response.isNull("img") && !response.getString("img").isEmpty()) {

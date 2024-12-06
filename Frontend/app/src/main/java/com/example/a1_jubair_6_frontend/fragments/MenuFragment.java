@@ -66,6 +66,7 @@ public class MenuFragment extends Fragment {
     private Gson gson = new Gson();
     private View adminToolsContainer;
     private boolean isAdmin = false;
+    private boolean isContributor = false;
     private ProfileDataManager profileDataManager;
 
     private int currentBreakfastMenuIndex, currentLunchMenuIndex, currentDinnerMenuIndex;
@@ -92,7 +93,8 @@ public class MenuFragment extends Fragment {
         foodItemList = new ArrayList<>();
         profileDataManager = new ProfileDataManager(requireContext());
         String accountType = profileDataManager.getAccountType();
-        isAdmin = accountType.equals("ADMINISTRATOR") || accountType.equals("CONTRIBUTOR");
+        isAdmin = accountType.equals("ADMINISTRATOR");
+        isContributor = accountType.equals("CONTRIBUTOR");
         allMenus = new ArrayList<>();
         breakfastMenus = new ArrayList<>();
         lunchMenus = new ArrayList<>();
@@ -127,13 +129,18 @@ public class MenuFragment extends Fragment {
 
         if (isAdmin) {
             adminToolsContainer.setVisibility(View.VISIBLE);
+            adminToolsContainer.findViewById(R.id.btnSelectMenus).setVisibility(View.VISIBLE);
             selectMenusButton.setOnClickListener(v -> showMenuSelectionDialog());
+        }
+
+        if (isContributor) {
+            adminToolsContainer.setVisibility(View.VISIBLE);
         }
 
         foodList = view.findViewById(R.id.foodList);
         foodList.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        foodAdapter = new FoodAdapter(foodItemList, isAdmin, true);
+        foodAdapter = new FoodAdapter(foodItemList, isAdmin, isContributor, true);
         foodList.setAdapter(foodAdapter);
 
         int bottomNavHeight = getResources().getDimensionPixelSize(R.dimen.bottom_nav_height);

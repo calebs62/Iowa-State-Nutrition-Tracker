@@ -156,7 +156,7 @@ public class RegisterActivity extends AppCompatActivity {
             jsonBody.put("lname", user.getLname());
             jsonBody.put("height", user.getHeight());
             jsonBody.put("weight", user.getWeight());
-            jsonBody.put("accounttype", User.Account.USER);
+            jsonBody.put("accountType", User.Account.USER);
             jsonBody.put("sessionToken", "**");
 
             Log.d("RequestBody", "JSON being sent: " + jsonBody.toString());

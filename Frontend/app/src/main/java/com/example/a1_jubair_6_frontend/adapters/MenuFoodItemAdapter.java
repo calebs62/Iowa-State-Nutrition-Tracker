@@ -1,5 +1,6 @@
 package com.example.a1_jubair_6_frontend.adapters;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
 import com.example.a1_jubair_6_frontend.models.FoodItem;
 
 import java.util.ArrayList;
@@ -18,6 +20,8 @@ import java.util.List;
 public class MenuFoodItemAdapter extends RecyclerView.Adapter<MenuFoodItemAdapter.ViewHolder> {
     private List<FoodItem> foodItems;
     private final OnFoodItemClickListener listener;
+    private ProfileDataManager profileDataManager;
+    private Context context;
 
     public interface OnFoodItemClickListener {
         void onFoodItemClick(FoodItem item);
@@ -36,8 +40,10 @@ public class MenuFoodItemAdapter extends RecyclerView.Adapter<MenuFoodItemAdapte
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        context = parent.getContext();
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_menu_food, parent, false);
+        profileDataManager = new ProfileDataManager(context);
         return new ViewHolder(view);
     }
 
@@ -60,7 +66,9 @@ public class MenuFoodItemAdapter extends RecyclerView.Adapter<MenuFoodItemAdapte
             }
         });
 
-        if (holder.deleteButton != null) {
+        boolean isAdmin = profileDataManager.getAccountType().equals("ADMINISTRATOR");
+        if(isAdmin && holder.deleteButton != null) {
+            holder.deleteButton.setVisibility(View.VISIBLE);
             holder.deleteButton.setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onFoodItemClick(item);
