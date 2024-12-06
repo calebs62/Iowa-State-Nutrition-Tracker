@@ -25,7 +25,6 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_marginEnd="16dp"
-        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/titleMenus"
         app:layout_constraintBottom_toBottomOf="@id/titleMenus">
@@ -37,6 +36,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/select_menus"
+            android:visibility="gone"
             android:textColor="@android:color/white"
             android:backgroundTint="@color/Iowa_State_Red"
             style="@style/Widget.MaterialComponents.Button"

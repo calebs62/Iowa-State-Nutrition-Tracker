@@ -66,6 +66,8 @@ dependencies {
     implementation(libs.lottie)
 
     androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
+    androidTestImplementation(libs.androidx.rules)
 
     testImplementation(libs.junit.junit)
     testImplementation(libs.mockito.android)

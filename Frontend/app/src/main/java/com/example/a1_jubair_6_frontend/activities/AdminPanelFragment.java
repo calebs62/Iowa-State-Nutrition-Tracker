@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -26,6 +27,7 @@ import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.adapters.FoodAdapter;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
 import com.example.a1_jubair_6_frontend.fragments.profile.PasswordAndSecurityFragment;
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
 import com.example.a1_jubair_6_frontend.models.FoodItem;
 import com.example.a1_jubair_6_frontend.network.VolleySingleton;
 import com.google.android.material.textfield.TextInputEditText;
@@ -43,12 +45,20 @@ public class AdminPanelFragment extends Fragment {
     private List<FoodItem> foodItemList;
     private Gson gson = new Gson();
     private View adminToolsContainer;
-    private boolean isAdmin = true;
+    private boolean isAdmin = false;
+    private boolean isContributor = false;
+    private ProfileDataManager profileDataManager;
+    private TextView title;
 
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        profileDataManager = new ProfileDataManager(requireContext());
+
+        String accountType = profileDataManager.getAccountType();
+        isAdmin = accountType.equals("ADMINISTRATOR");
+        isContributor = accountType.equals("CONTRIBUTOR");
 
         foodItemList = new ArrayList<>();
     }
@@ -64,6 +74,11 @@ public class AdminPanelFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstancesState){
         super.onViewCreated(view, savedInstancesState);
 
+        if(isContributor) {
+            title = view.findViewById(R.id.tvAdminPanel);
+            title.setText("Contributor Panel");
+        }
+
         ImageView backArrow = view.findViewById(R.id.backArrow);
         backArrow.setOnClickListener(v -> {
             // Pop the back stack instead of creating a new fragment
@@ -75,14 +90,14 @@ public class AdminPanelFragment extends Fragment {
         foodList = view.findViewById(R.id.foodList);
         foodList.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        foodAdapter = new FoodAdapter(foodItemList, isAdmin, false);
+        foodAdapter = new FoodAdapter(foodItemList, isAdmin, isContributor,false);
         foodList.setAdapter(foodAdapter);
 
         int bottomNavHeight = getResources().getDimensionPixelSize(R.dimen.bottom_nav_height);
         foodList.setPadding(0, 0, 0, bottomNavHeight);
 
         Button btnAddFood = view.findViewById(R.id.btnAddFood);
-        if (isAdmin && btnAddFood != null) {
+        if (btnAddFood != null) {
             btnAddFood.setOnClickListener(v -> showAddDialog());
         }
 

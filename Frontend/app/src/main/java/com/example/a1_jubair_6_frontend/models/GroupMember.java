@@ -37,6 +37,12 @@ public class GroupMember {
         else if (getPermissionLvl() == 2) {
             return "Owner";
         }
+        else if (getPermissionLvl() == 3) {
+            return "Contributor";
+        }
+        else if (getPermissionLvl() == 4) {
+            return "Administrator";
+        }
         else {
             return "User";
         }

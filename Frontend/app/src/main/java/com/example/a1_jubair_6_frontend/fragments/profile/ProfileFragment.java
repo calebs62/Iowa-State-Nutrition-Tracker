@@ -60,6 +60,7 @@ public class ProfileFragment extends Fragment {
     private Uri profilePictureUri;
     private ProfileDataManager profileDataManager;
     boolean isAdmin = false;
+    boolean isContributor = false;
 
     /**
      * Launcher for updating the profile picture.
@@ -89,7 +90,8 @@ public class ProfileFragment extends Fragment {
         super.onCreate(savedInstanceState);
         profileDataManager = new ProfileDataManager(requireContext());
         String accountType = profileDataManager.getAccountType();
-        isAdmin = accountType.equals("ADMINISTRATOR") || accountType.equals("CONTRIBUTOR");
+        isAdmin = accountType.equals("ADMINISTRATOR");
+        isContributor = accountType.equals("CONTRIBUTOR");
     }
 
     /**
@@ -221,6 +223,8 @@ public class ProfileFragment extends Fragment {
         setupMenuItem(R.id.notifications, R.drawable.notifications_icon, "Notifications");
         if (isAdmin)
             setupMenuItem(R.id.adminPanel, R.drawable.menu_icon, "Admin Panel");
+        else if(isContributor)
+            setupMenuItem(R.id.adminPanel, R.drawable.menu_icon, "Contributor Panel");
     }
 
     /**

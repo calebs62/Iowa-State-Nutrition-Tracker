@@ -19,7 +19,6 @@ import org.json.JSONObject;
 public class ViewMenusActivity extends AppCompatActivity {
 
     private MaterialButton add, edit, delete;
-
     EditText location, mealType, date, id, updateLocation, updateMealType, updateDate, updateId;
 
     @SuppressLint("MissingInflatedId")

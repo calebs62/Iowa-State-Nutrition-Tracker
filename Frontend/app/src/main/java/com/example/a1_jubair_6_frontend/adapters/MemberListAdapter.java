@@ -48,6 +48,8 @@ public class MemberListAdapter extends RecyclerView.Adapter<MemberListAdapter.Me
 
     private int getRoleColor(int permissionLevel) {
         switch (permissionLevel) {
+            case 4: return 0xFF8802CE; //Admin - Purple
+            case 3: return 0xFF00E209; //Contributor -
             case 2: return 0xFFFF6B6B; // Owner - Red
             case 1: return 0xFF4ECDC4; // Moderator - Teal
             default: return 0xFF95A5A6; // Member - Gray

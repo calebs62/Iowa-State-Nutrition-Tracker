@@ -3,12 +3,14 @@ package com.example.a1_jubair_6_frontend.fragments;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -45,7 +47,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJoinClickListener {
@@ -62,6 +66,7 @@ public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJ
     private View foodPlanDetails;
     private int currentGroupId = -1;
     private GroupMembershipCallback membershipCallback;
+    private boolean isOwner = false, isContributor = false, isAdmin = false;
 
     public interface GroupMembershipCallback {
         void onGroupMembershipChanged();
@@ -75,6 +80,9 @@ public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJ
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         profileDataManager = new ProfileDataManager(requireContext());
+
+        isAdmin = profileDataManager.getAccountType().equals("ADMINISTRATOR");
+        isContributor = profileDataManager.getAccountType().equals("CONTRIBUTOR");
     }
 
     @Override
@@ -148,6 +156,54 @@ public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJ
                     .setNegativeButton("Cancel", null)
                     .show();
         });
+
+        MaterialButton addMember = view.findViewById(R.id.addMemberButton);
+        addMember.setOnClickListener(v -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+            builder.setTitle("Add Member");
+
+            EditText input = new EditText(requireContext());
+            input.setInputType(InputType.TYPE_CLASS_TEXT);
+            input.setHint("Enter Member ID");
+
+            builder.setView(input);
+
+            builder.setPositiveButton("Add", (dialog, which) -> {
+                String memberId = input.getText().toString().trim();
+                if (!memberId.isEmpty()) {
+                    addMemberById(memberId);
+                } else {
+                    Toast.makeText(requireContext(), "Member ID cannot be empty", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+            builder.show();
+        });
+
+        MaterialButton kickMember = view.findViewById(R.id.kickMemberButton);
+        kickMember.setOnClickListener(v -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+            builder.setTitle("Kick Member");
+
+            EditText input = new EditText(requireContext());
+            input.setInputType(InputType.TYPE_CLASS_TEXT);
+            input.setHint("Enter Member ID");
+
+            builder.setView(input);
+
+            builder.setPositiveButton("Kick", (dialog, which) -> {
+                String memberId = input.getText().toString().trim();
+                if (!memberId.isEmpty()) {
+                    kickMemberById(memberId);
+                } else {
+                    Toast.makeText(requireContext(), "Member ID cannot be empty", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+            builder.show();
+        });
     }
 
     private void checkGroupMembership() {
@@ -159,7 +215,6 @@ public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJ
                 requestUrl,
                 null,
                 response -> {
-                    // If we get a successful response with content, show the group
                     try {
                         if (response != null && response.length() > 0) {
                             updateGroupMemberView(response);
@@ -427,7 +482,6 @@ public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJ
         TextView memberCountView = requireView().findViewById(R.id.memberCount);
         memberCountView.setText(getString(R.string.member_count, membersArray.length()));
 
-        boolean isOwner = false;
         int currentUserId = profileDataManager.getId();
         for (int i = 0; i < membersArray.length(); i++) {
             JSONObject memberJson = membersArray.getJSONObject(i);
@@ -440,13 +494,32 @@ public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJ
 
         MaterialButton leaveButton = requireView().findViewById(R.id.leaveGroupButton);
         MaterialButton deleteButton = requireView().findViewById(R.id.deleteGroupButton);
+        MaterialButton kickButton = requireView().findViewById(R.id.kickMemberButton);
+        MaterialButton addButton = requireView().findViewById(R.id.addMemberButton);
 
         if (isOwner) {
             leaveButton.setVisibility(View.GONE);
             deleteButton.setVisibility(View.VISIBLE);
-        } else {
+            kickButton.setVisibility(View.VISIBLE);
+            addButton.setVisibility(View.VISIBLE);
+        }
+        else if (isAdmin) {
+            leaveButton.setVisibility(View.VISIBLE);
+            deleteButton.setVisibility(View.VISIBLE);
+            kickButton.setVisibility(View.VISIBLE);
+            addButton.setVisibility(View.VISIBLE);
+        }
+        else if (isContributor) {
             leaveButton.setVisibility(View.VISIBLE);
             deleteButton.setVisibility(View.GONE);
+            kickButton.setVisibility(View.GONE);
+            addButton.setVisibility(View.VISIBLE);
+        }
+        else {
+            leaveButton.setVisibility(View.VISIBLE);
+            deleteButton.setVisibility(View.GONE);
+            kickButton.setVisibility(View.GONE);
+            addButton.setVisibility(View.GONE);
         }
 
         if (!groupData.isNull("plan")) {
@@ -468,11 +541,10 @@ public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJ
             group.setGroupName(groupName);
 
             User user = new User(userId.getInt("userId"));
-
             GroupMember member = new GroupMember(group, user);
+
             member.setPermissionLvl(permissionLevel);
             members.add(member);
-
             loadMemberUserInfo(member);
         }
 
@@ -737,6 +809,60 @@ public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJ
                     }
                 },
                 error -> handleError("Failed to create group")
+        );
+
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
+    }
+
+    private void addMemberById(String memberId) {
+        String url = AppConstants.SERVER_URL + "/group/" + currentGroupId + "/addMember";
+
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("sessionToken", "1:2:" + profileDataManager.getId());
+            jsonObject.put("uid", Integer.parseInt(memberId));
+        } catch (JSONException e) {
+            handleError("Error adding member to group.");
+            return;
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.PUT,
+                url,
+                jsonObject,
+                response -> {
+                    Toast.makeText(requireContext(), "Member with id: " + memberId + " added successfully.", Toast.LENGTH_SHORT).show();
+                },
+                error -> {
+                    Toast.makeText(requireContext(), "Failed to add member. Please Try again.", Toast.LENGTH_SHORT).show();
+                }
+        );
+
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
+    }
+
+    private void kickMemberById(String memberId) {
+        String url = AppConstants.SERVER_URL + "/group/" + currentGroupId + "/removeMember";
+
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("sessionToken", "1:2:" + profileDataManager.getId());
+            jsonObject.put("uid", Integer.parseInt(memberId));
+        } catch (JSONException e) {
+            handleError("Error adding member to group.");
+            return;
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.PUT,
+                url,
+                jsonObject,
+                response -> {
+                    Toast.makeText(requireContext(), "Member with id: " + memberId + " removed successfully.", Toast.LENGTH_SHORT).show();
+                },
+                error -> {
+                    Toast.makeText(requireContext(), "Failed to remove member. Please Try again.", Toast.LENGTH_SHORT).show();
+                }
         );
 
         VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);

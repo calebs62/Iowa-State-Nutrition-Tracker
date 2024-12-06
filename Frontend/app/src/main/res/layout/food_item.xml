@@ -82,7 +82,7 @@
                     style="@style/Widget.MaterialComponents.Button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
+                    android:visibility="gone"
                     android:text="Edit"
                     android:textColor="@color/white"
                     app:backgroundTint="@color/Iowa_State_Red" />
@@ -92,6 +92,8 @@
                     style="@style/Widget.MaterialComponents.Button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:visibility="gone"
                     android:text="Delete"
                     android:textColor="@color/white"
                     app:backgroundTint="@color/Iowa_State_Red" />
