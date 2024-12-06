@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UpdateProfilePictureActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.activities</a> &gt; <span class="el_source">UpdateProfilePictureActivity.java</span></div><h1>UpdateProfilePictureActivity.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.activities;
+
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.nfc.Tag;
+import android.os.Build;
+import android.os.Bundle;
+import android.util.Base64;
+import android.util.Log;
+import android.widget.ImageView;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.bumptech.glide.Glide;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
+import com.example.a1_jubair_6_frontend.utils.ImageUtils;
+
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+
+<span class="nc" id="L41">public class UpdateProfilePictureActivity extends AppCompatActivity {</span>
+    private static final String TAG = &quot;UpdateProfilePicture&quot;;
+    private static final int REQUEST_PERMISSION = 100;
+    private static final int MAX_IMAGE_SIZE = 500 * 1024; //500KB
+
+    private ImageView profilePicture;
+    private ImageView backArrow;
+    private Uri selectedImageUri;
+    private ProfileDataManager profileDataManager;
+
+
+<span class="nc" id="L52">    private final ActivityResultLauncher&lt;Intent&gt; galleryLauncher = registerForActivityResult(</span>
+            new ActivityResultContracts.StartActivityForResult(),
+            result -&gt; {
+<span class="nc bnc" id="L55" title="All 4 branches missed.">                if(result.getResultCode() == RESULT_OK &amp;&amp; result.getData() != null){</span>
+<span class="nc" id="L56">                    handleImageSelection(result.getData().getData());</span>
+                }
+<span class="nc" id="L58">            }</span>
+    );
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L63">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L64">        setContentView(R.layout.activity_update_profile_picture);</span>
+
+<span class="nc" id="L66">        profileDataManager = new ProfileDataManager(this);</span>
+<span class="nc" id="L67">        initializeViews();</span>
+<span class="nc" id="L68">        setupClickListeners();</span>
+<span class="nc" id="L69">    }</span>
+
+    private void initializeViews() {
+<span class="nc" id="L72">        backArrow = findViewById(R.id.backArrow);</span>
+<span class="nc" id="L73">        profilePicture = findViewById(R.id.ivProfilePic);</span>
+
+        // Load the current profile picture if it exists
+<span class="nc" id="L76">        String currentPictureUrl = getIntent().getStringExtra(&quot;currentPictureUri&quot;);</span>
+<span class="nc bnc" id="L77" title="All 4 branches missed.">        if(currentPictureUrl != null &amp;&amp; !currentPictureUrl.isEmpty())</span>
+<span class="nc" id="L78">            loadProfileImage(currentPictureUrl);</span>
+<span class="nc" id="L79">    }</span>
+
+    private void setupClickListeners() {
+<span class="nc" id="L82">        backArrow.setOnClickListener(v -&gt; finish());</span>
+<span class="nc" id="L83">        findViewById(R.id.btnUpdateProfile).setOnClickListener(v -&gt; checkPermissionAndShowOptions());</span>
+<span class="nc" id="L84">    }</span>
+
+    private void checkPermissionAndShowOptions() {
+<span class="nc" id="L87">        String permission = Manifest.permission.READ_MEDIA_IMAGES;</span>
+
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        if(ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED)</span>
+<span class="nc" id="L90">            ActivityCompat.requestPermissions(this, new String[]{permission}, REQUEST_PERMISSION);</span>
+        else
+<span class="nc" id="L92">            showImageOptions();</span>
+<span class="nc" id="L93">    }</span>
+
+    private void showImageOptions() {
+<span class="nc" id="L96">        new AlertDialog.Builder(this)</span>
+<span class="nc" id="L97">                .setTitle(&quot;Update Profile Picture&quot;)</span>
+<span class="nc" id="L98">                .setItems(new String[]{&quot;Upload from Gallery&quot;}, (dialog, which) -&gt; openGallery())</span>
+<span class="nc" id="L99">                .show();</span>
+<span class="nc" id="L100">    }</span>
+
+    private void openGallery() {
+<span class="nc" id="L103">        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);</span>
+<span class="nc" id="L104">        intent.setType(&quot;image/*&quot;);</span>
+<span class="nc" id="L105">        galleryLauncher.launch(intent);</span>
+<span class="nc" id="L106">    }</span>
+
+    private void handleImageSelection(Uri imageUri){
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        if (imageUri != null){</span>
+<span class="nc" id="L110">            selectedImageUri = imageUri;</span>
+<span class="nc" id="L111">            loadProfileImage(imageUri.toString());</span>
+<span class="nc" id="L112">            uploadProfilePicture();</span>
+        }
+<span class="nc" id="L114">    }</span>
+
+    private void loadProfileImage(String imageUri) {
+<span class="nc" id="L117">        Glide.with(this)</span>
+<span class="nc" id="L118">                .load(imageUri)</span>
+<span class="nc" id="L119">                .circleCrop()</span>
+<span class="nc" id="L120">                .placeholder(R.drawable.profile_icon)</span>
+<span class="nc" id="L121">                .error(R.drawable.circular_image_background)</span>
+<span class="nc" id="L122">                .into(profilePicture);</span>
+<span class="nc" id="L123">    }</span>
+
+    private void uploadProfilePicture() {
+        try {
+<span class="nc" id="L127">            String base64Image = ImageUtils.processAndEncodeImage(this, selectedImageUri);</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">            if(base64Image == null) return;</span>
+
+<span class="nc bnc" id="L130" title="All 2 branches missed.">            String logPreview = base64Image.length() &gt; 100</span>
+<span class="nc" id="L131">                    ? base64Image.substring(0, 100) + &quot;...&quot;</span>
+<span class="nc" id="L132">                    : base64Image;</span>
+
+<span class="nc" id="L134">            Log.d(TAG, &quot;Base64 image length: &quot; + base64Image.length() + &quot;, Preview: &quot; + logPreview);</span>
+
+<span class="nc" id="L136">            JSONObject requestBody = new JSONObject();</span>
+<span class="nc" id="L137">            requestBody.put(&quot;img&quot;, base64Image);</span>
+
+<span class="nc" id="L139">            String url = AppConstants.SERVER_URL + &quot;/user/update/&quot; + profileDataManager.getId();</span>
+
+<span class="nc" id="L141">            JsonObjectRequest request = new JsonObjectRequest(</span>
+                    Request.Method.PUT,
+                    url,
+                    requestBody,
+                    response -&gt; {
+<span class="nc" id="L146">                        Toast.makeText(this, &quot;Profile picture updated sucessfully&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L147">                        setSucessResult();</span>
+<span class="nc" id="L148">                    },</span>
+                    error -&gt; {
+<span class="nc" id="L150">                        Log.e(TAG, &quot;Upload error: &quot; + error.toString());</span>
+<span class="nc" id="L151">                        Toast.makeText(this, &quot;Failed to update profile picture&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L152">                    }</span>
+<span class="nc" id="L153">            ){</span>
+                @Override
+                public Map&lt;String, String&gt; getHeaders(){
+<span class="nc" id="L156">                    Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L157">                    headers.put(&quot;Content-Type&quot;, &quot;application/json&quot;);</span>
+<span class="nc" id="L158">                    return headers;</span>
+                }
+            };
+
+<span class="nc" id="L162">            VolleySingleton.getInstance(this).addToRequestQueue(request);</span>
+<span class="nc" id="L163">        } catch (Exception e) {</span>
+<span class="nc" id="L164">            Log.e(TAG, &quot;Error preparing upload: &quot; + e.getMessage());</span>
+<span class="nc" id="L165">            Toast.makeText(this, &quot;Error preparing image upload&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L166">        }</span>
+<span class="nc" id="L167">    }</span>
+
+    private void setSucessResult() {
+<span class="nc" id="L170">        Intent resultIntent = new Intent();</span>
+<span class="nc" id="L171">        resultIntent.putExtra(&quot;imageUri&quot;, selectedImageUri.toString());</span>
+<span class="nc" id="L172">        setResult(RESULT_OK, resultIntent);</span>
+<span class="nc" id="L173">        finish();</span>
+<span class="nc" id="L174">    }</span>
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults){
+<span class="nc" id="L178">        super.onRequestPermissionsResult(requestCode, permissions, grantResults);</span>
+<span class="nc bnc" id="L179" title="All 6 branches missed.">        if (requestCode == REQUEST_PERMISSION &amp;&amp; grantResults.length &gt; 0 &amp;&amp; grantResults[0] == PackageManager.PERMISSION_GRANTED)</span>
+<span class="nc" id="L180">            showImageOptions();</span>
+        else
+<span class="nc" id="L182">            Toast.makeText(this, &quot;Permission required to access gallery&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L183">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

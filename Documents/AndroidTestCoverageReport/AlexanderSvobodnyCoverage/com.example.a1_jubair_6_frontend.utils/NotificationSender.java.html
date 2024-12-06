@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NotificationSender.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.utils</a> &gt; <span class="el_source">NotificationSender.java</span></div><h1>NotificationSender.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.utils;
+
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.telephony.SmsManager;
+import android.util.Log;
+
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.example.a1_jubair_6_frontend.models.Notification;
+import com.example.a1_jubair_6_frontend.models.NotificationSettings;
+
+import java.util.ArrayList;
+
+public class NotificationSender {
+    private Context context;
+    private static final String TAG = &quot;NotificationSender&quot;;
+
+    public static final String TYPE_SYSTEM = &quot;SYSTEM&quot;;
+    public static final String TYPE_TIME = &quot;TIME&quot;;
+    public static final String TYPE_SMS = &quot;SMS&quot;;
+    public static final String TYPE_EMAIL = &quot;EMAIL&quot;;
+
+    private ProfileDataManager profileDataManager;
+
+<span class="nc" id="L26">    public NotificationSender(Context context) {</span>
+<span class="nc" id="L27">        this.context = context;</span>
+<span class="nc" id="L28">        profileDataManager = new ProfileDataManager(context);</span>
+<span class="nc" id="L29">    }</span>
+
+    public void handleNotification(Notification notification, NotificationSettings settings) {
+<span class="nc bnc" id="L32" title="All 3 branches missed.">        switch (notification.getType()) {</span>
+            case TYPE_SMS:
+<span class="nc bnc" id="L34" title="All 2 branches missed.">                if (settings.isSmsNotification()) {</span>
+<span class="nc" id="L35">                    sendSMS(notification);</span>
+                }
+                break;
+            case TYPE_EMAIL:
+<span class="nc bnc" id="L39" title="All 2 branches missed.">                if (settings.isEmailNotification()) {</span>
+<span class="nc" id="L40">                    sendEmail(notification);</span>
+                }
+                break;
+        }
+<span class="nc" id="L44">    }</span>
+
+    private void sendSMS(Notification notification) {
+<span class="nc" id="L47">        String phoneNumber = profileDataManager.getPhoneNumber();</span>
+<span class="nc bnc" id="L48" title="All 4 branches missed.">        if (phoneNumber == null || phoneNumber.isEmpty()) {</span>
+<span class="nc" id="L49">            Log.e(TAG, &quot;No phone number available for SMS&quot;);</span>
+<span class="nc" id="L50">            return;</span>
+        }
+
+        try {
+<span class="nc" id="L54">            SmsManager smsManager = SmsManager.getDefault();</span>
+<span class="nc" id="L55">            ArrayList&lt;String&gt; parts = smsManager.divideMessage(notification.getBody());</span>
+<span class="nc" id="L56">            smsManager.sendMultipartTextMessage(phoneNumber, null, parts, null, null);</span>
+<span class="nc" id="L57">            Log.d(TAG, &quot;SMS sent successfully: &quot; + notification.getHeader());</span>
+<span class="nc" id="L58">        } catch (Exception e) {</span>
+<span class="nc" id="L59">            Log.e(TAG, &quot;Failed to send SMS: &quot; + e.getMessage());</span>
+<span class="nc" id="L60">            e.printStackTrace();</span>
+<span class="nc" id="L61">        }</span>
+<span class="nc" id="L62">    }</span>
+
+    private void sendEmail(Notification notification) {
+<span class="nc" id="L65">        String email = profileDataManager.getEmail();</span>
+<span class="nc bnc" id="L66" title="All 4 branches missed.">        if (email == null || email.isEmpty()) {</span>
+<span class="nc" id="L67">            Log.e(TAG, &quot;No email address available&quot;);</span>
+<span class="nc" id="L68">            return;</span>
+        }
+
+        try {
+<span class="nc" id="L72">            Intent emailIntent = new Intent(Intent.ACTION_SENDTO);</span>
+<span class="nc" id="L73">            emailIntent.setData(Uri.parse(&quot;mailto:&quot;));</span>
+<span class="nc" id="L74">            emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{email});</span>
+<span class="nc" id="L75">            emailIntent.putExtra(Intent.EXTRA_SUBJECT, notification.getHeader());</span>
+<span class="nc" id="L76">            emailIntent.putExtra(Intent.EXTRA_TEXT, notification.getBody());</span>
+<span class="nc" id="L77">            emailIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);</span>
+
+<span class="nc bnc" id="L79" title="All 2 branches missed.">            if (emailIntent.resolveActivity(context.getPackageManager()) != null) {</span>
+<span class="nc" id="L80">                context.startActivity(emailIntent);</span>
+<span class="nc" id="L81">                Log.d(TAG, &quot;Email intent launched successfully&quot;);</span>
+            } else {
+<span class="nc" id="L83">                Log.e(TAG, &quot;No email app available&quot;);</span>
+            }
+<span class="nc" id="L85">        } catch (Exception e) {</span>
+<span class="nc" id="L86">            Log.e(TAG, &quot;Failed to launch email intent: &quot; + e.getMessage());</span>
+<span class="nc" id="L87">            e.printStackTrace();</span>
+<span class="nc" id="L88">        }</span>
+<span class="nc" id="L89">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

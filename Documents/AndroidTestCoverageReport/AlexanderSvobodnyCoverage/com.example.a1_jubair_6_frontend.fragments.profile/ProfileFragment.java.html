@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProfileFragment.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.fragments.profile</a> &gt; <span class="el_source">ProfileFragment.java</span></div><h1>ProfileFragment.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.fragments.profile;
+
+import static java.lang.String.*;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.net.Uri;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.AnimationUtils;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+import com.bumptech.glide.Glide;
+import com.example.a1_jubair_6_frontend.activities.AdminPanelFragment;
+import com.example.a1_jubair_6_frontend.activities.LoginSignupActivity;
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.models.User;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
+import com.example.a1_jubair_6_frontend.activities.*;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+/**
+ * Fragment representing the user's profile information, including their picture, weight, height,
+ * and settings options. This fragment allows users to view and update their profile data, change
+ * profile picture, and navigate to different sections like personal information, security settings,
+ * and notifications.
+ *
+ * @author Caleb Sanchez, Alexander Svobodny
+ */
+<span class="fc" id="L52">public class ProfileFragment extends Fragment {</span>
+
+    private View rootView;
+    ImageView profilePicture;
+    TextView username;
+    Button logout;
+    TextView weight;
+    TextView height;
+    private Uri profilePictureUri;
+    private ProfileDataManager profileDataManager;
+<span class="fc" id="L62">    boolean isAdmin = false;</span>
+
+    /**
+     * Launcher for updating the profile picture.
+     */
+<span class="fc" id="L67">    private final ActivityResultLauncher&lt;Intent&gt; updateProfilePictureLauncher =</span>
+<span class="fc" id="L68">            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -&gt; {</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">                if (result.getResultCode() == AppCompatActivity.RESULT_OK) {</span>
+<span class="nc" id="L70">                    Intent data = result.getData();</span>
+<span class="nc bnc" id="L71" title="All 4 branches missed.">                    if (data != null &amp;&amp; data.hasExtra(&quot;imageUri&quot;)) {</span>
+<span class="nc" id="L72">                        String uriString = data.getStringExtra(&quot;imageUri&quot;);</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">                        if (uriString != null) {</span>
+<span class="nc" id="L74">                            profilePictureUri = Uri.parse(uriString);</span>
+<span class="nc" id="L75">                            profileDataManager.saveProfileImageUri(profilePictureUri);</span>
+<span class="nc" id="L76">                            updateProfilePicture();</span>
+                        }
+                    }
+                }
+<span class="nc" id="L80">            });</span>
+
+    /**
+     * Initializes the fragment, sets up the profile data manager, and checks if the user is an admin.
+     *
+     * @param savedInstanceState the saved state of the fragment, if any.
+     */
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+<span class="fc" id="L89">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L90">        profileDataManager = new ProfileDataManager(requireContext());</span>
+<span class="fc" id="L91">        String accountType = profileDataManager.getAccountType();</span>
+<span class="pc bpc" id="L92" title="3 of 4 branches missed.">        isAdmin = accountType.equals(&quot;ADMINISTRATOR&quot;) || accountType.equals(&quot;CONTRIBUTOR&quot;);</span>
+<span class="fc" id="L93">    }</span>
+
+    /**
+     * Inflates the layout for this fragment.
+     *
+     * @param inflater the LayoutInflater object to inflate the layout.
+     * @param container the container in which the fragment will be placed.
+     * @param savedInstanceState the saved state of the fragment, if any.
+     * @return the inflated view of the fragment.
+     */
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+<span class="fc" id="L107">        rootView = inflater.inflate(R.layout.fragment_profile, container, false);</span>
+<span class="fc" id="L108">        return rootView;</span>
+    }
+
+    /**
+     * Sets up the profile information and handles UI interactions for logout and profile picture updates.
+     *
+     * @param view the root view of the fragment.
+     * @param savedInstancesState the saved state of the fragment, if any.
+     */
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstancesState) {
+<span class="fc" id="L119">        super.onViewCreated(view, savedInstancesState);</span>
+
+<span class="fc" id="L121">        setupMenuItems();</span>
+
+<span class="fc" id="L123">        profilePicture = view.findViewById(R.id.ivProfilePic);</span>
+<span class="fc" id="L124">        username = view.findViewById(R.id.tvName);</span>
+<span class="fc" id="L125">        weight = view.findViewById(R.id.tvWeight);</span>
+<span class="fc" id="L126">        height = view.findViewById(R.id.tvHeight);</span>
+
+<span class="fc" id="L128">        updateUserInfo();</span>
+
+<span class="fc" id="L130">        logout = view.findViewById(R.id.btnLogout);</span>
+<span class="fc" id="L131">        logout.setOnClickListener(new View.OnClickListener() {</span>
+            @Override
+            public void onClick(View view) {
+<span class="nc" id="L134">                String sessionToken = &quot;0:0:&quot; + profileDataManager.getId();</span>
+<span class="nc" id="L135">                String requestUrl = AppConstants.SERVER_URL + &quot;/logout&quot;;</span>
+<span class="nc" id="L136">                StringRequest logoutRequest = new StringRequest(</span>
+                        Request.Method.PUT,
+                        requestUrl,
+<span class="nc" id="L139">                        new Response.Listener&lt;String&gt;() {</span>
+                            @Override
+                            public void onResponse(String response) {
+<span class="nc" id="L142">                                Toast.makeText(getActivity(), response, Toast.LENGTH_SHORT).show();</span>
+
+<span class="nc bnc" id="L144" title="All 2 branches missed.">                                if (response.equals(&quot;Logout successful&quot;)) {</span>
+<span class="nc" id="L145">                                    Intent intent = new Intent(getActivity(), LoginSignupActivity.class);</span>
+<span class="nc" id="L146">                                    profileDataManager.clearUserData();</span>
+<span class="nc" id="L147">                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);</span>
+<span class="nc" id="L148">                                    startActivity(intent);</span>
+                                }
+<span class="nc" id="L150">                            }</span>
+                        },
+<span class="nc" id="L152">                        new Response.ErrorListener() {</span>
+                            @Override
+                            public void onErrorResponse(VolleyError error) {
+<span class="nc" id="L155">                                Log.e(&quot;Volley Error&quot;, &quot;Logout failed: &quot; + error.getMessage());</span>
+<span class="nc" id="L156">                                Toast.makeText(getActivity(), &quot;Logout failed. Please try again.&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L157">                            }</span>
+                        }
+<span class="nc" id="L159">                ) {</span>
+                    @Override
+                    public byte[] getBody() {
+<span class="nc" id="L162">                        return sessionToken.getBytes();</span>
+                    }
+
+                    @Override
+                    public String getBodyContentType() {
+<span class="nc" id="L167">                        return &quot;text/plain; charset=utf-8&quot;;</span>
+                    }
+                };
+<span class="nc" id="L170">                VolleySingleton.getInstance(getActivity()).addToRequestQueue(logoutRequest);</span>
+<span class="nc" id="L171">            }</span>
+        });
+
+        // Load saved profile picture if it exists
+<span class="fc" id="L175">        Uri savedUri = profileDataManager.getProfileImageUri();</span>
+<span class="pc bpc" id="L176" title="1 of 2 branches missed.">        if (savedUri != null) {</span>
+<span class="fc" id="L177">            profilePictureUri = savedUri;</span>
+<span class="fc" id="L178">            updateProfilePicture();</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">        } else if (getContext() != null) {</span>
+            // Load default image if no saved profile picture
+<span class="nc" id="L181">            Glide.with(getContext())</span>
+<span class="nc" id="L182">                    .load(R.drawable.circular_image_background)</span>
+<span class="nc" id="L183">                    .circleCrop()</span>
+<span class="nc" id="L184">                    .into(profilePicture);</span>
+        }
+
+<span class="fc" id="L187">        profilePicture.setOnClickListener(profilePictureView -&gt; {</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">            if (getActivity() != null) {</span>
+<span class="nc" id="L189">                Intent updateProfileIntent = new Intent(getActivity(), UpdateProfilePictureActivity.class);</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">                if (profilePictureUri != null) {</span>
+<span class="nc" id="L191">                    updateProfileIntent.putExtra(&quot;currentPictureUri&quot;, profilePictureUri.toString());</span>
+                }
+<span class="nc" id="L193">                updateProfilePictureLauncher.launch(updateProfileIntent);</span>
+            }
+<span class="nc" id="L195">        });</span>
+<span class="fc" id="L196">    }</span>
+
+    /**
+     * Updates the user's profile information, including full name, weight, and height.
+     */
+    private void updateUserInfo() {
+<span class="fc" id="L202">        String fullName = profileDataManager.getFirstname() + &quot; &quot; + profileDataManager.getLastname();</span>
+<span class="fc" id="L203">        username.setText(fullName);</span>
+
+<span class="fc" id="L205">        int weightVal = profileDataManager.getWeight();</span>
+<span class="pc bpc" id="L206" title="1 of 2 branches missed.">        if (weightVal &gt; -1)</span>
+<span class="fc" id="L207">            weight.setText(String.format(&quot;Height\n%d lb&quot;, weightVal));</span>
+
+<span class="fc" id="L209">        int heightVal = profileDataManager.getHeight();</span>
+<span class="pc bpc" id="L210" title="1 of 2 branches missed.">        if (heightVal &gt; -1)</span>
+<span class="fc" id="L211">            height.setText(String.format(&quot;Weight\n%d ft&quot;, heightVal));</span>
+<span class="fc" id="L212">    }</span>
+
+    /**
+     * Sets up the menu items in the profile section, including personal info, security settings, and notifications.
+     * If the user is an admin, the admin panel option is also added.
+     */
+    private void setupMenuItems() {
+<span class="fc" id="L219">        setupMenuItem(R.id.personalInfo, R.drawable.profile_icon, &quot;Personal Information&quot;);</span>
+<span class="fc" id="L220">        setupMenuItem(R.id.passwordSecurity, R.drawable.security_icon, &quot;Password &amp; Security&quot;);</span>
+<span class="fc" id="L221">        setupMenuItem(R.id.notifications, R.drawable.notifications_icon, &quot;Notifications&quot;);</span>
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">        if (isAdmin)</span>
+<span class="fc" id="L223">            setupMenuItem(R.id.adminPanel, R.drawable.menu_icon, &quot;Admin Panel&quot;);</span>
+<span class="fc" id="L224">    }</span>
+
+    /**
+     * Sets up an individual menu item, including icon, title, and click event.
+     *
+     * @param itemId the ID of the menu item.
+     * @param iconResId the resource ID of the icon.
+     * @param title the title of the menu item.
+     */
+    private void setupMenuItem(int itemId, int iconResId, String title) {
+<span class="fc" id="L234">        View item = rootView.findViewById(itemId);</span>
+<span class="fc" id="L235">        ImageView icon = item.findViewById(R.id.icon);</span>
+<span class="fc" id="L236">        ImageView rightArrow = item.findViewById(R.id.rightArrow);</span>
+<span class="fc" id="L237">        TextView titleView = item.findViewById(R.id.title);</span>
+
+<span class="fc" id="L239">        icon.setImageResource(iconResId);</span>
+<span class="fc" id="L240">        titleView.setText(title);</span>
+<span class="fc bfc" id="L241" title="All 2 branches covered.">        if (itemId == R.id.adminPanel) {</span>
+<span class="fc" id="L242">            item.setVisibility(View.VISIBLE);</span>
+        }
+
+<span class="fc" id="L245">        item.setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L246">            v.startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.click_animation));</span>
+<span class="fc" id="L247">            titleView.setTextColor(getResources().getColor(R.color.Iowa_State_Red));</span>
+<span class="fc" id="L248">            icon.setColorFilter(getResources().getColor(R.color.Iowa_State_Red));</span>
+<span class="fc" id="L249">            rightArrow.setColorFilter(getResources().getColor(R.color.Iowa_State_Red));</span>
+
+<span class="pc bpc" id="L251" title="1 of 2 branches missed.">            if (itemId == R.id.personalInfo) {</span>
+<span class="nc" id="L252">                navigateToSubFragment(new PersonalInfoFragment());</span>
+<span class="pc bpc" id="L253" title="1 of 2 branches missed.">            } else if (itemId == R.id.passwordSecurity) {</span>
+<span class="nc" id="L254">                navigateToSubFragment(new PasswordAndSecurityFragment());</span>
+<span class="pc bpc" id="L255" title="1 of 2 branches missed.">            } else if (itemId == R.id.notifications) {</span>
+<span class="fc" id="L256">                navigateToSubFragment(new NotificationsFragment());</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">            } else if (itemId == R.id.adminPanel) {</span>
+<span class="nc" id="L258">                navigateToSubFragment(new AdminPanelFragment());</span>
+            } else {
+<span class="nc" id="L260">                Log.e(&quot;Navigation Error&quot;, &quot;Could not navigate from profile page!&quot;);</span>
+            }
+<span class="fc" id="L262">        });</span>
+<span class="fc" id="L263">    }</span>
+
+    /**
+     * Navigates to a sub-fragment.
+     *
+     * @param fragment the fragment to navigate to.
+     */
+    private void navigateToSubFragment(Fragment fragment) {
+<span class="pc bpc" id="L271" title="1 of 2 branches missed.">        if (getActivity() instanceof BaseActivity) {</span>
+<span class="fc" id="L272">            ((BaseActivity) getActivity()).loadFragment(fragment, true);  // True to add to back stack</span>
+        }
+<span class="fc" id="L274">    }</span>
+
+    /**
+     * Updates the profile picture displayed in the profile fragment.
+     */
+    private void updateProfilePicture() {
+<span class="pc bpc" id="L280" title="1 of 2 branches missed.">        if (getContext() == null) return;</span>
+
+<span class="fc" id="L282">        Glide.with(getContext())</span>
+<span class="fc" id="L283">                .load(profilePictureUri)</span>
+<span class="fc" id="L284">                .placeholder(R.drawable.circular_image_background)</span>
+<span class="fc" id="L285">                .error(R.drawable.circular_image_background)</span>
+<span class="fc" id="L286">                .circleCrop()</span>
+<span class="fc" id="L287">                .into(profilePicture);</span>
+<span class="fc" id="L288">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

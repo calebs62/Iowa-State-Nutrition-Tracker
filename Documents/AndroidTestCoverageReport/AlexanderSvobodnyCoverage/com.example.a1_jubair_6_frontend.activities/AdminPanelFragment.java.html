@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdminPanelFragment.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.activities</a> &gt; <span class="el_source">AdminPanelFragment.java</span></div><h1>AdminPanelFragment.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.activities;
+
+import android.app.AlertDialog;
+import android.os.Bundle;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.adapters.FoodAdapter;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.fragments.profile.PasswordAndSecurityFragment;
+import com.example.a1_jubair_6_frontend.models.FoodItem;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.gson.Gson;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+<span class="nc" id="L40">public class AdminPanelFragment extends Fragment {</span>
+    private RecyclerView foodList;
+    private FoodAdapter foodAdapter;
+    private List&lt;FoodItem&gt; foodItemList;
+<span class="nc" id="L44">    private Gson gson = new Gson();</span>
+    private View adminToolsContainer;
+<span class="nc" id="L46">    private boolean isAdmin = true;</span>
+
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L51">        super.onCreate(savedInstanceState);</span>
+
+<span class="nc" id="L53">        foodItemList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L54">    }</span>
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+<span class="nc" id="L60">        return inflater.inflate(R.layout.fragment_admin_panel, container, false);</span>
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstancesState){
+<span class="nc" id="L65">        super.onViewCreated(view, savedInstancesState);</span>
+
+<span class="nc" id="L67">        ImageView backArrow = view.findViewById(R.id.backArrow);</span>
+<span class="nc" id="L68">        backArrow.setOnClickListener(v -&gt; {</span>
+            // Pop the back stack instead of creating a new fragment
+<span class="nc bnc" id="L70" title="All 2 branches missed.">            if (getParentFragmentManager().getBackStackEntryCount() &gt; 0) {</span>
+<span class="nc" id="L71">                getParentFragmentManager().popBackStack();</span>
+            }
+<span class="nc" id="L73">        });</span>
+
+<span class="nc" id="L75">        foodList = view.findViewById(R.id.foodList);</span>
+<span class="nc" id="L76">        foodList.setLayoutManager(new LinearLayoutManager(requireContext()));</span>
+
+<span class="nc" id="L78">        foodAdapter = new FoodAdapter(foodItemList, isAdmin, false);</span>
+<span class="nc" id="L79">        foodList.setAdapter(foodAdapter);</span>
+
+<span class="nc" id="L81">        int bottomNavHeight = getResources().getDimensionPixelSize(R.dimen.bottom_nav_height);</span>
+<span class="nc" id="L82">        foodList.setPadding(0, 0, 0, bottomNavHeight);</span>
+
+<span class="nc" id="L84">        Button btnAddFood = view.findViewById(R.id.btnAddFood);</span>
+<span class="nc bnc" id="L85" title="All 4 branches missed.">        if (isAdmin &amp;&amp; btnAddFood != null) {</span>
+<span class="nc" id="L86">            btnAddFood.setOnClickListener(v -&gt; showAddDialog());</span>
+        }
+
+<span class="nc" id="L89">        getAllFoodItems();</span>
+<span class="nc" id="L90">    }</span>
+
+    private void getAllFoodItems() {
+<span class="nc" id="L93">        String url = AppConstants.SERVER_URL + &quot;/item&quot;;</span>
+
+<span class="nc" id="L95">        JsonArrayRequest request = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+                response -&gt; {
+<span class="nc" id="L100">                    foodItemList.clear();</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">                    for (int i = 0; i &lt; response.length(); i++){</span>
+                        try{
+<span class="nc" id="L103">                            FoodItem item = gson.fromJson(response.getJSONObject(i).toString(), FoodItem.class);</span>
+<span class="nc" id="L104">                            foodItemList.add(item);</span>
+                        }
+<span class="nc" id="L106">                        catch (Exception e){</span>
+<span class="nc" id="L107">                            Log.e(&quot;Response Error&quot;, String.valueOf(e.getMessage()));</span>
+<span class="nc" id="L108">                        }</span>
+                    }
+<span class="nc" id="L110">                    foodAdapter.notifyDataSetChanged();</span>
+<span class="nc" id="L111">                },</span>
+                error -&gt;{
+<span class="nc" id="L113">                    Log.e(&quot;Request Error&quot;, String.valueOf(error.getMessage()));</span>
+<span class="nc" id="L114">                }</span>
+        );
+
+<span class="nc" id="L117">        VolleySingleton.getInstance(getContext()).addToRequestQueue(request);</span>
+<span class="nc" id="L118">    }</span>
+
+    private void getFoodItemById(int id) {
+<span class="nc" id="L121">        String url = AppConstants.SERVER_URL + &quot;/item/&quot; + id;</span>
+
+<span class="nc" id="L123">        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,</span>
+                response -&gt; {
+<span class="nc" id="L125">                    FoodItem item = gson.fromJson(response.toString(), FoodItem.class);</span>
+                    //TODO: Do something with the item, this will probably be used for the search bar
+<span class="nc" id="L127">                },</span>
+                error -&gt; {
+<span class="nc" id="L129">                    Log.e(&quot;Request Error&quot;, String.valueOf(error.getMessage()));</span>
+<span class="nc" id="L130">                }</span>
+        );
+<span class="nc" id="L132">    }</span>
+
+    private void createFoodItem(FoodItem foodItem) throws JSONException {
+<span class="nc" id="L135">        String url = AppConstants.SERVER_URL + &quot;/item&quot;;</span>
+
+<span class="nc" id="L137">        JSONObject jsonBody = new JSONObject(gson.toJson(foodItem));</span>
+
+<span class="nc" id="L139">        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, jsonBody,</span>
+                response -&gt; {
+<span class="nc" id="L141">                    Toast.makeText(requireContext(), &quot;Successfully created food item&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L142">                    FoodItem createdItem = gson.fromJson(response.toString(), FoodItem.class);</span>
+<span class="nc" id="L143">                    foodItemList.add(createdItem);</span>
+<span class="nc" id="L144">                    foodAdapter.notifyDataSetChanged();</span>
+<span class="nc" id="L145">                },</span>
+                error -&gt; {
+<span class="nc" id="L147">                    Toast.makeText(requireContext(), &quot;Error creating food item [&quot; + error.networkResponse.statusCode + &quot;]&quot;, Toast.LENGTH_SHORT);</span>
+<span class="nc" id="L148">                    Log.e(&quot;Request Error&quot;, String.valueOf(error.getMessage()));</span>
+<span class="nc" id="L149">                }</span>
+        );
+<span class="nc" id="L151">        VolleySingleton.getInstance(getContext()).addToRequestQueue(request);</span>
+<span class="nc" id="L152">    }</span>
+
+    private void showAddDialog() {
+<span class="nc" id="L155">        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());</span>
+<span class="nc" id="L156">        View dialogView = getLayoutInflater().inflate(R.layout.food_item_dialog, null);</span>
+
+<span class="nc" id="L158">        TextInputEditText nameInput = dialogView.findViewById(R.id.editTextName);</span>
+<span class="nc" id="L159">        TextInputEditText descriptionInput = dialogView.findViewById(R.id.editTextDescription);</span>
+<span class="nc" id="L160">        TextInputEditText servingSizeInput = dialogView.findViewById(R.id.editTextServingSize);</span>
+<span class="nc" id="L161">        TextInputEditText caloriesInput = dialogView.findViewById(R.id.editTextCalories);</span>
+<span class="nc" id="L162">        TextInputEditText totalFatInput = dialogView.findViewById(R.id.editTextTotalFat);</span>
+<span class="nc" id="L163">        TextInputEditText sodiumInput = dialogView.findViewById(R.id.editTextSodium);</span>
+<span class="nc" id="L164">        TextInputEditText carbohydrateInput = dialogView.findViewById(R.id.editTextCarbohydrate);</span>
+<span class="nc" id="L165">        TextInputEditText proteinInput = dialogView.findViewById(R.id.editTextProtein);</span>
+
+<span class="nc" id="L167">        AlertDialog dialog = builder</span>
+<span class="nc" id="L168">                .setView(dialogView)</span>
+<span class="nc" id="L169">                .setTitle(&quot;Add Food Item&quot;)</span>
+<span class="nc" id="L170">                .setPositiveButton(&quot;Add&quot;, null)</span>
+<span class="nc" id="L171">                .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="nc" id="L172">                .create();</span>
+
+<span class="nc" id="L174">        dialog.setOnShowListener(dialogInterface -&gt; {</span>
+<span class="nc" id="L175">            Button addButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);</span>
+<span class="nc" id="L176">            addButton.setOnClickListener(v -&gt; {</span>
+                try {
+<span class="nc" id="L178">                    FoodItem newItem = new FoodItem(</span>
+<span class="nc" id="L179">                            nameInput.getText().toString(),</span>
+<span class="nc" id="L180">                            Integer.parseInt(caloriesInput.getText().toString()),</span>
+<span class="nc" id="L181">                            Integer.parseInt(totalFatInput.getText().toString()),</span>
+<span class="nc" id="L182">                            Integer.parseInt(sodiumInput.getText().toString()),</span>
+<span class="nc" id="L183">                            Integer.parseInt(carbohydrateInput.getText().toString()),</span>
+<span class="nc" id="L184">                            Integer.parseInt(proteinInput.getText().toString()),</span>
+<span class="nc" id="L185">                            servingSizeInput.getText().toString(),</span>
+<span class="nc" id="L186">                            descriptionInput.getText().toString()</span>
+                    );
+
+<span class="nc" id="L189">                    createFoodItem(newItem);</span>
+<span class="nc" id="L190">                    dialog.dismiss();</span>
+<span class="nc" id="L191">                } catch (NumberFormatException e) {</span>
+<span class="nc" id="L192">                    Toast.makeText(requireContext(), &quot;Please fill all numeric fields correctly&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L193">                } catch (JSONException e) {</span>
+<span class="nc" id="L194">                    Toast.makeText(requireContext(), &quot;Error creating food item&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L195">                }</span>
+<span class="nc" id="L196">            });</span>
+<span class="nc" id="L197">        });</span>
+
+<span class="nc" id="L199">        dialog.show();</span>
+
+<span class="nc" id="L201">        TextWatcher textWatcher = new TextWatcher() {</span>
+            @Override
+<span class="nc" id="L203">            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}</span>
+
+            @Override
+<span class="nc" id="L206">            public void onTextChanged(CharSequence s, int start, int before, int count) {}</span>
+
+            @Override
+            public void afterTextChanged(Editable s) {
+<span class="nc" id="L210">                Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);</span>
+<span class="nc" id="L211">                positiveButton.setEnabled(</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">                        !nameInput.getText().toString().trim().isEmpty() &amp;&amp;</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">                                !servingSizeInput.getText().toString().trim().isEmpty() &amp;&amp;</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">                                !caloriesInput.getText().toString().trim().isEmpty() &amp;&amp;</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">                                !totalFatInput.getText().toString().trim().isEmpty() &amp;&amp;</span>
+<span class="nc bnc" id="L216" title="All 2 branches missed.">                                !sodiumInput.getText().toString().trim().isEmpty() &amp;&amp;</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">                                !carbohydrateInput.getText().toString().trim().isEmpty() &amp;&amp;</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">                                !proteinInput.getText().toString().trim().isEmpty()</span>
+                );
+<span class="nc" id="L220">            }</span>
+        };
+
+<span class="nc" id="L223">        nameInput.addTextChangedListener(textWatcher);</span>
+<span class="nc" id="L224">        servingSizeInput.addTextChangedListener(textWatcher);</span>
+<span class="nc" id="L225">        caloriesInput.addTextChangedListener(textWatcher);</span>
+<span class="nc" id="L226">        totalFatInput.addTextChangedListener(textWatcher);</span>
+<span class="nc" id="L227">        sodiumInput.addTextChangedListener(textWatcher);</span>
+<span class="nc" id="L228">        carbohydrateInput.addTextChangedListener(textWatcher);</span>
+<span class="nc" id="L229">        proteinInput.addTextChangedListener(textWatcher);</span>
+<span class="nc" id="L230">    }</span>
+
+
+    public void goBack(){
+<span class="nc" id="L234">        Fragment adminPanelFragment = new AdminPanelFragment();</span>
+
+<span class="nc" id="L236">        getParentFragmentManager().beginTransaction()</span>
+<span class="nc" id="L237">                .setCustomAnimations(R.anim.slide_in_right,</span>
+                        R.anim.slide_out_right,
+                        R.anim.slide_in_left,
+                        R.anim.slide_out_left)
+<span class="nc" id="L241">                .replace(R.id.container, adminPanelFragment)</span>
+<span class="nc" id="L242">                .addToBackStack(null)</span>
+<span class="nc" id="L243">                .commit();</span>
+<span class="nc" id="L244">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

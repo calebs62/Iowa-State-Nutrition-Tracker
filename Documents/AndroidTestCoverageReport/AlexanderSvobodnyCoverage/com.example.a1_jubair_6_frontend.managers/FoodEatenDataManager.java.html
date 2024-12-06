@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FoodEatenDataManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.managers</a> &gt; <span class="el_source">FoodEatenDataManager.java</span></div><h1>FoodEatenDataManager.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.managers;
+
+import android.content.Context;
+import android.util.Log;
+
+import com.android.volley.NetworkResponse;
+import com.android.volley.ParseError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.toolbox.HttpHeaderParser;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.JsonRequest;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.models.FoodEaten;
+import com.example.a1_jubair_6_frontend.models.FoodItem;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonParseException;
+
+import org.json.JSONObject;
+
+import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
+
+public class FoodEatenDataManager {
+    private static final String TAG = &quot;FoodEatenDataManager&quot;;
+    private final Context context;
+    private final ProfileDataManager profileDataManager;
+    private final Gson gson;
+    private List&lt;FoodEaten&gt; foodEatenList;
+
+    public interface FoodEatenCallback {
+        void onSuccess();
+        void onError(String message);
+    }
+
+    public interface FoodEatenListCallback {
+        void onSuccess(List&lt;FoodEaten&gt; foodEatenList);
+        void onError(String message);
+    }
+
+<span class="fc" id="L50">    public FoodEatenDataManager(Context context) {</span>
+<span class="fc" id="L51">        this.context = context;</span>
+<span class="fc" id="L52">        this.profileDataManager = new ProfileDataManager(context);</span>
+
+<span class="fc" id="L54">        this.gson = new GsonBuilder()</span>
+<span class="fc" id="L55">                .registerTypeAdapter(Date.class, (JsonDeserializer&lt;Date&gt;) (json, typeOfT, jsonContext) -&gt; {</span>
+                    try {
+<span class="nc bnc" id="L57" title="All 2 branches missed.">                        if (json.isJsonNull()) {</span>
+<span class="nc" id="L58">                            return null;</span>
+                        }
+<span class="nc" id="L60">                        String dateStr = json.getAsString();</span>
+<span class="nc" id="L61">                        Date parsedDate = FoodEaten.parseDate(dateStr);</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">                        if (parsedDate == null) {</span>
+<span class="nc" id="L63">                            throw new JsonParseException(&quot;Unable to parse date: &quot; + dateStr);</span>
+                        }
+<span class="nc" id="L65">                        return parsedDate;</span>
+<span class="nc" id="L66">                    } catch (Exception e) {</span>
+<span class="nc" id="L67">                        e.printStackTrace();</span>
+<span class="nc" id="L68">                        throw new JsonParseException(&quot;Error parsing date&quot;, e);</span>
+                    }
+                })
+<span class="fc" id="L71">                .create();</span>
+
+<span class="fc" id="L73">        this.foodEatenList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L74">    }</span>
+
+    public void addFoodEaten(FoodItem foodItem, int servings, FoodEatenCallback callback) {
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        if (profileDataManager.getId() == -1) {</span>
+<span class="nc" id="L78">            callback.onError(&quot;User not logged in&quot;);</span>
+<span class="nc" id="L79">            return;</span>
+        }
+
+<span class="nc" id="L82">        String url = AppConstants.SERVER_URL + &quot;/eaten&quot;;</span>
+
+        try {
+<span class="nc" id="L85">            JSONObject jsonBody = new JSONObject();</span>
+<span class="nc" id="L86">            jsonBody.put(&quot;userId&quot;, profileDataManager.getId());</span>
+<span class="nc" id="L87">            jsonBody.put(&quot;foodId&quot;, foodItem.getId());</span>
+<span class="nc" id="L88">            jsonBody.put(&quot;servings&quot;, servings);</span>
+
+<span class="nc" id="L90">            JsonObjectRequest request = new JsonObjectRequest(</span>
+                    Request.Method.POST,
+                    url,
+                    jsonBody,
+                    response -&gt; {
+<span class="nc" id="L95">                        FoodEaten newFoodEaten = gson.fromJson(response.toString(), FoodEaten.class);</span>
+<span class="nc" id="L96">                        foodEatenList.add(newFoodEaten);</span>
+<span class="nc" id="L97">                        callback.onSuccess();</span>
+<span class="nc" id="L98">                    },</span>
+                    error -&gt; {
+<span class="nc bnc" id="L100" title="All 2 branches missed.">                        String message = error.getMessage() != null ? error.getMessage() : &quot;Unknown error occurred&quot;;</span>
+<span class="nc" id="L101">                        callback.onError(&quot;Failed to add food: &quot; + message);</span>
+<span class="nc" id="L102">                    }</span>
+            );
+
+<span class="nc" id="L105">            VolleySingleton.getInstance(context).addToRequestQueue(request);</span>
+<span class="nc" id="L106">        } catch (Exception e) {</span>
+<span class="nc" id="L107">            callback.onError(&quot;Error preparing request: &quot; + e.getMessage());</span>
+<span class="nc" id="L108">        }</span>
+<span class="nc" id="L109">    }</span>
+
+    public void removeFoodEaten(int foodEatenId, FoodEatenCallback callback) {
+<span class="nc bnc" id="L112" title="All 2 branches missed.">        if (profileDataManager.getId() == -1) {</span>
+<span class="nc" id="L113">            callback.onError(&quot;User not logged in&quot;);</span>
+<span class="nc" id="L114">            return;</span>
+        }
+
+<span class="nc" id="L117">        String url = AppConstants.SERVER_URL + &quot;/eaten/&quot; + foodEatenId;</span>
+
+<span class="nc" id="L119">        Log.d(TAG, &quot;Attempting to delete food eaten with ID: &quot; + foodEatenId);</span>
+<span class="nc" id="L120">        Log.d(TAG, &quot;Delete URL: &quot; + url);</span>
+
+<span class="nc" id="L122">        JsonRequest&lt;Boolean&gt; request = new JsonRequest&lt;Boolean&gt;(</span>
+                Request.Method.DELETE,
+                url,
+                null,
+                response -&gt; {
+<span class="nc" id="L127">                    Log.d(TAG, &quot;Successfully deleted food eaten with ID: &quot; + foodEatenId);</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">                    foodEatenList.removeIf(item -&gt; item.getId() == foodEatenId);</span>
+<span class="nc" id="L129">                    callback.onSuccess();</span>
+<span class="nc" id="L130">                },</span>
+                error -&gt; {
+<span class="nc" id="L132">                    Log.e(TAG, &quot;Error deleting food: &quot; + error.toString());</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">                    if (error.networkResponse != null) {</span>
+<span class="nc" id="L134">                        Log.e(TAG, &quot;Error status code: &quot; + error.networkResponse.statusCode);</span>
+<span class="nc" id="L135">                        Log.e(TAG, &quot;Error data: &quot; + new String(error.networkResponse.data));</span>
+                    }
+<span class="nc" id="L137">                    callback.onError(&quot;Failed to remove food: &quot; + error.getMessage());</span>
+<span class="nc" id="L138">                }</span>
+<span class="nc" id="L139">        ) {</span>
+            @Override
+            protected Response&lt;Boolean&gt; parseNetworkResponse(NetworkResponse response) {
+                try {
+<span class="nc" id="L143">                    String jsonString = new String(response.data,</span>
+<span class="nc" id="L144">                            HttpHeaderParser.parseCharset(response.headers, PROTOCOL_CHARSET));</span>
+<span class="nc" id="L145">                    return Response.success(Boolean.parseBoolean(jsonString),</span>
+<span class="nc" id="L146">                            HttpHeaderParser.parseCacheHeaders(response));</span>
+<span class="nc" id="L147">                } catch (UnsupportedEncodingException e) {</span>
+<span class="nc" id="L148">                    return Response.error(new ParseError(e));</span>
+                }
+            }
+
+            @Override
+            public String getBodyContentType() {
+<span class="nc" id="L154">                return &quot;application/json&quot;;</span>
+            }
+        };
+
+<span class="nc" id="L158">        VolleySingleton.getInstance(context).addToRequestQueue(request);</span>
+<span class="nc" id="L159">    }</span>
+
+    public void getFoodEatenForTimeRange(Date startTime, Date endTime, FoodEatenListCallback callback) {
+<span class="nc bnc" id="L162" title="All 2 branches missed.">        if (profileDataManager.getId() == -1) {</span>
+<span class="nc" id="L163">            callback.onError(&quot;User not logged in&quot;);</span>
+<span class="nc" id="L164">            return;</span>
+        }
+
+<span class="nc" id="L167">        SimpleDateFormat dateFormat = new SimpleDateFormat(&quot;yyyy-MM-dd'T'HH:mm:ss.SSSXXX&quot;, Locale.US);</span>
+<span class="nc" id="L168">        dateFormat.setTimeZone(TimeZone.getTimeZone(&quot;UTC&quot;));</span>
+<span class="nc" id="L169">        String startTimeStr = dateFormat.format(startTime);</span>
+<span class="nc" id="L170">        String endTimeStr = dateFormat.format(endTime);</span>
+
+<span class="nc" id="L172">        String url = AppConstants.SERVER_URL + &quot;/eaten/user/&quot; + profileDataManager.getId() +</span>
+                &quot;/time?startTime=&quot; + startTimeStr + &quot;&amp;endTime=&quot; + endTimeStr;
+
+<span class="nc" id="L175">        JsonArrayRequest request = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+                response -&gt; {
+                    try {
+<span class="nc" id="L181">                        List&lt;FoodEaten&gt; foods = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">                        for (int i = 0; i &lt; response.length(); i++) {</span>
+<span class="nc" id="L183">                            FoodEaten food = gson.fromJson(response.getJSONObject(i).toString(), FoodEaten.class);</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">                            if (food.getTime() == null) {</span>
+<span class="nc" id="L185">                                Log.e(&quot;FoodEatenDataManager&quot;, &quot;Parsed food has null date: &quot; + response.getJSONObject(i).toString());</span>
+<span class="nc" id="L186">                                continue;</span>
+                            }
+<span class="nc" id="L188">                            foods.add(food);</span>
+                        }
+<span class="nc" id="L190">                        foodEatenList = foods;</span>
+<span class="nc" id="L191">                        callback.onSuccess(foods);</span>
+<span class="nc" id="L192">                    } catch (Exception e) {</span>
+<span class="nc" id="L193">                        Log.e(&quot;FoodEatenDataManager&quot;, &quot;Error parsing response: &quot; + e.getMessage());</span>
+<span class="nc" id="L194">                        callback.onError(&quot;Error parsing response: &quot; + e.getMessage());</span>
+<span class="nc" id="L195">                    }</span>
+<span class="nc" id="L196">                },</span>
+<span class="nc" id="L197">                error -&gt; callback.onError(&quot;Error fetching food data: &quot; + error.getMessage())</span>
+        );
+
+<span class="nc" id="L200">        VolleySingleton.getInstance(context).addToRequestQueue(request);</span>
+<span class="nc" id="L201">    }</span>
+
+    public List&lt;FoodEaten&gt; getFoodEatenList() {
+<span class="nc" id="L204">        return new ArrayList&lt;&gt;(foodEatenList);</span>
+    }
+
+    public void clearFoodEatenData() {
+<span class="nc" id="L208">        foodEatenList.clear();</span>
+<span class="nc" id="L209">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

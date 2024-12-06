@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChatActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.activities</a> &gt; <span class="el_source">ChatActivity.java</span></div><h1>ChatActivity.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.activities;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.fragments.HomePageFragment;
+import com.example.a1_jubair_6_frontend.network.WebSocketClient;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import okhttp3.Response;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
+
+<span class="nc" id="L26">public class ChatActivity extends AppCompatActivity {</span>
+    private EditText msgEtx;
+    private TextView chatMessages;
+    private WebSocketClient webSocketClient;
+<span class="nc" id="L30">    private final String username = &quot;username&quot;;  // Hardcoded username</span>
+<span class="nc" id="L31">    private final String groupChatId = &quot;1&quot;;      // Hardcoded groupId</span>
+<span class="nc" id="L32">    private boolean isTyping = false;</span>
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L36">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L37">        setContentView(R.layout.activity_chat);</span>
+
+<span class="nc" id="L39">        ImageView backButton = findViewById(R.id.backButton);</span>
+<span class="nc" id="L40">        Button sendBtn = findViewById(R.id.sendBtn);</span>
+<span class="nc" id="L41">        msgEtx = findViewById(R.id.msgEdt);</span>
+<span class="nc" id="L42">        chatMessages = findViewById(R.id.chatMessages);</span>
+<span class="nc" id="L43">        TextView chatTitle = findViewById(R.id.chatTitle);</span>
+
+<span class="nc" id="L45">        chatTitle.setText(findGroupChat(groupChatId));</span>
+
+<span class="nc" id="L47">        backButton.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L48">            webSocketClient.close();</span>
+<span class="nc" id="L49">            Intent exploreIntent = new Intent(this, BaseActivity.class);</span>
+<span class="nc" id="L50">            exploreIntent.putExtra(BaseActivity.EXTRA_INITIAL_FRAGMENT, HomePageFragment.class.getName());</span>
+<span class="nc" id="L51">            startActivity(exploreIntent);</span>
+<span class="nc" id="L52">            finish();</span>
+<span class="nc" id="L53">        });</span>
+
+<span class="nc" id="L55">        webSocketClient = new WebSocketClient(new WebSocketListener() {</span>
+            @Override
+            public void onOpen(WebSocket webSocket, Response response) {
+<span class="nc" id="L58">                runOnUiThread(() -&gt; Log.d(&quot;ChatActivity&quot;, &quot;Connected to WebSocket server&quot;));</span>
+<span class="nc" id="L59">            }</span>
+
+            @Override
+            public void onMessage(WebSocket webSocket, String text) {
+<span class="nc" id="L63">                runOnUiThread(() -&gt; handleIncomingMessage(text));</span>
+<span class="nc" id="L64">            }</span>
+
+            @Override
+            public void onClosing(WebSocket webSocket, int code, String reason) {
+<span class="nc" id="L68">                runOnUiThread(() -&gt; handleConnectionClosed(reason, true));</span>
+<span class="nc" id="L69">            }</span>
+
+            @Override
+            public void onClosed(WebSocket webSocket, int code, String reason) {
+<span class="nc" id="L73">                runOnUiThread(() -&gt; handleConnectionClosed(reason, false));</span>
+<span class="nc" id="L74">            }</span>
+
+            @Override
+            public void onFailure(WebSocket webSocket, Throwable t, Response response) {
+<span class="nc" id="L78">                runOnUiThread(() -&gt; Log.e(&quot;ChatActivity&quot;, &quot;WebSocket Error: &quot; + t.getMessage()));</span>
+<span class="nc" id="L79">            }</span>
+        });
+
+        //This will be the real string once its finished String url = AppConstants.SERVER_URL + &quot;/chat/&quot; + username + &quot;/&quot; + profileDataManager.getId() + &quot;/&quot; + groupChatId;
+<span class="nc" id="L83">        String url = &quot;wss://ws.postman-echo.com/raw&quot;;  // Replace with your backend URL when ready</span>
+<span class="nc" id="L84">        webSocketClient.connect(url);</span>
+
+<span class="nc" id="L86">        msgEtx.setOnKeyListener((v, keyCode, event) -&gt; {</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">            if (!isTyping) {</span>
+<span class="nc" id="L88">                sendTypingStatus(true);</span>
+<span class="nc" id="L89">                isTyping = true;</span>
+            }
+<span class="nc" id="L91">            return false;</span>
+        });
+
+<span class="nc" id="L94">        sendBtn.setOnClickListener(v -&gt; {</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">            if (isTyping) {</span>
+<span class="nc" id="L96">                sendTypingStatus(false);</span>
+<span class="nc" id="L97">                isTyping = false;</span>
+            }
+<span class="nc" id="L99">            sendMessage();</span>
+<span class="nc" id="L100">        });</span>
+<span class="nc" id="L101">    }</span>
+
+    private void handleIncomingMessage(String message) {
+        try {
+<span class="nc" id="L105">            JSONObject jsonMessage = new JSONObject(message);</span>
+<span class="nc" id="L106">            String type = jsonMessage.getString(&quot;type&quot;);</span>
+<span class="nc" id="L107">            String messageUsername = jsonMessage.getString(&quot;username&quot;);</span>
+
+<span class="nc bnc" id="L109" title="All 4 branches missed.">            switch (type) {</span>
+                case &quot;chat&quot;:
+<span class="nc" id="L111">                    String messageText = jsonMessage.getString(&quot;message&quot;);</span>
+<span class="nc" id="L112">                    String formattedMessage = messageUsername + &quot;: &quot; + messageText;</span>
+<span class="nc" id="L113">                    appendMessage(formattedMessage);</span>
+<span class="nc" id="L114">                    break;</span>
+
+                case &quot;typing-started&quot;:
+<span class="nc bnc" id="L117" title="All 2 branches missed.">                    if (!messageUsername.equals(username)) {</span>
+<span class="nc" id="L118">                        appendMessage(messageUsername + &quot; is typing...&quot;);</span>
+                    }
+                    break;
+
+                case &quot;typing-stopped&quot;:
+<span class="nc bnc" id="L123" title="All 2 branches missed.">                    if (!messageUsername.equals(username)) {</span>
+<span class="nc" id="L124">                        removeTypingMessage(messageUsername);</span>
+                    }
+                    break;
+            }
+<span class="nc" id="L128">        } catch (JSONException e) {</span>
+<span class="nc" id="L129">            Log.e(&quot;ChatActivity&quot;, &quot;Error parsing message: &quot; + e.getMessage());</span>
+<span class="nc" id="L130">            appendMessage(message);  // Fallback to displaying raw message</span>
+<span class="nc" id="L131">        }</span>
+<span class="nc" id="L132">    }</span>
+
+    private void sendMessage() {
+<span class="nc" id="L135">        String messageText = msgEtx.getText().toString().trim();</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">        if (!messageText.isEmpty()) {</span>
+            try {
+<span class="nc" id="L138">                JSONObject jsonMessage = new JSONObject();</span>
+<span class="nc" id="L139">                jsonMessage.put(&quot;type&quot;, &quot;chat&quot;);</span>
+<span class="nc" id="L140">                jsonMessage.put(&quot;username&quot;, username);</span>
+<span class="nc" id="L141">                jsonMessage.put(&quot;groupId&quot;, groupChatId);</span>
+<span class="nc" id="L142">                jsonMessage.put(&quot;message&quot;, messageText);</span>
+
+<span class="nc" id="L144">                webSocketClient.send(jsonMessage.toString());</span>
+<span class="nc" id="L145">                msgEtx.setText(&quot;&quot;);</span>
+<span class="nc" id="L146">            } catch (JSONException e) {</span>
+<span class="nc" id="L147">                Log.e(&quot;ChatActivity&quot;, &quot;Error creating message: &quot; + e.getMessage());</span>
+<span class="nc" id="L148">            }</span>
+        }
+<span class="nc" id="L150">    }</span>
+
+    private void sendTypingStatus(boolean typing) {
+        try {
+<span class="nc" id="L154">            JSONObject jsonMessage = new JSONObject();</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">            jsonMessage.put(&quot;type&quot;, typing ? &quot;typing-started&quot; : &quot;typing-stopped&quot;);</span>
+<span class="nc" id="L156">            jsonMessage.put(&quot;username&quot;, username);</span>
+<span class="nc" id="L157">            jsonMessage.put(&quot;groupId&quot;, groupChatId);</span>
+
+<span class="nc" id="L159">            webSocketClient.send(jsonMessage.toString());</span>
+<span class="nc" id="L160">        } catch (JSONException e) {</span>
+<span class="nc" id="L161">            Log.e(&quot;ChatActivity&quot;, &quot;Error sending typing status: &quot; + e.getMessage());</span>
+<span class="nc" id="L162">        }</span>
+<span class="nc" id="L163">    }</span>
+
+    private void appendMessage(String message) {
+<span class="nc" id="L166">        String currentText = chatMessages.getText().toString();</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">        chatMessages.setText(currentText.isEmpty() ? message : currentText + &quot;\n&quot; + message);</span>
+<span class="nc" id="L168">    }</span>
+
+    private void removeTypingMessage(String username) {
+<span class="nc" id="L171">        String currentText = chatMessages.getText().toString();</span>
+<span class="nc" id="L172">        String typingText = username + &quot; is typing...&quot;;</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">        if (currentText.endsWith(typingText)) {</span>
+<span class="nc" id="L174">            chatMessages.setText(currentText.substring(0, currentText.length() - typingText.length()).trim());</span>
+        }
+<span class="nc" id="L176">    }</span>
+
+    private void handleConnectionClosed(String reason, boolean remote) {
+<span class="nc bnc" id="L179" title="All 2 branches missed.">        String closedBy = remote ? &quot;server&quot; : &quot;local&quot;;</span>
+<span class="nc" id="L180">        appendMessage(&quot;---\nConnection closed by &quot; + closedBy + &quot;\nReason: &quot; + reason);</span>
+<span class="nc" id="L181">    }</span>
+
+    @Override
+    protected void onDestroy() {
+<span class="nc" id="L185">        super.onDestroy();</span>
+<span class="nc" id="L186">        webSocketClient.close();</span>
+<span class="nc" id="L187">    }</span>
+
+    private String findGroupChat(String id) {
+<span class="nc bnc" id="L190" title="All 4 branches missed.">        switch (id) {</span>
+            case &quot;1&quot;:
+<span class="nc" id="L192">                return &quot;Weight Loss Group&quot;;</span>
+            case &quot;2&quot;:
+<span class="nc" id="L194">                return &quot;Weight Gain Group&quot;;</span>
+            case &quot;3&quot;:
+<span class="nc" id="L196">                return &quot;Muscle Gain Group&quot;;</span>
+            default:
+<span class="nc" id="L198">                return &quot;Chat Group&quot;;</span>
+        }
+    }
+}
+
+
+
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>
