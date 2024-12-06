@@ -128,7 +128,7 @@ public class ActivityFeedWebsocket {
     private void sendActivityToUser(ActivityFeed activity, Session session) {
         try {
             String json = String.format(
-                    "{\"type\":\"%s\",\"message\":\"%s\",\"timestamp\":\"%s\",\"userId\":%d,\"userName\":\"%s\",\"additionalData\":\"%s\"}",
+                    "{\"type\":\"%s\",\"message\":\"%s\",\"timestamp\":\"%s\",\"userId\":%d,\"userName\":\"%s\",\"additionalData\":\"%s\"",
                     activity.getType(),
                     activity.getMessage(),
                     activity.getTimestamp(),
@@ -136,6 +136,16 @@ public class ActivityFeedWebsocket {
                     activity.getUser().getFName() + " " + activity.getUser().getLName(),
                     activity.getAdditionalData()
             );
+            List<ImageGallery> img = activity.getImages();
+            json +=", images: [";
+            if (!img.isEmpty()) {
+                for (ImageGallery i : img) {
+                    json += ("\"" + i.getImg() + "\"");
+                }
+            }
+            json = json.substring(0, json.length() - 1);
+            json +="]";
+            json += "}";
             logger.info("Sending message: " + json);
             session.getBasicRemote().sendText(json);
         } catch (IOException e) {
