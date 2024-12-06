@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.managers</a> &gt; <span class="el_source">GroupManager.java</span></div><h1>GroupManager.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.managers;
+
+import android.content.Context;
+import android.util.Log;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
+import com.google.gson.Gson;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+public class GroupManager {
+    private static final String TAG = &quot;GroupManager&quot;;
+    private final Context context;
+    private final Gson gson;
+    private final ProfileDataManager profileDataManager;
+
+    public interface GroupCallback {
+        void onSuccess(JSONObject response);
+        void onError(String message);
+    }
+
+<span class="nc" id="L27">    public GroupManager(Context context) {</span>
+<span class="nc" id="L28">        this.context = context;</span>
+<span class="nc" id="L29">        this.gson = new Gson();</span>
+<span class="nc" id="L30">        this.profileDataManager = new ProfileDataManager(context);</span>
+<span class="nc" id="L31">    }</span>
+
+    public void joinGroup(int groupId, GroupCallback callback) {
+<span class="nc" id="L34">        String url = AppConstants.SERVER_URL + &quot;/group/&quot; + groupId + &quot;/join&quot;;</span>
+<span class="nc" id="L35">        makeRequest(url, Request.Method.PUT, profileDataManager.getSessionToken(), null, callback);</span>
+<span class="nc" id="L36">    }</span>
+
+    public void leaveGroup(int groupId, GroupCallback callback) {
+<span class="nc" id="L39">        String url = AppConstants.SERVER_URL + &quot;/group/&quot; + groupId + &quot;/leave&quot;;</span>
+<span class="nc" id="L40">        String sessionToken = profileDataManager.getSessionToken();</span>
+
+<span class="nc" id="L42">        Log.d(TAG, &quot;Attempting to leave group &quot; + groupId + &quot; with session token: &quot; + sessionToken);</span>
+
+<span class="nc" id="L44">        StringRequest request = new StringRequest(</span>
+                Request.Method.PUT,
+                url,
+                response -&gt; {
+<span class="nc" id="L48">                    Log.d(TAG, &quot;Leave group response: &quot; + response);</span>
+                    try {
+<span class="nc" id="L50">                        callback.onSuccess(new JSONObject(response));</span>
+<span class="nc" id="L51">                    } catch (JSONException e) {</span>
+<span class="nc" id="L52">                        callback.onError(&quot;Failed to parse response&quot;);</span>
+<span class="nc" id="L53">                    }</span>
+<span class="nc" id="L54">                },</span>
+                error -&gt; {
+<span class="nc" id="L56">                    String errorMessage = &quot;Unknown error&quot;;</span>
+<span class="nc bnc" id="L57" title="All 4 branches missed.">                    if (error.networkResponse != null &amp;&amp; error.networkResponse.data != null) {</span>
+<span class="nc" id="L58">                        errorMessage = new String(error.networkResponse.data);</span>
+                    }
+<span class="nc" id="L60">                    Log.e(TAG, &quot;Leave group error: &quot; + errorMessage);</span>
+<span class="nc" id="L61">                    callback.onError(errorMessage);</span>
+<span class="nc" id="L62">                }</span>
+<span class="nc" id="L63">        ) {</span>
+            @Override
+            public byte[] getBody() {
+<span class="nc" id="L66">                return sessionToken.getBytes();</span>
+            }
+
+            @Override
+            public String getBodyContentType() {
+<span class="nc" id="L71">                return &quot;text/plain&quot;;</span>
+            }
+        };
+
+<span class="nc" id="L75">        request.setShouldRetryServerErrors(false);</span>
+<span class="nc" id="L76">        VolleySingleton.getInstance(context).addToRequestQueue(request);</span>
+<span class="nc" id="L77">    }</span>
+
+    public void getGroupDetails(int groupId, GroupCallback callback) {
+<span class="nc" id="L80">        String url = AppConstants.SERVER_URL + &quot;/group/&quot; + groupId;</span>
+<span class="nc" id="L81">        makeRequest(url, Request.Method.GET, null, null, callback);</span>
+<span class="nc" id="L82">    }</span>
+
+    public void searchGroups(String keyword, GroupCallback callback) {
+<span class="nc" id="L85">        String url = AppConstants.SERVER_URL + &quot;/searchGroups?keyword=&quot; + keyword;</span>
+<span class="nc" id="L86">        makeRequest(url, Request.Method.GET, null, null, callback);</span>
+<span class="nc" id="L87">    }</span>
+
+    private void makeRequest(String url, int method, String sessionToken, JSONObject requestBody, GroupCallback callback) {
+<span class="nc" id="L90">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                method,
+                url,
+                requestBody,
+                response -&gt; {
+<span class="nc" id="L95">                    Log.d(TAG, &quot;Request successful: &quot; + response.toString());</span>
+<span class="nc" id="L96">                    callback.onSuccess(response);</span>
+<span class="nc" id="L97">                },</span>
+                error -&gt; {
+<span class="nc bnc" id="L99" title="All 2 branches missed.">                    String message = error.getMessage() != null ? error.getMessage() : &quot;Unknown error occurred&quot;;</span>
+<span class="nc" id="L100">                    Log.e(TAG, &quot;Request failed: &quot; + message);</span>
+<span class="nc" id="L101">                    callback.onError(message);</span>
+<span class="nc" id="L102">                }</span>
+<span class="nc" id="L103">        ) {</span>
+            @Override
+            public java.util.Map&lt;String, String&gt; getHeaders() {
+<span class="nc" id="L106">                java.util.Map&lt;String, String&gt; headers = new java.util.HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">                if (sessionToken != null) {</span>
+<span class="nc" id="L108">                    headers.put(&quot;Authorization&quot;, &quot;Bearer &quot; + sessionToken);</span>
+                }
+<span class="nc" id="L110">                return headers;</span>
+            }
+        };
+<span class="nc" id="L113">        VolleySingleton.getInstance(context).addToRequestQueue(request);</span>
+<span class="nc" id="L114">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

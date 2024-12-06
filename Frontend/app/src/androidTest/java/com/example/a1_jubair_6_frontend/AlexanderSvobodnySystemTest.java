@@ -14,6 +14,8 @@ import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
 import static org.hamcrest.Matchers.not;
 
+import android.content.Context;
+
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
@@ -28,7 +30,12 @@ import com.example.a1_jubair_6_frontend.activities.LoginSignupActivity;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
+import org.junit.runners.model.Statement;
+
+import java.io.IOException;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
@@ -49,6 +56,15 @@ public class AlexanderSvobodnySystemTest {
     @Before
     public void setUp() {
         device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        // Disable animations
+        try {
+            device.executeShellCommand("settings put global window_animation_scale 0");
+            device.executeShellCommand("settings put global transition_animation_scale 0");
+            device.executeShellCommand("settings put global animator_duration_scale 0");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void allowPermissionsIfNeeded() throws Exception {
@@ -61,6 +77,49 @@ public class AlexanderSvobodnySystemTest {
         }
     }
 
+    @Rule
+    public TestRule clearPreferencesRule = new TestRule() {
+        @Override
+        public Statement apply(final Statement base, Description description) {
+            return new Statement() {
+                @Override
+                public void evaluate() throws Throwable {
+                    Context context = InstrumentationRegistry.getInstrumentation()
+                            .getTargetContext().getApplicationContext();
+
+                    String[] prefsFiles = {
+                            "ProfilePreferences",
+                            "PREFS",
+                            "user_prefs",
+                            "app_prefs",
+                            "login_prefs"
+                    };
+
+                    for (String prefsFile : prefsFiles) {
+                        context.getSharedPreferences(prefsFile, Context.MODE_PRIVATE)
+                                .edit()
+                                .clear()
+                                .commit();
+                    }
+
+                    // Clear app data
+                    context.getCacheDir().delete();
+
+                    try {
+                        base.evaluate();
+                    } finally {
+                        // Clear again after test
+                        for (String prefsFile : prefsFiles) {
+                            context.getSharedPreferences(prefsFile, Context.MODE_PRIVATE)
+                                    .edit()
+                                    .clear()
+                                    .commit();
+                        }
+                    }
+                }
+            };
+        }
+    };
 
     @Test
     public void testCompleteNotificationFlow() throws Exception {
@@ -75,7 +134,7 @@ public class AlexanderSvobodnySystemTest {
 
         onView(withId(R.id.btnExplore))
                 .perform(click());
-        Thread.sleep(2000);
+        Thread.sleep(3000);
 
         // Navigate to Profile
         onView(withId(R.id.nav_profile))
@@ -165,7 +224,7 @@ public class AlexanderSvobodnySystemTest {
 
         onView(withId(R.id.btnExplore))
                 .perform(click());
-        Thread.sleep(2000);
+        Thread.sleep(3000);
 
         // Go to Menus
         onView(withId(R.id.nav_menus))
@@ -262,17 +321,19 @@ public class AlexanderSvobodnySystemTest {
 
         onView(withId(R.id.btnExplore))
                 .perform(click());
-        Thread.sleep(2000);
+        Thread.sleep(3000);
 
-        // Go to home
+        // Go to home and wait for content to load
         onView(withId(R.id.nav_home))
                 .perform(click());
-        Thread.sleep(2000);
+        Thread.sleep(3000);
 
-        // Click view groups
+        // Try to click view groups button with more robust approach
         onView(withId(R.id.btnViewGroups))
+                .perform(scrollTo())
+                .check(matches(isDisplayed()))
                 .perform(click());
-        Thread.sleep(1000);
+        Thread.sleep(2000);
 
         // Test group search
         onView(withId(R.id.searchGroupsInput))
@@ -327,7 +388,7 @@ public class AlexanderSvobodnySystemTest {
 
         onView(withId(R.id.btnExplore))
                 .perform(click());
-        Thread.sleep(2000);
+        Thread.sleep(3000);
 
         // Navigate to menus
         onView(withId(R.id.nav_menus))

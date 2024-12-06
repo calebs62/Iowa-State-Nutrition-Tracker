@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProfileDataManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.managers</a> &gt; <span class="el_source">ProfileDataManager.java</span></div><h1>ProfileDataManager.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.managers;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.net.Uri;
+import android.util.Base64;
+import android.util.Log;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.models.PrivacySettings;
+import com.example.a1_jubair_6_frontend.models.User;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileOutputStream;
+
+public class ProfileDataManager {
+    private static final String PREF_NAME = &quot;ProfilePreferences&quot;;
+    private static final String KEY_PROFILE_IMAGE_URI = &quot;profile_image_uri&quot;;
+    private static final String KEY_EMAIL = &quot;email&quot;;
+    private static final String KEY_PASSWORD = &quot;password&quot;;
+    private static final String KEY_WEIGHT = &quot;weight&quot;;
+    private static final String KEY_HEIGHT = &quot;height&quot;;
+    private static final String KEY_FIRSTNAME = &quot;firstname&quot;;
+    private static final String KEY_LASTNAME = &quot;lastname&quot;;
+    private static final String KEY_ACCOUNT = &quot;account&quot;;
+    private static final String KEY_UID = &quot;uid&quot;;
+    private static final String KEY_PHONE_NUMBER = &quot;phone_number&quot;;
+    private static final String PREF_SHARE_FOOD = &quot;share_food&quot;;
+    private static final String PREF_SHARE_GOALS = &quot;share_goals&quot;;
+    private static final String PREF_SHARE_ACHIEVEMENTS = &quot;share_achievements&quot;;
+    private static final String PREF_SHOW_FOOD = &quot;show_food&quot;;
+    private static final String PREF_SHOW_GOALS = &quot;show_goals&quot;;
+    private static final String PREF_SHOW_ACHIEVEMENTS = &quot;show_achievements&quot;;
+    private static final String KEY_CONSECUTIVE_LOGIN_COUNT = &quot;consecutive_login_count&quot;;
+    private static final String KEY_LAST_LOGIN_DATE = &quot;last_login_date&quot;;
+    private static final String KEY_GROUP_ID = &quot;group_id&quot;;
+
+    private static final String uploadDir = &quot;uploads/profile-pictures/&quot;;
+
+    private final SharedPreferences preferences;
+    private final Context context;
+
+<span class="fc" id="L49">    public ProfileDataManager(Context context) {</span>
+<span class="fc" id="L50">        this.context = context;</span>
+<span class="fc" id="L51">        preferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);</span>
+<span class="fc" id="L52">    }</span>
+
+    public void saveUserData(User user){
+<span class="fc" id="L55">        preferences.edit()</span>
+<span class="fc" id="L56">                .putInt(KEY_UID, user.getId())</span>
+<span class="fc" id="L57">                .putString(KEY_FIRSTNAME, user.getFname())</span>
+<span class="fc" id="L58">                .putString(KEY_LASTNAME, user.getLname())</span>
+<span class="fc" id="L59">                .putString(KEY_EMAIL, user.getUsername())</span>
+<span class="fc" id="L60">                .putString(KEY_PASSWORD, user.getPassword())</span>
+<span class="fc" id="L61">                .putInt(KEY_HEIGHT, user.getHeight())</span>
+<span class="fc" id="L62">                .putInt(KEY_WEIGHT, user.getWeight())</span>
+<span class="fc" id="L63">                .putString(KEY_ACCOUNT, user.getAccounttype().toString())</span>
+<span class="fc" id="L64">                .apply();</span>
+<span class="fc" id="L65">    }</span>
+
+    public void saveProfileImageUri(Uri uri) {
+<span class="nc" id="L68">        preferences.edit()</span>
+<span class="nc" id="L69">                .putString(KEY_PROFILE_IMAGE_URI, uri.toString())</span>
+<span class="nc" id="L70">                .apply();</span>
+<span class="nc" id="L71">    }</span>
+
+    public Uri getProfileImageUri() {
+<span class="fc" id="L74">        String uriString = preferences.getString(KEY_PROFILE_IMAGE_URI, null);</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        return uriString != null ? Uri.parse(uriString) : null;</span>
+    }
+
+    public void saveEmailAndPassword(String email, String password){
+<span class="fc" id="L79">        preferences.edit()</span>
+<span class="fc" id="L80">                .putString(KEY_EMAIL, email)</span>
+<span class="fc" id="L81">                .apply();</span>
+<span class="fc" id="L82">        preferences.edit()</span>
+<span class="fc" id="L83">                .putString(KEY_PASSWORD, password)</span>
+<span class="fc" id="L84">                .apply();</span>
+<span class="fc" id="L85">    }</span>
+
+    public void setEmail(String email){
+<span class="nc" id="L88">        preferences.edit()</span>
+<span class="nc" id="L89">                .putString(KEY_EMAIL, email)</span>
+<span class="nc" id="L90">                .apply();</span>
+<span class="nc" id="L91">    }</span>
+
+    public void setPassword(String password){
+<span class="nc" id="L94">        preferences.edit()</span>
+<span class="nc" id="L95">                .putString(KEY_PASSWORD, password)</span>
+<span class="nc" id="L96">                .apply();</span>
+<span class="nc" id="L97">    }</span>
+
+    public void setWeight(int weight){
+<span class="nc" id="L100">        preferences.edit()</span>
+<span class="nc" id="L101">                .putInt(KEY_WEIGHT, weight)</span>
+<span class="nc" id="L102">                .apply();</span>
+<span class="nc" id="L103">    }</span>
+
+    public void setHeight(int height){
+<span class="nc" id="L106">        preferences.edit()</span>
+<span class="nc" id="L107">                .putInt(KEY_HEIGHT, height)</span>
+<span class="nc" id="L108">                .apply();</span>
+<span class="nc" id="L109">    }</span>
+
+    public void setPhoneNumber(String phoneNumber){
+<span class="nc" id="L112">        preferences.edit()</span>
+<span class="nc" id="L113">                .putString(KEY_PHONE_NUMBER, phoneNumber)</span>
+<span class="nc" id="L114">                .apply();</span>
+<span class="nc" id="L115">    }</span>
+
+    public void setFoodSharingEnabled(boolean enabled) {
+<span class="nc" id="L118">        preferences.edit().putBoolean(PREF_SHARE_FOOD, enabled).apply();</span>
+<span class="nc" id="L119">    }</span>
+
+    public void setGoalSharingEnabled(boolean enabled) {
+<span class="nc" id="L122">        preferences.edit().putBoolean(PREF_SHARE_GOALS, enabled).apply();</span>
+<span class="nc" id="L123">    }</span>
+
+    public void setAchievementSharingEnabled(boolean enabled) {
+<span class="nc" id="L126">        preferences.edit().putBoolean(PREF_SHARE_ACHIEVEMENTS, enabled).apply();</span>
+<span class="nc" id="L127">    }</span>
+
+    public void setConsecutiveLoginCount(int count) {
+<span class="nc" id="L130">        preferences.edit().putInt(KEY_CONSECUTIVE_LOGIN_COUNT, count).apply();</span>
+<span class="nc" id="L131">    }</span>
+
+    public void setLastLoginDate(String date) {
+<span class="nc" id="L134">        preferences.edit().putString(KEY_LAST_LOGIN_DATE, date).apply();</span>
+<span class="nc" id="L135">    }</span>
+
+    public String getKeyLastLoginDate() {
+<span class="nc" id="L138">        return preferences.getString(KEY_LAST_LOGIN_DATE, &quot;&quot;);</span>
+    }
+
+    public int getConsecutiveLoginCount() {
+<span class="nc" id="L142">        return preferences.getInt(KEY_CONSECUTIVE_LOGIN_COUNT, 0);</span>
+    }
+
+    private void setGroupId(int groupId) {
+<span class="nc" id="L146">        preferences.edit().putInt(KEY_GROUP_ID, groupId).apply();</span>
+<span class="nc" id="L147">    }</span>
+
+    public String getEmail(){
+<span class="fc" id="L150">        return preferences.getString(KEY_EMAIL, &quot;&quot;);</span>
+    }
+
+    public String getPassword(){
+<span class="fc" id="L154">        return preferences.getString(KEY_PASSWORD, &quot;&quot;);</span>
+    }
+
+    public int getWeight(){
+<span class="fc" id="L158">        return preferences.getInt(KEY_WEIGHT, -1);</span>
+    }
+
+    public int getHeight() {
+<span class="fc" id="L162">        return preferences.getInt(KEY_HEIGHT, -1);</span>
+    }
+
+    public String getFirstname() {
+<span class="fc" id="L166">        return preferences.getString(KEY_FIRSTNAME, &quot;User&quot;);</span>
+    }
+
+    public String getLastname() {
+<span class="fc" id="L170">        return preferences.getString(KEY_LASTNAME, &quot;&quot;);</span>
+    }
+
+    public String getAccountType(){
+<span class="fc" id="L174">        return preferences.getString(KEY_ACCOUNT, null);</span>
+    }
+
+<span class="fc" id="L177">    public int getId() {return preferences.getInt(KEY_UID, -1); }</span>
+
+<span class="nc" id="L179">    public int getGroupId() {return preferences.getInt(KEY_GROUP_ID, -1); }</span>
+
+<span class="nc" id="L181">    public String getPhoneNumber() { return preferences.getString(KEY_PHONE_NUMBER, null); }</span>
+
+    public boolean getFoodSharingEnabled() {
+<span class="nc" id="L184">        return preferences.getBoolean(PREF_SHARE_FOOD, true);</span>
+    }
+
+    public boolean getGoalSharingEnabled() {
+<span class="nc" id="L188">        return preferences.getBoolean(PREF_SHARE_GOALS, true);</span>
+    }
+
+    public boolean getAchievementSharingEnabled() {
+<span class="nc" id="L192">        return preferences.getBoolean(PREF_SHARE_ACHIEVEMENTS, true);</span>
+    }
+
+
+    public User getUser() {
+<span class="fc" id="L197">        int id = getId();</span>
+<span class="fc" id="L198">        String username = getEmail();</span>
+<span class="fc" id="L199">        String password = getPassword();</span>
+<span class="fc" id="L200">        int weight = getWeight();</span>
+<span class="fc" id="L201">        int height = getHeight();</span>
+<span class="fc" id="L202">        String fname = getFirstname();</span>
+<span class="fc" id="L203">        String lname = getLastname();</span>
+<span class="fc" id="L204">        User.Account accType = User.Account.valueOf(getAccountType());</span>
+
+<span class="fc" id="L206">        return new User(id, username, password, fname, lname, height, weight, accType);</span>
+    }
+
+    public void clearUserData() {
+<span class="nc" id="L210">        preferences.edit()</span>
+<span class="nc" id="L211">                .remove(KEY_FIRSTNAME)</span>
+<span class="nc" id="L212">                .remove(KEY_LASTNAME)</span>
+<span class="nc" id="L213">                .remove(KEY_EMAIL)</span>
+<span class="nc" id="L214">                .remove(KEY_PASSWORD)</span>
+<span class="nc" id="L215">                .remove(KEY_WEIGHT)</span>
+<span class="nc" id="L216">                .remove(KEY_HEIGHT)</span>
+<span class="nc" id="L217">                .remove(KEY_ACCOUNT)</span>
+<span class="nc" id="L218">                .remove(KEY_PROFILE_IMAGE_URI)</span>
+<span class="nc" id="L219">                .remove(KEY_PHONE_NUMBER)</span>
+<span class="nc" id="L220">                .apply();</span>
+<span class="nc" id="L221">    }</span>
+
+    public void setFood(boolean enabled) {
+<span class="nc" id="L224">        preferences.edit().putBoolean(PREF_SHARE_FOOD, enabled).apply();</span>
+<span class="nc" id="L225">    }</span>
+
+    public void setGoal(boolean enabled) {
+<span class="nc" id="L228">        preferences.edit().putBoolean(PREF_SHARE_GOALS, enabled).apply();</span>
+<span class="nc" id="L229">    }</span>
+
+    public void setAchievement(boolean enabled) {
+<span class="nc" id="L232">        preferences.edit().putBoolean(PREF_SHARE_ACHIEVEMENTS, enabled).apply();</span>
+<span class="nc" id="L233">    }</span>
+
+    public boolean getFood() {
+<span class="nc" id="L236">        return preferences.getBoolean(PREF_SHARE_FOOD, true);</span>
+    }
+
+    public boolean getGoal() {
+<span class="nc" id="L240">        return preferences.getBoolean(PREF_SHARE_GOALS, true);</span>
+    }
+
+    public boolean getAchievement() {
+<span class="nc" id="L244">        return preferences.getBoolean(PREF_SHARE_ACHIEVEMENTS, true);</span>
+    }
+
+    public void updatePrivacySettings(PrivacySettings settings, UpdateCallback callback) {
+<span class="nc" id="L248">        String url = AppConstants.SERVER_URL + &quot;/privacy/settings/&quot; + getId();</span>
+
+<span class="nc" id="L250">        JSONObject jsonBody = new JSONObject();</span>
+        try {
+<span class="nc" id="L252">            jsonBody.put(&quot;food&quot;, settings.getFood());</span>
+<span class="nc" id="L253">            jsonBody.put(&quot;goal&quot;, settings.getGoal());</span>
+<span class="nc" id="L254">            jsonBody.put(&quot;achievement&quot;, settings.getAchievement());</span>
+<span class="nc" id="L255">        } catch (JSONException e) {</span>
+<span class="nc" id="L256">            callback.onError(&quot;Failed to create request: &quot; + e.getMessage());</span>
+<span class="nc" id="L257">            return;</span>
+<span class="nc" id="L258">        }</span>
+
+<span class="nc" id="L260">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.PUT,
+                url,
+                jsonBody,
+                response -&gt; {
+<span class="nc" id="L265">                    setFood(settings.getFood());</span>
+<span class="nc" id="L266">                    setGoal(settings.getGoal());</span>
+<span class="nc" id="L267">                    setAchievement(settings.getAchievement());</span>
+<span class="nc" id="L268">                    callback.onSuccess();</span>
+<span class="nc" id="L269">                },</span>
+<span class="nc" id="L270">                error -&gt; callback.onError(&quot;Network error: &quot; + error.getMessage())</span>
+        );
+
+<span class="nc" id="L273">        VolleySingleton.getInstance(context).addToRequestQueue(request);</span>
+<span class="nc" id="L274">    }</span>
+
+    public void fetchPrivacySettings() {
+<span class="nc" id="L277">        String url = AppConstants.SERVER_URL + &quot;/privacy/settings/&quot; + getId();</span>
+
+<span class="nc" id="L279">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+                response -&gt; {
+                    try {
+<span class="nc" id="L285">                        setFoodSharingEnabled(response.getBoolean(&quot;food&quot;));</span>
+<span class="nc" id="L286">                        setGoalSharingEnabled(response.getBoolean(&quot;goal&quot;));</span>
+<span class="nc" id="L287">                        setAchievementSharingEnabled(response.getBoolean(&quot;achievement&quot;));</span>
+<span class="nc" id="L288">                    } catch (JSONException e) {</span>
+<span class="nc" id="L289">                        Log.e(&quot;Privacy&quot;, &quot;Error parsing privacy settings&quot;, e);</span>
+<span class="nc" id="L290">                    }</span>
+<span class="nc" id="L291">                },</span>
+<span class="nc" id="L292">                error -&gt; Log.e(&quot;Privacy&quot;, &quot;Error fetching privacy settings&quot;, error)</span>
+        );
+
+<span class="nc" id="L295">        VolleySingleton.getInstance(context).addToRequestQueue(request);</span>
+<span class="nc" id="L296">    }</span>
+
+    public void updateUserToServer(){
+<span class="nc" id="L299">        String url = AppConstants.SERVER_URL + &quot;/user/update/&quot; + getId();</span>
+
+<span class="nc" id="L301">        User user = getUser();</span>
+
+<span class="nc" id="L303">        JSONObject jsonBody = new JSONObject();</span>
+
+        try{
+<span class="nc" id="L306">            jsonBody.put(&quot;username&quot;, user.getUsername());</span>
+<span class="nc" id="L307">            jsonBody.put(&quot;password&quot;, user.getPassword());</span>
+<span class="nc" id="L308">            jsonBody.put(&quot;fname&quot;, user.getFname());</span>
+<span class="nc" id="L309">            jsonBody.put(&quot;lname&quot;, user.getLname());</span>
+<span class="nc" id="L310">            jsonBody.put(&quot;weight&quot;, user.getWeight());</span>
+<span class="nc" id="L311">            jsonBody.put(&quot;height&quot;, user.getHeight());</span>
+<span class="nc" id="L312">        }catch (Exception e){</span>
+<span class="nc" id="L313">            Log.e(&quot;JSON Exception&quot;, e.getMessage());</span>
+<span class="nc" id="L314">        }</span>
+
+<span class="nc" id="L316">        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(</span>
+                Request.Method.PUT,
+                url,
+                jsonBody,
+                response -&gt; {
+                    try {
+<span class="nc" id="L322">                        int id = response.getInt(&quot;UID&quot;);</span>
+<span class="nc" id="L323">                        String username = response.getString(&quot;username&quot;);</span>
+<span class="nc" id="L324">                        String userPass = response.getString(&quot;password&quot;);</span>
+<span class="nc" id="L325">                        String fname = response.getString(&quot;fname&quot;);</span>
+<span class="nc" id="L326">                        String lname = response.getString(&quot;lname&quot;);</span>
+<span class="nc" id="L327">                        int heightS = response.getInt(&quot;height&quot;);</span>
+<span class="nc" id="L328">                        int weightS = response.getInt(&quot;weight&quot;);</span>
+<span class="nc" id="L329">                        String accountType = response.getString(&quot;accountType&quot;);</span>
+
+<span class="nc" id="L331">                        User userServer = new User(id, username, userPass, fname, lname, heightS, weightS, User.Account.valueOf(accountType));</span>
+
+<span class="nc" id="L333">                        saveUserData(userServer);</span>
+<span class="nc" id="L334">                    }catch (Exception e){</span>
+<span class="nc" id="L335">                        Log.e(&quot;Request Error&quot;, String.valueOf(e.getMessage()));</span>
+<span class="nc" id="L336">                    }</span>
+<span class="nc" id="L337">                },</span>
+                error -&gt; {
+<span class="nc" id="L339">                    Log.e(&quot;Update User Request Error&quot;, String.valueOf(error.getMessage()));</span>
+<span class="nc" id="L340">                }</span>
+        );
+<span class="nc" id="L342">        VolleySingleton.getInstance(context).addToRequestQueue(jsonObjectRequest);</span>
+<span class="nc" id="L343">    }</span>
+
+    public boolean isAdminOrContributor() {
+<span class="nc" id="L346">        String role = getAccountType();</span>
+<span class="nc bnc" id="L347" title="All 4 branches missed.">        return &quot;ADMINISTRATOR&quot;.equals(role) || &quot;CONTRIBUTOR&quot;.equals(role);</span>
+    }
+
+    public void saveBase64Image(String base64Image) {
+        try{
+<span class="fc" id="L352">            String[] parts = base64Image.split(&quot;,&quot;);</span>
+<span class="pc bpc" id="L353" title="1 of 2 branches missed.">            String imageString = parts.length &gt; 1 ? parts[1] : parts[0];</span>
+
+<span class="fc" id="L355">            byte[] imageBytes = Base64.decode(imageString, Base64.DEFAULT);</span>
+
+<span class="fc" id="L357">            String filename = &quot;profile_&quot; + getId() + &quot;.png&quot;;</span>
+
+<span class="fc" id="L359">            File file = new File(context.getFilesDir(), filename);</span>
+<span class="fc" id="L360">            try (FileOutputStream fos = new FileOutputStream(file)){</span>
+<span class="fc" id="L361">                fos.write(imageBytes);</span>
+            }
+
+<span class="fc" id="L364">            Uri imageUri = Uri.fromFile(file);</span>
+<span class="fc" id="L365">            preferences.edit().putString(KEY_PROFILE_IMAGE_URI, imageUri.toString()).apply();</span>
+        }
+<span class="nc" id="L367">        catch (Exception e){</span>
+<span class="nc" id="L368">            throw new RuntimeException(&quot;Failed to save image&quot;, e);</span>
+<span class="fc" id="L369">        }</span>
+<span class="fc" id="L370">    }</span>
+
+    public String getSessionToken() {
+<span class="nc" id="L373">        return &quot;1:&quot; + getAccountTypeInt() + &quot;:&quot; + getId();</span>
+    }
+
+    private int getAccountTypeInt(){
+<span class="nc" id="L377">        String accountType = getAccountType();</span>
+
+<span class="nc bnc" id="L379" title="All 2 branches missed.">        if (accountType.equals(&quot;CONTRIBUTOR&quot;))</span>
+<span class="nc" id="L380">            return 1;</span>
+<span class="nc bnc" id="L381" title="All 2 branches missed.">        else if (accountType.equals(&quot;ADMINISTRATOR&quot;))</span>
+<span class="nc" id="L382">            return 2;</span>
+        else
+<span class="nc" id="L384">            return 0;</span>
+    }
+
+    public interface UpdateCallback {
+        void onSuccess();
+        void onError(String error);
+    }
+
+    public boolean getShowGoals() {
+<span class="nc" id="L393">        return preferences.getBoolean(PREF_SHOW_GOALS, true);</span>
+    }
+
+    public boolean getShowFood() {
+<span class="nc" id="L397">        return preferences.getBoolean(PREF_SHOW_FOOD, true);</span>
+    }
+
+    public boolean getShowAchievements() {
+<span class="nc" id="L401">        return preferences.getBoolean(PREF_SHOW_ACHIEVEMENTS, true);</span>
+    }
+
+    public void setShowFood(boolean enabled) {
+<span class="nc" id="L405">        preferences.edit().putBoolean(PREF_SHOW_FOOD, enabled).apply();</span>
+<span class="nc" id="L406">    }</span>
+
+    public void setShowGoals(boolean enabled) {
+<span class="nc" id="L409">        preferences.edit().putBoolean(PREF_SHOW_GOALS, enabled).apply();</span>
+<span class="nc" id="L410">    }</span>
+
+    public void setShowAchievements(boolean enabled) {
+<span class="nc" id="L413">        preferences.edit().putBoolean(PREF_SHOW_ACHIEVEMENTS, enabled).apply();</span>
+<span class="nc" id="L414">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

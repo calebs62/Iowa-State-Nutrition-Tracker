@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoginSignupActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.activities</a> &gt; <span class="el_source">LoginSignupActivity.java</span></div><h1>LoginSignupActivity.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.activities;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.util.Log;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.fragments.HomePageFragment;
+import com.example.a1_jubair_6_frontend.managers.EngagementNotificationManager;
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.models.User;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+<span class="fc" id="L32">public class LoginSignupActivity extends AppCompatActivity {</span>
+    private EditText emailText;
+    private EditText passwordText;
+    private TextView loginError;
+
+    private String email;
+    private String password;
+
+    private ProfileDataManager profileDataManager;
+    private SharedPreferences sharedPreferences;
+    private SharedPreferences.Editor editor;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L46">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L47">        EdgeToEdge.enable(this);</span>
+
+<span class="fc" id="L49">        profileDataManager = new ProfileDataManager(this);</span>
+<span class="fc" id="L50">        sharedPreferences = getSharedPreferences(&quot;LoginPrefs&quot;, MODE_PRIVATE);</span>
+<span class="fc" id="L51">        editor = sharedPreferences.edit();</span>
+
+<span class="fc" id="L53">        setContentView(R.layout.activity_login_signup);</span>
+<span class="fc" id="L54">        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.login_signup), (v, insets) -&gt; {</span>
+<span class="fc" id="L55">            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());</span>
+<span class="fc" id="L56">            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);</span>
+<span class="fc" id="L57">            return insets;</span>
+        });
+
+<span class="fc" id="L60">        emailText = findViewById(R.id.emailText);</span>
+<span class="fc" id="L61">        passwordText = findViewById(R.id.passwordText);</span>
+<span class="fc" id="L62">        loginError = findViewById(R.id.tvLoginError);</span>
+
+<span class="fc" id="L64">        loadSavedCredentials();</span>
+
+<span class="fc" id="L66">        Button exploreButton = findViewById(R.id.btnExplore);</span>
+<span class="fc" id="L67">        exploreButton.setOnClickListener(view -&gt; {</span>
+<span class="fc" id="L68">            Log.i(&quot;Explore Button&quot;, &quot;Explore button was clicked!&quot;);</span>
+<span class="fc" id="L69">            email = emailText.getText().toString();</span>
+<span class="fc" id="L70">            password = passwordText.getText().toString();</span>
+
+<span class="fc" id="L72">            Log.i(&quot;Email&quot;, email);</span>
+<span class="fc" id="L73">            Log.i(&quot;Password&quot;, password);</span>
+
+<span class="pc bpc" id="L75" title="2 of 4 branches missed.">            if(email.isEmpty() || password.isEmpty()){</span>
+<span class="nc" id="L76">                loginError.setText(R.string.invalid_email_or_password_please_try_again);</span>
+<span class="nc" id="L77">                loginError.setVisibility(TextView.VISIBLE);</span>
+            }
+            else
+<span class="fc" id="L80">                    profileDataManager.saveEmailAndPassword(email, password);</span>
+            try {
+<span class="fc" id="L82">                getCredentialsFromServer(email, password);</span>
+<span class="nc" id="L83">            } catch (JSONException e) {</span>
+<span class="nc" id="L84">                Log.e(&quot;JSON Exception&quot;, e.getMessage());</span>
+<span class="fc" id="L85">            }</span>
+<span class="fc" id="L86">        });</span>
+
+<span class="fc" id="L88">        TextView registerView = findViewById(R.id.tvRegister);</span>
+<span class="fc" id="L89">        registerView.setOnClickListener(view -&gt; {</span>
+<span class="nc" id="L90">             Log.i(&quot;Register Button&quot;, &quot;Register button clicked!&quot;);</span>
+<span class="nc" id="L91">             Intent intent = new Intent(LoginSignupActivity.this, RegisterActivity.class);</span>
+<span class="nc" id="L92">             startActivity(intent);</span>
+<span class="nc" id="L93">        });</span>
+
+<span class="fc" id="L95">        TextView forgotPasswordView = findViewById(R.id.tvForgotPassword);</span>
+<span class="fc" id="L96">        forgotPasswordView.setOnClickListener(view -&gt; {</span>
+<span class="nc" id="L97">            Log.i(&quot;Forgot Password Button&quot;, &quot;Forgot password button clicked!&quot;);</span>
+<span class="nc" id="L98">            Intent intent = new Intent(LoginSignupActivity.this, ForgotPasswordActivity.class);</span>
+<span class="nc" id="L99">            startActivity(intent);</span>
+<span class="nc" id="L100">        });</span>
+<span class="fc" id="L101">    }</span>
+
+    @Override
+    protected void onResume() {
+<span class="fc" id="L105">        super.onResume();</span>
+<span class="fc" id="L106">        EngagementNotificationManager engagementManager =</span>
+                new EngagementNotificationManager(this);
+<span class="fc" id="L108">        engagementManager.updateLastAccessTime();</span>
+<span class="fc" id="L109">    }</span>
+
+    public void getCredentialsFromServer(String email, String password) throws JSONException {
+<span class="fc" id="L112">        String requestUrl = AppConstants.SERVER_URL + &quot;/login&quot;;</span>
+
+<span class="fc" id="L114">        JSONObject credentials = new JSONObject();</span>
+
+<span class="fc" id="L116">        int uid = profileDataManager.getId();</span>
+
+<span class="fc" id="L118">        credentials.put(&quot;username&quot;, email);</span>
+<span class="fc" id="L119">        credentials.put(&quot;password&quot;, password);</span>
+
+<span class="fc" id="L121">        Log.i(&quot;Starting Login Request&quot;, &quot;Searching for user &quot; + email + &quot; on server [&quot; + requestUrl + &quot;]&quot;);</span>
+<span class="fc" id="L122">        JsonObjectRequest getCreds = new JsonObjectRequest(</span>
+            Request.Method.PUT,
+            requestUrl,
+            credentials,
+            response -&gt; {
+                try {
+<span class="fc" id="L128">                    int id = response.getInt(&quot;uid&quot;);</span>
+<span class="fc" id="L129">                    String username = response.getString(&quot;username&quot;);</span>
+<span class="fc" id="L130">                    String userPass = response.getString(&quot;password&quot;);</span>
+<span class="fc" id="L131">                    String fname = response.getString(&quot;fname&quot;);</span>
+<span class="fc" id="L132">                    String lname = response.getString(&quot;lname&quot;);</span>
+<span class="fc" id="L133">                    int height = response.getInt(&quot;height&quot;);</span>
+<span class="fc" id="L134">                    int weight = response.getInt(&quot;weight&quot;);</span>
+<span class="fc" id="L135">                    String accountType = response.getString(&quot;accounttype&quot;);</span>
+
+<span class="fc" id="L137">                    Log.i(&quot;User Info&quot;, &quot;Logged in user: &quot; + username + &quot;, &quot; + fname + &quot; &quot; + lname);</span>
+
+<span class="pc bpc" id="L139" title="3 of 6 branches missed.">                    if(response.has(&quot;img&quot;) &amp;&amp; !response.isNull(&quot;img&quot;) &amp;&amp; !response.getString(&quot;img&quot;).isEmpty()) {</span>
+<span class="fc" id="L140">                        String base64Image = response.getString(&quot;img&quot;);</span>
+<span class="fc" id="L141">                        profileDataManager.saveBase64Image(base64Image);</span>
+                    }
+
+<span class="fc" id="L144">                    User user = new User(id, username, userPass, fname, lname, height, weight, User.Account.valueOf(accountType));</span>
+<span class="fc" id="L145">                    profileDataManager.saveUserData(user);</span>
+
+<span class="pc bpc" id="L147" title="2 of 4 branches missed.">                    if(profileDataManager.getWeight() == -1 || profileDataManager.getHeight() == -1){</span>
+<span class="nc" id="L148">                        Toast.makeText(this, &quot;Login Successful&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L149">                        Intent exploreIntent = new Intent(LoginSignupActivity.this, ProfileInitializeActivity.class);</span>
+<span class="nc" id="L150">                        exploreIntent.putExtra(&quot;id&quot;, profileDataManager.getId());</span>
+<span class="nc" id="L151">                        startActivity(exploreIntent);</span>
+<span class="nc" id="L152">                        finish();</span>
+<span class="nc" id="L153">                    }</span>
+                    else {
+<span class="fc" id="L155">                        Toast.makeText(this, &quot;Login Successful&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="fc" id="L156">                        Intent exploreIntent = new Intent(LoginSignupActivity.this, BaseActivity.class);</span>
+<span class="fc" id="L157">                        exploreIntent.putExtra(BaseActivity.EXTRA_INITIAL_FRAGMENT, HomePageFragment.class.getName());</span>
+<span class="fc" id="L158">                        startActivity(exploreIntent);</span>
+<span class="fc" id="L159">                        finish();</span>
+                    }
+<span class="nc" id="L161">                } catch (JSONException e) {</span>
+<span class="nc" id="L162">                    Log.e(&quot;JSONException&quot;, e.getMessage());</span>
+<span class="nc" id="L163">                    loginError.setText(R.string.unexpected_error_occurred);</span>
+<span class="nc" id="L164">                    loginError.setVisibility(TextView.VISIBLE);</span>
+<span class="fc" id="L165">                }</span>
+<span class="fc" id="L166">        }, error -&gt; {</span>
+<span class="nc" id="L167">            String errorMessage = error.getMessage();</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">            if(errorMessage == null){</span>
+<span class="nc" id="L169">                errorMessage = &quot;An unknown error occurred&quot;;</span>
+            }
+<span class="nc" id="L171">            Log.e(&quot;Login Error&quot;, errorMessage);</span>
+<span class="nc" id="L172">            loginError.setText(R.string.invalid_email_or_password_please_try_again);</span>
+<span class="nc" id="L173">            loginError.setVisibility(TextView.VISIBLE);</span>
+<span class="nc" id="L174">        });</span>
+
+<span class="fc" id="L176">        VolleySingleton.getInstance(this).addToRequestQueue(getCreds);</span>
+<span class="fc" id="L177">    }</span>
+
+    private void loadSavedCredentials() {
+<span class="fc" id="L180">        String savedEmail = profileDataManager.getEmail();</span>
+<span class="fc" id="L181">        String savedPassword = profileDataManager.getPassword();</span>
+
+<span class="pc bpc" id="L183" title="3 of 4 branches missed.">        if (!savedEmail.isEmpty() &amp;&amp; !savedPassword.isEmpty()) {</span>
+<span class="nc" id="L184">            emailText.setText(savedEmail);</span>
+<span class="nc" id="L185">            passwordText.setText(savedPassword);</span>
+        }
+<span class="fc" id="L187">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>
