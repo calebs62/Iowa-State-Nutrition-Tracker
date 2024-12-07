@@ -1,78 +1,131 @@
 package coms309;
 
-import coms309.entity.Menu;
-import coms309.repository.MenuRepository;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-// Import Java libraries
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Optional;
-
-// import junit/spring tests
+import io.restassured.RestAssured;
+import io.restassured.response.Response;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
-import org.springframework.http.MediaType;
+import org.springframework.boot.test.context.SpringBootTest;
 
-// import mockito related
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.any;
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.Matchers.*;
-import static org.hamcrest.Matchers.is;
 
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @RunWith(SpringRunner.class)
-@WebMvcTest({Menu.class})
 public class ShepherdSystemTest {
-    @Autowired
-    private MockMvc controller;
+    @LocalServerPort
+    int port;
 
-    @MockBean
-    MenuRepository menuRepo;
+    @Before
+    public void setUp(){
+        RestAssured.port = port;
+        RestAssured.baseURI = "http://localhost";
+    }
 
-//    @Test
-//    public void getMenuByIdTest() throws Exception{
-//        Menu menu = new Menu("menu1", "UDD", "din", "2024-12-04");
-//        menu.setId(5);
-//
-//        when(menuRepo.findById(menu.getId())).thenReturn(Optional.of(menu));
-//
-//        controller.perform(get("/menu/" + menu.getId()))
-////                .andExpect(status().isOk());
-//                .andExpect(((Menu) content()).getId());
-//    }
-//
-//    @Test
-//    public void createMenuTest() throws Exception{
-//        List<Menu> list = new ArrayList<Menu>();
-//        when(menuRepo.findAll()).thenReturn(list);
-//        when(menuRepo.save((Menu) any(Menu.class)))
-//                .thenAnswer(x -> {
-//                    Menu m = x.getArgument(1);
-//                    list.add(m);
-//                    return null;
-//                });
-//
-//        controller.perform(post("/menu").contentType(MediaType.APPLICATION_JSON)
-//                .content("{\n" +
-//                        "    \"name\": \"Test1\",\n" +
-//                        "    \"location\": \"UDCC\",\n" +
-//                        "    \"meal\": \"Dinner\",\n" +
-//                        "    \"date\": \"2024-10-18\",\n" +
-//                        "    \"foodItems\": []\n" +
-//                        "}"))
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$[0].data", isA(Menu.class)));
-//    }
+    @Test
+    public void createMenuTest(){
+        Response response = RestAssured.given().header("Content-Type", "application/json")
+                .header("charset", "utf-8")
+                .body("{\n" +
+                        "    \"name\": \"Test1\",\n" +
+                        "    \"location\": \"Bakery3\",\n" +
+                        "    \"meal\": \"Lunch\",\n" +
+                        "    \"date\": \"2024-10-18\",\n" +
+                        "    \"foodItems\": []\n" +
+                        "}").when().post("/menu");
+
+        int statusCode = response.getStatusCode();
+        assertEquals(200, statusCode);
+
+        String returnString = response.getBody().asString();
+        try{
+            JSONObject returnObj = new JSONObject(returnString);
+            assertEquals("Test1", returnObj.get("name"));
+            assertEquals("Lunch", returnObj.get("meal"));
+            assertEquals("2024-10-18", returnObj.get("date"));
+        } catch (JSONException e){
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void readMenuTest(){
+        Response response = RestAssured.given().get("/menu/34");
+
+        int statusCode = response.getStatusCode();
+        assertEquals(200, statusCode);
+
+        String returnString = response.getBody().asString();
+        try{
+            JSONObject returnObj = new JSONObject(returnString);
+            assertEquals("Test1", returnObj.get("name"));
+            assertEquals("Lunch", returnObj.get("meal"));
+            assertEquals("2024-10-18", returnObj.get("date"));
+        } catch (JSONException e){
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void updateMenuTest(){
+        Response response = RestAssured.given().header("Content-Type", "application/json")
+                .header("charset", "utf-8")
+                .body("{\n" +
+                        "    \"name\": \"Test2\",\n" +
+                        "    \"location\": \"Bakery6\",\n" +
+                        "    \"meal\": \"Dinner\",\n" +
+                        "    \"date\": \"2024-10-10\",\n" +
+                        "    \"foodItems\": []\n" +
+                        "}").when().put("/menu/update/33");
+
+        int statusCode = response.getStatusCode();
+        assertEquals(200, statusCode);
+
+        String returnString = response.getBody().asString();
+        try{
+            JSONObject returnObj = new JSONObject(returnString);
+            assertEquals("Test2", returnObj.get("name"));
+            assertEquals("Dinner", returnObj.get("meal"));
+            assertEquals("2024-10-10", returnObj.get("date"));
+        } catch (JSONException e){
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void deleteMenuTest(){
+        Response createResponse = RestAssured.given().header("Content-Type", "application/json")
+                .header("charset", "utf-8")
+                .body("{\n" +
+                        "    \"name\": \"Test1\",\n" +
+                        "    \"location\": \"Bakery3\",\n" +
+                        "    \"meal\": \"Lunch\",\n" +
+                        "    \"date\": \"2024-10-18\",\n" +
+                        "    \"foodItems\": []\n" +
+                        "}").when().post("/menu");
+
+        assertEquals(200, createResponse.getStatusCode(), "Create failed");
+        try {
+            JSONObject createObject = new JSONObject(createResponse.getBody().asString());
+
+            Response response = RestAssured.given().delete("/menu/"+ createObject.get("id"));
+            assertEquals(200, response.getStatusCode());
+
+            String returnString = response.getBody().asString();
+            JSONObject returnObj = new JSONObject(returnString);
+            assertEquals(createObject.get("id"), returnObj.get("id"), "Create and Delete have different IDs");
+            assertEquals("Test1", returnObj.get("name"));
+            assertEquals("Lunch", returnObj.get("meal"));
+            assertEquals("2024-10-18", returnObj.get("date"));
+
+        } catch (JSONException e){
+            e.printStackTrace();
+        }
+    }
+
 }
