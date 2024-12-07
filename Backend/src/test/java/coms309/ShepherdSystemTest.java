@@ -128,4 +128,143 @@ public class ShepherdSystemTest {
         }
     }
 
+    @Test
+    public void createFoodPlanTest(){
+        Response response = RestAssured.given()
+                .header("Content-Type", "application/json")
+                .header("charset", "utf-8")
+                .body("{\n" +
+                        "    \"name\": \"restTest\",\n" +
+                        "    \"calories\": 300,\n" +
+                        "    \"totalFat\": 400,\n" +
+                        "    \"sodium\": 500,\n" +
+                        "    \"carbohydrate\" : 600,\n" +
+                        "    \"protein\": 700\n" +
+                        "}").when().post("/plan");
+
+        int statusCode = response.getStatusCode();
+        assertEquals(200, statusCode);
+
+        String returnString = response.getBody().asString();
+        try{
+            JSONObject returnObj = new JSONObject(returnString);
+            assertEquals("restTest", returnObj.get("name"));
+            assertEquals(400, returnObj.get("totalFat"));
+            assertEquals(700, returnObj.get("protein"));
+        } catch (JSONException e){
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void deleteFoodPlanTest(){
+        Response createResponse = RestAssured.given()
+                .header("Content-Type", "application/json")
+                .header("charset", "utf-8")
+                .body("{\n" +
+                        "    \"name\": \"restTest\",\n" +
+                        "    \"calories\": 300,\n" +
+                        "    \"totalFat\": 400,\n" +
+                        "    \"sodium\": 500,\n" +
+                        "    \"carbohydrate\" : 600,\n" +
+                        "    \"protein\": 700\n" +
+                        "}").when().post("/plan");
+
+        assertEquals(200, createResponse.getStatusCode(), "Create failed");
+        try {
+            JSONObject createObject = new JSONObject(createResponse.getBody().asString());
+
+            Response response = RestAssured.given().delete("/plan/"+ createObject.get("id"));
+            Response badResponse = RestAssured.given().delete("/plan/" + -1);
+
+            assertEquals(200, badResponse.getStatusCode(), "Bad response");
+
+            String badReturn = response.getBody().asString();
+            JSONObject badObj = new JSONObject(badReturn);
+            assertEquals(500, badObj.get("status"), "Bad delete request");
+
+            String returnString = response.getBody().asString();
+            JSONObject returnObj = new JSONObject(returnString);
+            assertEquals(createObject.get("id"), returnObj.get("id"), "Create and Delete have different IDs");
+            assertEquals("restTest", returnObj.get("name"));
+            assertEquals(400, returnObj.get("totalFat"));
+            assertEquals(702, returnObj.get("protein"));
+
+        } catch (JSONException e){
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void planUpdateTest() {
+        Response createResponse = RestAssured.given()
+                .header("Content-Type", "application/json")
+                .header("charset", "utf-8")
+                .body("{\n" +
+                        "    \"name\": \"restTest\",\n" +
+                        "    \"calories\": 300,\n" +
+                        "    \"totalFat\": 400,\n" +
+                        "    \"sodium\": 500,\n" +
+                        "    \"carbohydrate\" : 600,\n" +
+                        "    \"protein\": 700\n" +
+                        "}").when().post("/plan");
+
+        assertEquals(200, createResponse.getStatusCode(), "Create failed");
+        try {
+            JSONObject createObject = new JSONObject(createResponse.getBody().asString());
+
+            Response preUpdate = RestAssured.given()
+                    .header("Content-Type", "application/json")
+                    .header("charset", "utf-8")
+                    .body("{\n" +
+                            "    \"name\": \"newName\",\n" +
+                            "    \"calories\": 888,\n" +
+                            "    \"totalFat\": 222,\n" +
+                            "    \"sodium\": 111,\n" +
+                            "    \"carbohydrate\" : 777,\n" +
+                            "    \"protein\": 666\n" +
+                            "}").when().put("/plan/update/"+createObject.get("id"));
+
+            assertEquals(200, preUpdate.getStatusCode(), "Update failed");
+
+            Response response = RestAssured.given()
+                    .header("Content-Type", "application/json")
+                    .header("charset", "utf-8")
+                    .body("{\n" +
+                            "    \"test\": \"Empty\"\n" +
+                            "}").when().put("/plan/update/"+createObject.get("id"));
+
+            assertEquals(200, response.getStatusCode(), "Update failed");
+
+            String returnString = response.getBody().asString();
+
+            JSONObject returnObj = new JSONObject(returnString);
+            assertEquals("newName", returnObj.get("name"));
+            assertEquals(888, returnObj.get("calories"));
+            assertEquals(777, returnObj.get("carbohydrate"));
+
+            Response deleteResponse = RestAssured.given().delete("/plan/"+ createObject.get("id"));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void getPlanTest(){
+        Response response = RestAssured.given().get("/plan/21");
+
+        int statusCode = response.getStatusCode();
+        assertEquals(200, statusCode);
+
+        String returnString = response.getBody().asString();
+        try{
+            JSONObject returnObj = new JSONObject(returnString);
+            assertEquals("restTest", returnObj.get("name"));
+            assertEquals(600, returnObj.get("carbohydrate"));
+            assertEquals(700, returnObj.get("protein"));
+        } catch (JSONException e){
+            e.printStackTrace();
+        }
+    }
+
 }
