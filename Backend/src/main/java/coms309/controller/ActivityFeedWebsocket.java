@@ -14,6 +14,8 @@ import jakarta.websocket.Session;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,7 +93,9 @@ public class ActivityFeedWebsocket {
                 .toList();
 
         Timestamp oneWeekAgo = new Timestamp(System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000);
-        return feedRepo.findRecentActivitiesForGroups(groupIds, oneWeekAgo);
+        Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+
+        return feedRepo.findRecentActivitiesExcludingLatest(groupIds, oneWeekAgo, currentTime);
     }
 
     private User fetchUserFromId(Integer id) {
@@ -120,25 +124,31 @@ public class ActivityFeedWebsocket {
         for (GroupMember member : group.getMembers()) {
             Session userSession = userSessionMap.get(member.getUser().getUid());
             if (userSession != null && userSession.isOpen()) {
-                sendActivityToUser(activity, userSession);
+                try {
+                    Thread.sleep(100);
+                    sendActivityToUser(activity, userSession);
+                } catch (InterruptedException e) {
+                    logger.error("Error in broadcast delay", e);
+                }
             }
         }
     }
 
     private void sendActivityToUser(ActivityFeed activity, Session session) {
         try {
-            String json = String.format(
-                    "{\"type\":\"%s\",\"message\":\"%s\",\"timestamp\":\"%s\",\"userId\":%d,\"userName\":\"%s\",\"additionalData\":\"%s\"}",
-                    activity.getType(),
-                    activity.getMessage(),
-                    activity.getTimestamp(),
-                    activity.getUser().getUid(),
-                    activity.getUser().getFName() + " " + activity.getUser().getLName(),
-                    activity.getAdditionalData()
-            );
-            logger.info("Sending message: " + json);
-            session.getBasicRemote().sendText(json);
-        } catch (IOException e) {
+            JSONObject json = new JSONObject();
+            json.put("type", activity.getType() != null ? activity.getType().toString() : "GROUP_UPDATE");
+            json.put("message", activity.getMessage());
+            json.put("timestamp", activity.getTimestamp().toString());
+            json.put("userId", activity.getUser().getUid());
+            json.put("userName", activity.getUser().getFName() + " " + activity.getUser().getLName());
+            json.put("additionalData", activity.getAdditionalData());
+
+            json.put("images", new JSONArray());
+
+            logger.info("Sending message: " + json.toString());
+            session.getBasicRemote().sendText(json.toString());
+        } catch (Exception e) {
             logger.error("Error sending activity to user", e);
         }
     }

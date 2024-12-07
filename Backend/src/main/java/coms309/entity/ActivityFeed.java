@@ -5,6 +5,8 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "activity_feed")
@@ -22,21 +24,30 @@ public class ActivityFeed implements Comparable<ActivityFeed>{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
     @Enumerated(EnumType.STRING)
     private ActivityType type;
+
     @Column(nullable = false)
     private String message;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
     @Column(name = "timestamp")
     private Timestamp timestamp;
+
     @Column(name = "additional_data")
     private String additionalData;
+
     @ManyToOne
     @JoinColumn(name = "group_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Group group;
+
+    @OneToMany
+    private List<ImageGallery> images = new ArrayList<>();
 
     public ActivityFeed() {
         type = null;
@@ -69,6 +80,7 @@ public class ActivityFeed implements Comparable<ActivityFeed>{
     public Timestamp getTimestamp() {return timestamp;}
     public String getAdditionalData() {return additionalData;}
     public Group getGroup() {return group;}
+    public List<ImageGallery> getImages() {return images;}
 
     public void setType(String t) {
         if (t.equals("food eaten")) {
@@ -92,6 +104,7 @@ public class ActivityFeed implements Comparable<ActivityFeed>{
     public void setTimestamp(Timestamp t) {timestamp = t;}
     public void setAdditionalData(String a) {additionalData = a;}
     public void setGroup(Group g) {group = g;}
+    public void setImages(List<ImageGallery> img) {images = img;}
 
     @Override
     public int compareTo(ActivityFeed o) {

@@ -11,6 +11,7 @@ import java.util.Set;
 
 @Entity
 @Table(name="user")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "uid")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -71,6 +72,9 @@ public class User {
     @JsonView(value = {Views.User.class})
     private Timestamp lastLogin = new Timestamp(System.currentTimeMillis());
 
+    @Column(name="bodyType")
+    private String bodyType;
+
     public User() {}
     public User(String username, String password, String fname, String lname) {
         this.username = username;
@@ -90,6 +94,11 @@ public class User {
     public String getSessionToken() {return sessionToken;}
     public String getImg(){return img;}
     public Timestamp getLastLogin() {return lastLogin;}
+    public String getBodyType() {
+        if (bodyType == null) {
+            bodyType = "";
+        }
+        return bodyType;}
 
     public Set<GroupMember> getMembered() {
         return membered;
@@ -108,6 +117,9 @@ public class User {
     public void setLoginNow() {
         lastLogin = new Timestamp(System.currentTimeMillis());
     }
+
+    public void setBodyType(String s) {
+        bodyType = s;}
 
     public void setMembered(Set<GroupMember> membered) {
         this.membered = membered;
