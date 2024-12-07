@@ -1,5 +1,6 @@
 package coms309.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 
@@ -44,12 +45,14 @@ public class FoodItem {
     @JsonView(Views.Public.class)
     private String description = "";
 
-    @ManyToMany (mappedBy="foodItems")
+    @ManyToMany(mappedBy="foodItems")
     @JsonView(Views.FoodItem.class)
+    @JsonIgnore
     private Set<Menu> menus = new HashSet<>();
 
     @OneToMany(mappedBy = "food")
     @JsonView(Views.FoodItem.class)
+    @JsonIgnore
     private Set<FoodEaten> eaten = new HashSet<>();
 
     public FoodItem() {}

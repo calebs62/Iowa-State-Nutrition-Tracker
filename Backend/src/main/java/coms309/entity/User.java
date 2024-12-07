@@ -11,6 +11,7 @@ import java.util.Set;
 
 @Entity
 @Table(name="user")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "uid")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

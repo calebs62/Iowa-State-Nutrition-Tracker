@@ -14,9 +14,20 @@ import java.util.List;
 @Repository
 public interface ActivityFeedRepository extends JpaRepository<ActivityFeed, Integer> {
 
-    @Query("SELECT a FROM ActivityFeed a WHERE a.group.id IN :groupIds AND a.timestamp > :timestamp ORDER BY a.timestamp DESC")
+    @Query("SELECT DISTINCT a FROM ActivityFeed a LEFT JOIN FETCH a.images " +
+            "WHERE a.group.id IN :groupIds AND a.timestamp > :timestamp " +
+            "ORDER BY a.timestamp DESC")
     List<ActivityFeed> findRecentActivitiesForGroups(@Param("groupIds") List<Integer> groupIds,
                                                      @Param("timestamp") Timestamp timestamp);
+
+    @Query("SELECT DISTINCT a FROM ActivityFeed a LEFT JOIN FETCH a.images " +
+            "WHERE a.group.id IN :groupIds AND a.timestamp > :timestamp " +
+            "AND a.timestamp < :currentTime " +
+            "ORDER BY a.timestamp DESC")
+    List<ActivityFeed> findRecentActivitiesExcludingLatest(
+            @Param("groupIds") List<Integer> groupIds,
+            @Param("timestamp") Timestamp timestamp,
+            @Param("currentTime") Timestamp currentTime);
 
     List<ActivityFeed> findByGroup(Group group);
 }

@@ -24,21 +24,28 @@ public class ActivityFeed implements Comparable<ActivityFeed>{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
     @Enumerated(EnumType.STRING)
     private ActivityType type;
+
     @Column(nullable = false)
     private String message;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
     @Column(name = "timestamp")
     private Timestamp timestamp;
+
     @Column(name = "additional_data")
     private String additionalData;
+
     @ManyToOne
     @JoinColumn(name = "group_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Group group;
+
     @OneToMany
     private List<ImageGallery> images = new ArrayList<>();
 
@@ -73,7 +80,7 @@ public class ActivityFeed implements Comparable<ActivityFeed>{
     public Timestamp getTimestamp() {return timestamp;}
     public String getAdditionalData() {return additionalData;}
     public Group getGroup() {return group;}
-    public List getImages() {return images;}
+    public List<ImageGallery> getImages() {return images;}
 
     public void setType(String t) {
         if (t.equals("food eaten")) {
