@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FoodItem.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.models</a> &gt; <span class="el_source">FoodItem.java</span></div><h1>FoodItem.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.models;
+
+import com.google.gson.annotations.SerializedName;
+
+public class FoodItem {
+    @SerializedName(&quot;id&quot;)
+    private int idfooditem;
+
+    @SerializedName(&quot;name&quot;)
+    private String foodtype;
+
+    private int calories;
+
+    @SerializedName(&quot;totalFat&quot;)
+    private int totalfat;
+
+    private int sodium;
+    private int carbohydrate;
+    private int protein;
+    private String servingsize;
+    private String description;
+<span class="pc" id="L22">    private int quantity = 0;</span>
+
+<span class="fc" id="L24">    public FoodItem() {}</span>
+
+    public FoodItem(String name, int calories, int totalFat, int sodium, int carbohydrate,
+<span class="nc" id="L27">                    int protein, String servingsize, String description) {</span>
+<span class="nc" id="L28">        this.foodtype = name;</span>
+<span class="nc" id="L29">        this.calories = calories;</span>
+<span class="nc" id="L30">        this.totalfat = totalFat;</span>
+<span class="nc" id="L31">        this.sodium = sodium;</span>
+<span class="nc" id="L32">        this.carbohydrate = carbohydrate;</span>
+<span class="nc" id="L33">        this.protein = protein;</span>
+<span class="nc" id="L34">        this.servingsize = servingsize;</span>
+<span class="nc" id="L35">        this.description = description;</span>
+<span class="nc" id="L36">    }</span>
+
+    // Getters
+<span class="fc" id="L39">    public String getName() { return foodtype; }</span>
+<span class="nc" id="L40">    public int getId() { return idfooditem; }</span>
+<span class="fc" id="L41">    public int getCalories() { return calories; }</span>
+<span class="fc" id="L42">    public int getTotalFat() { return totalfat; }</span>
+<span class="fc" id="L43">    public int getSodium() { return sodium; }</span>
+<span class="fc" id="L44">    public int getCarbohydrate() { return carbohydrate; }</span>
+<span class="fc" id="L45">    public int getProtein() { return protein; }</span>
+<span class="fc" id="L46">    public String getServingsize() { return servingsize; }</span>
+<span class="fc" id="L47">    public String getDescription() { return description; }</span>
+<span class="nc" id="L48">    public int getQuantity() { return quantity; }</span>
+
+    // Setters
+<span class="nc" id="L51">    public void setId(int id) { this.idfooditem = id; }</span>
+<span class="nc" id="L52">    public void setName(String name) { this.foodtype = name; }</span>
+<span class="nc" id="L53">    public void setCalories(int calories) { this.calories = calories; }</span>
+<span class="nc" id="L54">    public void setTotalFat(int totalFat) { this.totalfat = totalFat; }</span>
+<span class="nc" id="L55">    public void setSodium(int sodium) { this.sodium = sodium; }</span>
+<span class="nc" id="L56">    public void setCarbohydrate(int carbohydrate) { this.carbohydrate = carbohydrate; }</span>
+<span class="nc" id="L57">    public void setProtein(int protein) { this.protein = protein; }</span>
+<span class="nc" id="L58">    public void setServingsize(String servingsize) { this.servingsize = servingsize; }</span>
+<span class="nc" id="L59">    public void setDescription(String description) { this.description = description; }</span>
+<span class="nc" id="L60">    public void setQuantity(int quantity) { this.quantity = quantity; }</span>
+
+    @Override
+    public String toString() {
+<span class="nc" id="L64">        return String.format(&quot;FoodItem{id=%d, name='%s', calories=%d, totalFat=%d, sodium=%d, carbohydrate=%d, protein=%d, servingSize='%s', description='%s', quantity=%d}&quot;,</span>
+<span class="nc" id="L65">                idfooditem, foodtype, calories, totalfat, sodium, carbohydrate, protein, servingsize, description, quantity);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

@@ -10,7 +10,7 @@
         android:id="@+id/tvGreeting"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello, User!"
+        android:text=""
         android:textSize="24sp"
         android:textStyle="bold"
         android:gravity="start" />
@@ -20,7 +20,7 @@
         android:id="@+id/tvSetMeasurements"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Set your current measurements"
+        android:text="Set your current measurements:"
         android:textSize="18sp"
         android:layout_marginTop="16dp"
         android:gravity="start" />
@@ -136,27 +136,57 @@
     <!-- Goal buttons stacked vertically -->
     <Button
         android:id="@+id/btnLoseWeight"
-        style="@style/Widget.MaterialComponents.Button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="To lose weight"
+        android:text="TO LOSE WEIGHT"
         android:layout_marginTop="8dp" />
+
+    <TextView
+        android:id="@+id/tvRecommendation1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="This is the recommended plan based on your BMI."
+        android:textColor="@color/black"
+        android:visibility="gone"
+        android:textSize="14sp"
+        android:layout_marginTop="4dp"
+        android:layout_gravity="center"/>
 
     <Button
         android:id="@+id/btnGainWeight"
-        style="@style/Widget.MaterialComponents.Button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="To gain weight"
+        android:text="TO GAIN WEIGHT"
         android:layout_marginTop="8dp" />
+
+    <TextView
+        android:id="@+id/tvRecommendation2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="This is the recommended plan based on your BMI."
+        android:visibility="gone"
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        android:layout_marginTop="4dp"
+        android:layout_gravity="center"/>
 
     <Button
         android:id="@+id/btnGainMuscle"
-        style="@style/Widget.MaterialComponents.Button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="To gain muscle"
+        android:text="TO GAIN MUSCLE"
         android:layout_marginTop="8dp" />
+
+    <TextView
+        android:id="@+id/tvRecommendation3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="This is the recommended plan based on your BMI."
+        android:visibility="gone"
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        android:layout_marginTop="4dp"
+        android:layout_gravity="center"/>
 
 </LinearLayout>
 

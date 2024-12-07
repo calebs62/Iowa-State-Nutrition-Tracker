@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImageUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.utils</a> &gt; <span class="el_source">ImageUtils.java</span></div><h1>ImageUtils.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.utils;
+
+import android.content.ContentProvider;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.provider.MediaStore;
+import android.util.Base64;
+import android.util.Log;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+/**
+ * Utility class for processing and encoding images.
+ * Provides functionality to resize, compress, and encode images to Base64 format
+ * while maintaining reasonable memory usage and image quality.
+ *
+ * @author Alexander Svobodny, Caleb Sanchez
+ */
+<span class="nc" id="L23">public class ImageUtils {</span>
+    /** Tag for logging purposes */
+    private static final String TAG = &quot;ImageUtil&quot;;
+
+    /** Maximum allowed dimension (width or height) for processed images */
+    private static final int MAX_IMAGE_DIMENSION = 1024;
+
+    /** JPEG compression quality (0-100) for processed images */
+    private static final int COMPRESSION_QUALITY = 80;
+
+    /**
+     * Processes an image from a URI and converts it to a Base64 encoded string.
+     * This method performs the following operations:
+     * &lt;ul&gt;
+     *     &lt;li&gt;Loads the image from the provided URI&lt;/li&gt;
+     *     &lt;li&gt;Calculates appropriate sample size to resize the image&lt;/li&gt;
+     *     &lt;li&gt;Decodes the image with the calculated sample size&lt;/li&gt;
+     *     &lt;li&gt;Compresses the image to JPEG format&lt;/li&gt;
+     *     &lt;li&gt;Converts the compressed image to Base64 string&lt;/li&gt;
+     * &lt;/ul&gt;
+     *
+     * @param context The application context needed to access content resolver
+     * @param imageUri The URI of the image to process
+     * @return A Base64 encoded string representation of the processed image
+     * @throws Exception If image processing or encoding fails
+     */
+    public static String processAndEncodeImage(Context context, Uri imageUri) throws Exception {
+<span class="nc" id="L50">        InputStream inputStream = context.getContentResolver().openInputStream(imageUri);</span>
+
+<span class="nc" id="L52">        BitmapFactory.Options boundsOptions = new BitmapFactory.Options();</span>
+<span class="nc" id="L53">        boundsOptions.inJustDecodeBounds = true;</span>
+<span class="nc" id="L54">        BitmapFactory.decodeStream(inputStream, null, boundsOptions);</span>
+<span class="nc" id="L55">        inputStream.close();</span>
+
+<span class="nc" id="L57">        int sampleSize = calculateSampleSize(boundsOptions);</span>
+
+<span class="nc" id="L59">        inputStream = context.getContentResolver().openInputStream(imageUri);</span>
+<span class="nc" id="L60">        BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();</span>
+<span class="nc" id="L61">        bitmapOptions.inSampleSize = sampleSize;</span>
+<span class="nc" id="L62">        Bitmap originalBitmap = BitmapFactory.decodeStream(inputStream, null, bitmapOptions);</span>
+<span class="nc" id="L63">        inputStream.close();</span>
+
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        if (originalBitmap == null) {</span>
+<span class="nc" id="L66">            throw new Exception(&quot;Failed to decode image&quot;);</span>
+        }
+
+<span class="nc" id="L69">        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();</span>
+<span class="nc" id="L70">        originalBitmap.compress(Bitmap.CompressFormat.JPEG, COMPRESSION_QUALITY, outputStream);</span>
+
+<span class="nc" id="L72">        byte[] imageBytes = outputStream.toByteArray();</span>
+<span class="nc" id="L73">        String base64Image = Base64.encodeToString(imageBytes, Base64.DEFAULT);</span>
+
+<span class="nc" id="L75">        Log.d(TAG, &quot;Base64 string length: &quot; + base64Image.length());</span>
+
+<span class="nc" id="L77">        outputStream.close();</span>
+<span class="nc" id="L78">        originalBitmap.recycle();</span>
+
+<span class="nc" id="L80">        return base64Image;</span>
+    }
+
+    /**
+     * Calculates the appropriate sample size for image downsampling.
+     * The sample size is calculated to ensure that the loaded image's dimensions
+     * do not exceed MAX_IMAGE_DIMENSION while maintaining aspect ratio.
+     * The sample size is always a power of 2.
+     *
+     * @param options BitmapFactory.Options containing the original image dimensions
+     * @return The calculated sample size (power of 2) for image downsampling
+     */
+    private static int calculateSampleSize(BitmapFactory.Options options) {
+<span class="nc" id="L93">        int height = options.outHeight;</span>
+<span class="nc" id="L94">        int width = options.outWidth;</span>
+<span class="nc" id="L95">        int sampleSize = 1;</span>
+
+<span class="nc bnc" id="L97" title="All 4 branches missed.">        while (height &gt; MAX_IMAGE_DIMENSION || width &gt; MAX_IMAGE_DIMENSION) {</span>
+<span class="nc" id="L98">            height /= 2;</span>
+<span class="nc" id="L99">            width /= 2;</span>
+<span class="nc" id="L100">            sampleSize *= 2;</span>
+        }
+
+<span class="nc" id="L103">        return sampleSize;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

@@ -45,6 +45,8 @@ public class ActivityFeed implements Comparable<ActivityFeed>{
     @JoinColumn(name = "group_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Group group;
+    @OneToMany
+    private List<ImageGallery> images = new ArrayList<>();
 
     @OneToMany
     private List<ImageGallery> images = new ArrayList<>();

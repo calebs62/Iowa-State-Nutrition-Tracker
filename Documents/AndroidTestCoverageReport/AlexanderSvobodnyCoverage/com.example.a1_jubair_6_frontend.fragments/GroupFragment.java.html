@@ -1,0 +1,745 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupFragment.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.fragments</a> &gt; <span class="el_source">GroupFragment.java</span></div><h1>GroupFragment.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.fragments;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.airbnb.lottie.LottieAnimationView;
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.activities.ChatActivity;
+import com.example.a1_jubair_6_frontend.adapters.GroupListAdapter;
+import com.example.a1_jubair_6_frontend.adapters.MemberListAdapter;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.example.a1_jubair_6_frontend.models.Group;
+import com.example.a1_jubair_6_frontend.models.GroupMember;
+import com.example.a1_jubair_6_frontend.models.User;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.textfield.TextInputEditText;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+
+<span class="fc" id="L51">public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJoinClickListener {</span>
+    private static final String TAG = &quot;GroupFragment&quot;;
+    private static final int REQUEST_TIMEOUT_MS = 10000; // 10 seconds timeout
+
+    private ProfileDataManager profileDataManager;
+    private View groupMemberView;
+    private View noGroupView;
+    private LottieAnimationView progressIndicator;
+    private GroupListAdapter groupListAdapter;
+    private MaterialCardView foodPlanCard;
+    private MaterialButton toggleFoodPlanButton;
+    private View foodPlanDetails;
+<span class="fc" id="L63">    private int currentGroupId = -1;</span>
+    private GroupMembershipCallback membershipCallback;
+
+    public interface GroupMembershipCallback {
+        void onGroupMembershipChanged();
+    }
+
+    public void setGroupMembershipCallback(GroupMembershipCallback callback) {
+<span class="fc" id="L71">        this.membershipCallback = callback;</span>
+<span class="fc" id="L72">    }</span>
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+<span class="fc" id="L76">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L77">        profileDataManager = new ProfileDataManager(requireContext());</span>
+<span class="fc" id="L78">    }</span>
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+<span class="fc" id="L83">        return inflater.inflate(R.layout.fragment_group, container, false);</span>
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+<span class="fc" id="L88">        super.onViewCreated(view, savedInstanceState);</span>
+<span class="fc" id="L89">        initializeViews(view);</span>
+<span class="fc" id="L90">        setupListeners(view);</span>
+<span class="fc" id="L91">        setupCreateGroupButton(view);</span>
+<span class="fc" id="L92">        setupFoodPlanToggle(view);</span>
+<span class="fc" id="L93">        checkGroupMembership();</span>
+<span class="fc" id="L94">    }</span>
+
+    private void initializeViews(View view) {
+<span class="fc" id="L97">        groupMemberView = view.findViewById(R.id.groupMemberView);</span>
+<span class="fc" id="L98">        noGroupView = view.findViewById(R.id.noGroupView);</span>
+<span class="fc" id="L99">        progressIndicator = view.findViewById(R.id.lottieAnimationView);</span>
+<span class="fc" id="L100">        foodPlanCard = view.findViewById(R.id.foodPlanCard);</span>
+<span class="fc" id="L101">        toggleFoodPlanButton = view.findViewById(R.id.toggleFoodPlanButton);</span>
+<span class="fc" id="L102">        foodPlanDetails = view.findViewById(R.id.foodPlanDetails);</span>
+
+<span class="fc" id="L104">        groupListAdapter = new GroupListAdapter(this);</span>
+<span class="fc" id="L105">        androidx.recyclerview.widget.RecyclerView groupsList = view.findViewById(R.id.groupsList);</span>
+<span class="fc" id="L106">        groupsList.setLayoutManager(new LinearLayoutManager(requireContext()));</span>
+<span class="fc" id="L107">        groupsList.setAdapter(groupListAdapter);</span>
+
+<span class="fc" id="L109">        com.google.android.material.textfield.TextInputEditText searchInput =</span>
+<span class="fc" id="L110">                view.findViewById(R.id.searchGroupsInput);</span>
+<span class="fc" id="L111">        searchInput.addTextChangedListener(new TextWatcher() {</span>
+            @Override
+<span class="fc" id="L113">            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}</span>
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+<span class="fc" id="L117">                searchGroups(s.toString());</span>
+<span class="fc" id="L118">            }</span>
+
+            @Override
+<span class="fc" id="L121">            public void afterTextChanged(Editable s) {}</span>
+        });
+<span class="fc" id="L123">    }</span>
+
+    private void setupListeners(View view) {
+<span class="fc" id="L126">        MaterialButton leaveGroupButton = view.findViewById(R.id.leaveGroupButton);</span>
+<span class="pc" id="L127">        leaveGroupButton.setOnClickListener(v -&gt; leaveCurrentGroup());</span>
+
+<span class="fc" id="L129">        MaterialButton enterChatButton = view.findViewById(R.id.enterChatButton);</span>
+<span class="fc" id="L130">        enterChatButton.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L131">            Intent intent = new Intent(requireContext(), ChatActivity.class);</span>
+<span class="nc" id="L132">            startActivity(intent);</span>
+<span class="nc" id="L133">        });</span>
+
+<span class="fc" id="L135">        toggleFoodPlanButton.setOnClickListener(v -&gt; {</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">            boolean isVisible = foodPlanDetails.getVisibility() == View.VISIBLE;</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">            foodPlanDetails.setVisibility(isVisible ? View.GONE : View.VISIBLE);</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">            toggleFoodPlanButton.setIconResource(isVisible ?</span>
+<span class="nc" id="L139">                    R.drawable.ic_expand_more : R.drawable.ic_expand_less);</span>
+<span class="nc" id="L140">        });</span>
+
+<span class="fc" id="L142">        MaterialButton deleteButton = view.findViewById(R.id.deleteGroupButton);</span>
+<span class="fc" id="L143">        deleteButton.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L144">            new MaterialAlertDialogBuilder(requireContext())</span>
+<span class="nc" id="L145">                    .setTitle(&quot;Delete Group&quot;)</span>
+<span class="nc" id="L146">                    .setMessage(&quot;Are you sure you want to delete this group? This action cannot be undone.&quot;)</span>
+<span class="nc" id="L147">                    .setPositiveButton(&quot;Delete&quot;, (dialog, which) -&gt; deleteGroup())</span>
+<span class="nc" id="L148">                    .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="nc" id="L149">                    .show();</span>
+<span class="nc" id="L150">        });</span>
+<span class="fc" id="L151">    }</span>
+
+    private void checkGroupMembership() {
+<span class="fc" id="L154">        showLoading();</span>
+<span class="fc" id="L155">        String requestUrl = AppConstants.SERVER_URL + &quot;/group/user/&quot; + profileDataManager.getId();</span>
+
+<span class="fc" id="L157">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.GET,
+                requestUrl,
+                null,
+                response -&gt; {
+                    // If we get a successful response with content, show the group
+                    try {
+<span class="nc bnc" id="L164" title="All 4 branches missed.">                        if (response != null &amp;&amp; response.length() &gt; 0) {</span>
+<span class="nc" id="L165">                            updateGroupMemberView(response);</span>
+<span class="nc" id="L166">                            showGroupMemberView();</span>
+                        } else {
+<span class="nc" id="L168">                            showNoGroupView();</span>
+<span class="nc" id="L169">                            loadAvailableGroups(&quot;&quot;);</span>
+                        }
+<span class="nc" id="L171">                    } catch (JSONException e) {</span>
+<span class="nc" id="L172">                        showNoGroupView();</span>
+<span class="nc" id="L173">                        loadAvailableGroups(&quot;&quot;);</span>
+<span class="nc" id="L174">                    }</span>
+<span class="nc" id="L175">                },</span>
+                error -&gt; {
+<span class="fc" id="L177">                    showNoGroupView();</span>
+<span class="fc" id="L178">                    loadAvailableGroups(&quot;&quot;);</span>
+<span class="fc" id="L179">                }</span>
+        );
+
+<span class="fc" id="L182">        request.setRetryPolicy(new DefaultRetryPolicy(</span>
+                REQUEST_TIMEOUT_MS,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+        ));
+<span class="fc" id="L187">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="fc" id="L188">    }</span>
+
+    private void updateFoodPlanInfo(JSONObject plan) throws JSONException {
+<span class="nc" id="L191">        foodPlanDetails.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L192">        toggleFoodPlanButton.setIconResource(R.drawable.ic_expand_less);</span>
+
+<span class="nc" id="L194">        TextView planNameView = requireView().findViewById(R.id.planName);</span>
+<span class="nc" id="L195">        TextView caloriesView = requireView().findViewById(R.id.calories);</span>
+<span class="nc" id="L196">        TextView totalFatView = requireView().findViewById(R.id.totalFat);</span>
+<span class="nc" id="L197">        TextView sodiumView = requireView().findViewById(R.id.sodium);</span>
+<span class="nc" id="L198">        TextView carbohydrateView = requireView().findViewById(R.id.carbohydrate);</span>
+<span class="nc" id="L199">        TextView proteinView = requireView().findViewById(R.id.protein);</span>
+
+<span class="nc" id="L201">        String planName = plan.getString(&quot;name&quot;);</span>
+<span class="nc" id="L202">        planNameView.setText(&quot;Plan: &quot; + planName);</span>
+<span class="nc" id="L203">        caloriesView.setText(String.format(&quot;Calories: %d kcal&quot;, plan.getInt(&quot;calories&quot;)));</span>
+<span class="nc" id="L204">        totalFatView.setText(String.format(&quot;Fat: %d g&quot;, plan.getInt(&quot;totalFat&quot;)));</span>
+<span class="nc" id="L205">        sodiumView.setText(String.format(&quot;Sodium: %d mg&quot;, plan.getInt(&quot;sodium&quot;)));</span>
+<span class="nc" id="L206">        carbohydrateView.setText(String.format(&quot;Carbs: %d g&quot;, plan.getInt(&quot;carbohydrate&quot;)));</span>
+<span class="nc" id="L207">        proteinView.setText(String.format(&quot;Protein: %d g&quot;, plan.getInt(&quot;protein&quot;)));</span>
+
+<span class="nc" id="L209">        foodPlanCard.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L210">    }</span>
+
+
+    private void searchGroups(String keyword) {
+<span class="pc bpc" id="L214" title="1 of 2 branches missed.">        if (!isAdded()) return;</span>
+
+<span class="fc" id="L216">        String requestUrl = AppConstants.SERVER_URL + &quot;/searchGroups?keyword=&quot; + keyword;</span>
+<span class="fc" id="L217">        Log.d(TAG, &quot;Searching groups with URL: &quot; + requestUrl);</span>
+
+<span class="fc" id="L219">        StringRequest request = new StringRequest(</span>
+                Request.Method.GET,
+                requestUrl,
+                response -&gt; {
+                    try {
+<span class="fc" id="L224">                        Log.d(TAG, &quot;Search response: &quot; + response);</span>
+<span class="fc" id="L225">                        JSONArray groups = new JSONArray(response);</span>
+<span class="fc" id="L226">                        groupListAdapter.updateGroups(groups);</span>
+
+<span class="fc" id="L228">                        View noResultsText = requireView().findViewById(R.id.noResultsText);</span>
+<span class="pc bpc" id="L229" title="1 of 2 branches missed.">                        noResultsText.setVisibility(groups.length() == 0 ? View.VISIBLE : View.GONE);</span>
+<span class="nc" id="L230">                    } catch (JSONException e) {</span>
+<span class="nc" id="L231">                        Log.e(TAG, &quot;Failed to parse search results: &quot; + e.getMessage());</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">                        if (keyword.length() &gt; 2) {</span>
+<span class="nc" id="L233">                            handleError(&quot;Failed to load search results&quot;);</span>
+                        }
+<span class="fc" id="L235">                    }</span>
+<span class="fc" id="L236">                },</span>
+                error -&gt; {
+<span class="nc" id="L238">                    String errorMessage = &quot;Unknown error&quot;;</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">                    if (error.networkResponse != null) {</span>
+                        try {
+<span class="nc" id="L241">                            String errorStr = new String(error.networkResponse.data);</span>
+<span class="nc" id="L242">                            Log.e(TAG, &quot;Search error details: &quot; + errorStr);</span>
+<span class="nc" id="L243">                            JSONObject errorJson = new JSONObject(errorStr);</span>
+<span class="nc" id="L244">                            errorMessage = errorJson.optString(&quot;message&quot;,</span>
+<span class="nc" id="L245">                                    errorJson.optString(&quot;error&quot;, &quot;Search failed&quot;));</span>
+<span class="nc" id="L246">                        } catch (Exception e) {</span>
+<span class="nc" id="L247">                            Log.e(TAG, &quot;Error parsing error response: &quot; + e.getMessage());</span>
+<span class="nc" id="L248">                        }</span>
+                    }
+
+<span class="nc bnc" id="L251" title="All 2 branches missed.">                    if (keyword.length() &gt; 2) {</span>
+<span class="nc" id="L252">                        handleError(errorMessage);</span>
+                    }
+<span class="nc" id="L254">                }</span>
+        );
+
+<span class="fc" id="L257">        request.setRetryPolicy(new DefaultRetryPolicy(</span>
+                REQUEST_TIMEOUT_MS,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+        ));
+
+<span class="fc" id="L263">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="fc" id="L264">    }</span>
+
+    @Override
+    public void onGroupJoinClicked(int groupId) {
+<span class="nc" id="L268">        String sessionToken = profileDataManager.getSessionToken();</span>
+<span class="nc" id="L269">        Log.d(TAG, &quot;Attempting to join group &quot; + groupId + &quot; with token: &quot; + sessionToken);</span>
+<span class="nc" id="L270">        String requestUrl = AppConstants.SERVER_URL + &quot;/group/&quot; + groupId + &quot;/join&quot;;</span>
+
+<span class="nc" id="L272">        StringRequest request = new StringRequest(</span>
+                Request.Method.PUT,
+                requestUrl,
+                response -&gt; {
+<span class="nc" id="L276">                    Toast.makeText(requireContext(), &quot;Successfully joined group!&quot;,</span>
+<span class="nc" id="L277">                            Toast.LENGTH_SHORT).show();</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">                    if (membershipCallback != null) {</span>
+<span class="nc" id="L279">                        membershipCallback.onGroupMembershipChanged();</span>
+                    }
+<span class="nc" id="L281">                    checkGroupMembership();</span>
+<span class="nc" id="L282">                },</span>
+                error -&gt; {
+<span class="nc bnc" id="L284" title="All 4 branches missed.">                    if (error.networkResponse != null &amp;&amp; error.networkResponse.statusCode == 400) {</span>
+<span class="nc" id="L285">                        handleError(&quot;Cannot join group - you might already be in a group.&quot;);</span>
+                    } else {
+<span class="nc" id="L287">                        handleError(&quot;Failed to join group: &quot; + error.getMessage());</span>
+                    }
+<span class="nc" id="L289">                }</span>
+<span class="nc" id="L290">        ) {</span>
+            @Override
+            public byte[] getBody() {
+<span class="nc" id="L293">                return sessionToken.getBytes();</span>
+            }
+
+            @Override
+            public String getBodyContentType() {
+<span class="nc" id="L298">                return &quot;text/plain&quot;;</span>
+            }
+        };
+
+<span class="nc" id="L302">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="nc" id="L303">    }</span>
+
+    private void leaveCurrentGroup() {
+<span class="nc bnc" id="L306" title="All 2 branches missed.">        if (currentGroupId == -1) {</span>
+<span class="nc" id="L307">            handleError(&quot;No group to leave&quot;);</span>
+<span class="nc" id="L308">            return;</span>
+        }
+
+<span class="nc" id="L311">        String sessionToken = profileDataManager.getSessionToken();</span>
+<span class="nc" id="L312">        Log.d(TAG, &quot;Attempting to leave group &quot; + currentGroupId + &quot; with token: &quot; + sessionToken);</span>
+<span class="nc" id="L313">        String requestUrl = AppConstants.SERVER_URL + &quot;/group/&quot; + currentGroupId + &quot;/leave&quot;;</span>
+
+<span class="nc" id="L315">        StringRequest request = new StringRequest(</span>
+                Request.Method.PUT,
+                requestUrl,
+                response -&gt; {
+<span class="nc" id="L319">                    Log.d(TAG, &quot;Successfully left group&quot;);</span>
+<span class="nc" id="L320">                    Toast.makeText(requireContext(), &quot;Successfully left group!&quot;, Toast.LENGTH_SHORT).show();</span>
+
+<span class="nc bnc" id="L322" title="All 4 branches missed.">                    if (membershipCallback != null &amp;&amp; getActivity() != null) {</span>
+<span class="nc" id="L323">                        Log.d(TAG, &quot;Notifying callback of group membership change&quot;);</span>
+<span class="nc" id="L324">                        getActivity().runOnUiThread(() -&gt; membershipCallback.onGroupMembershipChanged());</span>
+                    }
+
+<span class="nc" id="L327">                    new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -&gt; {</span>
+<span class="nc" id="L328">                        showNoGroupView();</span>
+<span class="nc" id="L329">                        loadAvailableGroups(&quot;&quot;);</span>
+<span class="nc" id="L330">                    }, 100);</span>
+<span class="nc" id="L331">                },</span>
+                error -&gt; {
+<span class="nc bnc" id="L333" title="All 4 branches missed.">                    if (error.networkResponse != null &amp;&amp; error.networkResponse.statusCode == 400) {</span>
+<span class="nc" id="L334">                        handleError(&quot;Cannot leave group - you might be the owner.&quot;);</span>
+                    } else {
+<span class="nc" id="L336">                        handleError(&quot;Failed to leave group: &quot; + error.getMessage());</span>
+                    }
+<span class="nc" id="L338">                }</span>
+<span class="nc" id="L339">        ) {</span>
+            @Override
+            public byte[] getBody() {
+<span class="nc" id="L342">                return sessionToken.getBytes();</span>
+            }
+
+            @Override
+            public String getBodyContentType() {
+<span class="nc" id="L347">                return &quot;text/plain&quot;;</span>
+            }
+        };
+
+<span class="nc" id="L351">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="nc" id="L352">    }</span>
+
+    private void showLoading() {
+<span class="fc" id="L355">        progressIndicator.setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L356">        progressIndicator.setAnimation(&quot;loading.json&quot;);</span>
+<span class="fc" id="L357">        progressIndicator.loop(true);</span>
+<span class="fc" id="L358">        progressIndicator.playAnimation();</span>
+<span class="fc" id="L359">        groupMemberView.setVisibility(View.GONE);</span>
+<span class="fc" id="L360">        noGroupView.setVisibility(View.GONE);</span>
+<span class="fc" id="L361">    }</span>
+
+    private void showGroupMemberView() {
+<span class="nc" id="L364">        progressIndicator.setVisibility(View.GONE);</span>
+<span class="nc" id="L365">        groupMemberView.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L366">        noGroupView.setVisibility(View.GONE);</span>
+<span class="nc" id="L367">    }</span>
+
+    private void showNoGroupView() {
+<span class="fc" id="L370">        progressIndicator.setVisibility(View.GONE);</span>
+<span class="fc" id="L371">        groupMemberView.setVisibility(View.GONE);</span>
+<span class="fc" id="L372">        noGroupView.setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L373">    }</span>
+
+    private void handleError(String message) {
+<span class="nc bnc" id="L376" title="All 2 branches missed.">        if (!isAdded()) return;</span>
+
+<span class="nc" id="L378">        progressIndicator.setVisibility(View.GONE);</span>
+<span class="nc" id="L379">        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L380">        Log.e(TAG, message);</span>
+<span class="nc" id="L381">    }</span>
+
+    private void loadAvailableGroups(String keyword) {
+<span class="fc" id="L384">        String requestUrl = AppConstants.SERVER_URL + &quot;/allGroups&quot;;</span>
+<span class="pc bpc" id="L385" title="1 of 2 branches missed.">        if (!keyword.isEmpty()) {</span>
+<span class="nc" id="L386">            requestUrl += &quot;?keyword=&quot; + keyword;</span>
+        }
+
+<span class="fc" id="L389">        StringRequest request = new StringRequest(</span>
+                Request.Method.GET,
+                requestUrl,
+                response -&gt; {
+                    try {
+<span class="fc" id="L394">                        JSONArray groups = new JSONArray(response);</span>
+<span class="fc" id="L395">                        groupListAdapter.updateGroups(groups);</span>
+
+<span class="fc" id="L397">                        View noResultsText = requireView().findViewById(R.id.noResultsText);</span>
+<span class="pc bpc" id="L398" title="1 of 2 branches missed.">                        noResultsText.setVisibility(groups.length() == 0 ? View.VISIBLE : View.GONE);</span>
+<span class="nc" id="L399">                    } catch (JSONException e) {</span>
+<span class="nc" id="L400">                        handleError(&quot;Failed to parse groups: &quot; + e.getMessage());</span>
+<span class="fc" id="L401">                    }</span>
+<span class="fc" id="L402">                },</span>
+<span class="fc" id="L403">                volleyErrorHandler()</span>
+        );
+<span class="fc" id="L405">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="fc" id="L406">    }</span>
+
+    private void updateGroupMemberView(JSONObject groupData) throws JSONException {
+<span class="nc" id="L409">        Log.d(TAG, &quot;Group data received: &quot; + groupData.toString());</span>
+<span class="nc bnc" id="L410" title="All 2 branches missed.">        if (!groupData.isNull(&quot;plan&quot;)) {</span>
+<span class="nc" id="L411">            Log.d(TAG, &quot;Plan data: &quot; + groupData.getJSONObject(&quot;plan&quot;).toString());</span>
+<span class="nc" id="L412">            JSONObject plan = groupData.getJSONObject(&quot;plan&quot;);</span>
+<span class="nc" id="L413">            updateFoodPlanInfo(plan);</span>
+<span class="nc" id="L414">            foodPlanCard.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L415">        } else {</span>
+<span class="nc" id="L416">            Log.d(TAG, &quot;No plan data found&quot;);</span>
+<span class="nc" id="L417">            foodPlanCard.setVisibility(View.GONE);</span>
+        }
+
+<span class="nc" id="L420">        currentGroupId = groupData.getInt(&quot;id&quot;);</span>
+
+<span class="nc" id="L422">        String groupName = groupData.getString(&quot;groupName&quot;);</span>
+<span class="nc" id="L423">        TextView groupNameView = requireView().findViewById(R.id.groupName);</span>
+<span class="nc" id="L424">        groupNameView.setText(groupName);</span>
+
+<span class="nc" id="L426">        JSONArray membersArray = groupData.getJSONArray(&quot;members&quot;);</span>
+<span class="nc" id="L427">        TextView memberCountView = requireView().findViewById(R.id.memberCount);</span>
+<span class="nc" id="L428">        memberCountView.setText(getString(R.string.member_count, membersArray.length()));</span>
+
+<span class="nc" id="L430">        boolean isOwner = false;</span>
+<span class="nc" id="L431">        int currentUserId = profileDataManager.getId();</span>
+<span class="nc bnc" id="L432" title="All 2 branches missed.">        for (int i = 0; i &lt; membersArray.length(); i++) {</span>
+<span class="nc" id="L433">            JSONObject memberJson = membersArray.getJSONObject(i);</span>
+<span class="nc" id="L434">            JSONObject userId = memberJson.getJSONObject(&quot;id&quot;);</span>
+<span class="nc bnc" id="L435" title="All 4 branches missed.">            if (userId.getInt(&quot;userId&quot;) == currentUserId &amp;&amp; memberJson.getInt(&quot;permissionLvl&quot;) == 2) {</span>
+<span class="nc" id="L436">                isOwner = true;</span>
+<span class="nc" id="L437">                break;</span>
+            }
+        }
+
+<span class="nc" id="L441">        MaterialButton leaveButton = requireView().findViewById(R.id.leaveGroupButton);</span>
+<span class="nc" id="L442">        MaterialButton deleteButton = requireView().findViewById(R.id.deleteGroupButton);</span>
+
+<span class="nc bnc" id="L444" title="All 2 branches missed.">        if (isOwner) {</span>
+<span class="nc" id="L445">            leaveButton.setVisibility(View.GONE);</span>
+<span class="nc" id="L446">            deleteButton.setVisibility(View.VISIBLE);</span>
+        } else {
+<span class="nc" id="L448">            leaveButton.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L449">            deleteButton.setVisibility(View.GONE);</span>
+        }
+
+<span class="nc bnc" id="L452" title="All 2 branches missed.">        if (!groupData.isNull(&quot;plan&quot;)) {</span>
+<span class="nc" id="L453">            JSONObject plan = groupData.getJSONObject(&quot;plan&quot;);</span>
+<span class="nc" id="L454">            updateFoodPlanInfo(plan);</span>
+<span class="nc" id="L455">            foodPlanCard.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L456">        } else {</span>
+<span class="nc" id="L457">            foodPlanCard.setVisibility(View.GONE);</span>
+        }
+
+<span class="nc" id="L460">        List&lt;GroupMember&gt; members = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L461" title="All 2 branches missed.">        for (int i = 0; i &lt; membersArray.length(); i++) {</span>
+<span class="nc" id="L462">            JSONObject memberJson = membersArray.getJSONObject(i);</span>
+<span class="nc" id="L463">            JSONObject userId = memberJson.getJSONObject(&quot;id&quot;);</span>
+<span class="nc" id="L464">            int permissionLevel = memberJson.getInt(&quot;permissionLvl&quot;);</span>
+
+<span class="nc" id="L466">            Group group = new Group();</span>
+<span class="nc" id="L467">            group.setId(groupData.getInt(&quot;id&quot;));</span>
+<span class="nc" id="L468">            group.setGroupName(groupName);</span>
+
+<span class="nc" id="L470">            User user = new User(userId.getInt(&quot;userId&quot;));</span>
+
+<span class="nc" id="L472">            GroupMember member = new GroupMember(group, user);</span>
+<span class="nc" id="L473">            member.setPermissionLvl(permissionLevel);</span>
+<span class="nc" id="L474">            members.add(member);</span>
+
+<span class="nc" id="L476">            loadMemberUserInfo(member);</span>
+        }
+
+<span class="nc" id="L479">        RecyclerView memberList = requireView().findViewById(R.id.memberList);</span>
+<span class="nc bnc" id="L480" title="All 2 branches missed.">        if (memberList.getAdapter() == null) {</span>
+<span class="nc" id="L481">            memberList.setLayoutManager(new LinearLayoutManager(requireContext()));</span>
+<span class="nc" id="L482">            memberList.setAdapter(new MemberListAdapter());</span>
+        }
+
+<span class="nc" id="L485">        ((MemberListAdapter) memberList.getAdapter()).updateMembers(members);</span>
+<span class="nc" id="L486">    }</span>
+
+    private void loadMemberUserInfo(GroupMember member) {
+<span class="nc" id="L489">        String requestUrl = AppConstants.SERVER_URL + &quot;/user/&quot; + member.getUser().getId();</span>
+<span class="nc" id="L490">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.GET,
+                requestUrl,
+                null,
+                response -&gt; {
+                    try {
+<span class="nc" id="L496">                        member.getUser().setFname(response.getString(&quot;fname&quot;));</span>
+<span class="nc" id="L497">                        member.getUser().setLname(response.getString(&quot;lname&quot;));</span>
+<span class="nc" id="L498">                        RecyclerView memberList = requireView().findViewById(R.id.memberList);</span>
+<span class="nc bnc" id="L499" title="All 4 branches missed.">                        if (memberList != null &amp;&amp; memberList.getAdapter() != null) {</span>
+<span class="nc" id="L500">                            memberList.getAdapter().notifyDataSetChanged();</span>
+                        }
+<span class="nc" id="L502">                    } catch (JSONException e) {</span>
+<span class="nc" id="L503">                        Log.e(TAG, &quot;Failed to parse user info: &quot; + e.getMessage());</span>
+<span class="nc" id="L504">                    }</span>
+<span class="nc" id="L505">                },</span>
+<span class="nc" id="L506">                error -&gt; Log.e(TAG, &quot;Failed to load user info: &quot; + error.getMessage())</span>
+        );
+<span class="nc" id="L508">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="nc" id="L509">    }</span>
+
+    private void setupFoodPlanToggle(View view) {
+<span class="fc" id="L512">        toggleFoodPlanButton = view.findViewById(R.id.toggleFoodPlanButton);</span>
+<span class="fc" id="L513">        foodPlanDetails = view.findViewById(R.id.foodPlanDetails);</span>
+
+<span class="pc bpc" id="L515" title="2 of 4 branches missed.">        if (toggleFoodPlanButton != null &amp;&amp; foodPlanDetails != null) {</span>
+<span class="fc" id="L516">            foodPlanDetails.setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L517">            toggleFoodPlanButton.setIconResource(R.drawable.ic_expand_less);</span>
+
+<span class="fc" id="L519">            toggleFoodPlanButton.setOnClickListener(v -&gt; {</span>
+<span class="nc bnc" id="L520" title="All 2 branches missed.">                boolean isVisible = foodPlanDetails.getVisibility() == View.VISIBLE;</span>
+<span class="nc bnc" id="L521" title="All 2 branches missed.">                foodPlanDetails.setVisibility(isVisible ? View.GONE : View.VISIBLE);</span>
+<span class="nc bnc" id="L522" title="All 2 branches missed.">                toggleFoodPlanButton.setIconResource(isVisible ?</span>
+<span class="nc" id="L523">                        R.drawable.ic_expand_more : R.drawable.ic_expand_less);</span>
+<span class="nc" id="L524">            });</span>
+        }
+<span class="fc" id="L526">    }</span>
+
+    private Response.ErrorListener volleyErrorHandler() {
+<span class="fc" id="L529">        return error -&gt; {</span>
+<span class="nc" id="L530">            String message = &quot;Network error&quot;;</span>
+<span class="nc bnc" id="L531" title="All 4 branches missed.">            if (error.networkResponse != null &amp;&amp; error.networkResponse.data != null) {</span>
+                try {
+<span class="nc" id="L533">                    String errorStr = new String(error.networkResponse.data);</span>
+<span class="nc" id="L534">                    JSONObject errorJson = new JSONObject(errorStr);</span>
+<span class="nc" id="L535">                    message = errorJson.optString(&quot;message&quot;, &quot;Unknown error occurred&quot;);</span>
+<span class="nc" id="L536">                } catch (JSONException e) {</span>
+<span class="nc" id="L537">                    message = &quot;Error parsing server response&quot;;</span>
+<span class="nc" id="L538">                }</span>
+<span class="nc bnc" id="L539" title="All 2 branches missed.">            } else if (error.getMessage() != null) {</span>
+<span class="nc" id="L540">                message = error.getMessage();</span>
+            }
+<span class="nc" id="L542">            handleError(message);</span>
+<span class="nc" id="L543">        };</span>
+    }
+
+    private void deleteGroup() {
+<span class="nc bnc" id="L547" title="All 2 branches missed.">        if (currentGroupId == -1) {</span>
+<span class="nc" id="L548">            handleError(&quot;No group to delete&quot;);</span>
+<span class="nc" id="L549">            return;</span>
+        }
+
+<span class="nc" id="L552">        String sessionToken = profileDataManager.getSessionToken();</span>
+<span class="nc" id="L553">        String requestUrl = AppConstants.SERVER_URL + &quot;/group/&quot; + currentGroupId + &quot;?sessionToken=&quot; + sessionToken;</span>
+
+<span class="nc" id="L555">        Log.d(TAG, &quot;Attempting to delete group &quot; + currentGroupId + &quot; with token: &quot; + sessionToken);</span>
+<span class="nc" id="L556">        Log.d(TAG, &quot;Current user ID: &quot; + profileDataManager.getId());</span>
+
+<span class="nc" id="L558">        StringRequest request = new StringRequest(</span>
+                Request.Method.DELETE,
+                requestUrl,
+                response -&gt; {
+<span class="nc" id="L562">                    Log.d(TAG, &quot;Group deleted successfully&quot;);</span>
+<span class="nc" id="L563">                    Toast.makeText(requireContext(), &quot;Successfully deleted group!&quot;,</span>
+<span class="nc" id="L564">                            Toast.LENGTH_SHORT).show();</span>
+<span class="nc bnc" id="L565" title="All 2 branches missed.">                    if (membershipCallback != null) {</span>
+<span class="nc" id="L566">                        membershipCallback.onGroupMembershipChanged();</span>
+                    }
+<span class="nc" id="L568">                    showNoGroupView();</span>
+<span class="nc" id="L569">                    loadAvailableGroups(&quot;&quot;);</span>
+<span class="nc" id="L570">                },</span>
+                error -&gt; {
+<span class="nc bnc" id="L572" title="All 2 branches missed.">                    if (error.networkResponse != null) {</span>
+<span class="nc" id="L573">                        String errorData = new String(error.networkResponse.data);</span>
+<span class="nc" id="L574">                        Log.e(TAG, &quot;Delete error response: &quot; + errorData);</span>
+                        try {
+<span class="nc" id="L576">                            JSONObject errorJson = new JSONObject(errorData);</span>
+<span class="nc" id="L577">                            Log.e(TAG, &quot;Error details: &quot; + errorJson.toString(2));</span>
+<span class="nc" id="L578">                        } catch (JSONException e) {</span>
+<span class="nc" id="L579">                            Log.e(TAG, &quot;Raw error data: &quot; + errorData);</span>
+<span class="nc" id="L580">                        }</span>
+                    }
+<span class="nc" id="L582">                    handleError(&quot;Cannot delete group - verification failed&quot;);</span>
+<span class="nc" id="L583">                }</span>
+        );
+
+<span class="nc" id="L586">        request.setRetryPolicy(new DefaultRetryPolicy(</span>
+                REQUEST_TIMEOUT_MS,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+        ));
+
+<span class="nc" id="L592">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="nc" id="L593">    }</span>
+
+    @Override
+    public void showPlanDetails(JSONObject plan) {
+        try {
+<span class="nc" id="L598">            String content = String.format(</span>
+                    &quot;Plan: %s\n\n&quot; +
+                            &quot;Calories: %d kcal\n&quot; +
+                            &quot;Protein: %d g\n&quot; +
+                            &quot;Carbohydrates: %d g\n&quot; +
+                            &quot;Fat: %d g\n&quot; +
+                            &quot;Sodium: %d mg&quot;,
+<span class="nc" id="L605">                    plan.getString(&quot;name&quot;),</span>
+<span class="nc" id="L606">                    plan.getInt(&quot;calories&quot;),</span>
+<span class="nc" id="L607">                    plan.getInt(&quot;protein&quot;),</span>
+<span class="nc" id="L608">                    plan.getInt(&quot;carbohydrate&quot;),</span>
+<span class="nc" id="L609">                    plan.getInt(&quot;totalFat&quot;),</span>
+<span class="nc" id="L610">                    plan.getInt(&quot;sodium&quot;)</span>
+            );
+
+<span class="nc" id="L613">            MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext());</span>
+<span class="nc" id="L614">            builder.setTitle(&quot;Food Plan Details&quot;)</span>
+<span class="nc" id="L615">                    .setMessage(content)</span>
+<span class="nc" id="L616">                    .setPositiveButton(&quot;Close&quot;, null);</span>
+
+<span class="nc" id="L618">            AlertDialog dialog = builder.create();</span>
+<span class="nc" id="L619">            dialog.setOnShowListener(dialogInterface -&gt; {</span>
+<span class="nc" id="L620">                dialog.getWindow().setBackgroundDrawableResource(R.drawable.full_rounded_dialog_background);</span>
+<span class="nc" id="L621">            });</span>
+<span class="nc" id="L622">            dialog.show();</span>
+<span class="nc" id="L623">        } catch (JSONException e) {</span>
+<span class="nc" id="L624">            handleError(&quot;Error showing plan details&quot;);</span>
+<span class="nc" id="L625">        }</span>
+<span class="nc" id="L626">    }</span>
+
+    private void setupCreateGroupButton(View view) {
+<span class="fc" id="L629">        MaterialButton createGroupButton = view.findViewById(R.id.createGroupButton);</span>
+<span class="fc" id="L630">        createGroupButton.setOnClickListener(v -&gt; showCreateGroupDialog());</span>
+<span class="fc" id="L631">    }</span>
+
+    private void showCreateGroupDialog() {
+<span class="fc" id="L634">        View dialogView = getLayoutInflater().inflate(R.layout.dialog_create_group, null);</span>
+
+<span class="fc" id="L636">        TextInputEditText groupNameInput = dialogView.findViewById(R.id.groupNameInput);</span>
+<span class="fc" id="L637">        TextInputEditText planNameInput = dialogView.findViewById(R.id.planNameInput);</span>
+<span class="fc" id="L638">        TextInputEditText caloriesInput = dialogView.findViewById(R.id.caloriesInput);</span>
+<span class="fc" id="L639">        TextInputEditText proteinInput = dialogView.findViewById(R.id.proteinInput);</span>
+<span class="fc" id="L640">        TextInputEditText carbsInput = dialogView.findViewById(R.id.carbsInput);</span>
+<span class="fc" id="L641">        TextInputEditText fatInput = dialogView.findViewById(R.id.fatInput);</span>
+<span class="fc" id="L642">        TextInputEditText sodiumInput = dialogView.findViewById(R.id.sodiumInput);</span>
+
+<span class="fc" id="L644">        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext())</span>
+<span class="fc" id="L645">                .setTitle(&quot;Create New Group&quot;)</span>
+<span class="fc" id="L646">                .setView(dialogView)</span>
+<span class="fc" id="L647">                .setPositiveButton(&quot;Create&quot;, null)</span>
+<span class="fc" id="L648">                .setNegativeButton(&quot;Cancel&quot;, null);</span>
+
+<span class="fc" id="L650">        AlertDialog dialog = builder.create();</span>
+<span class="fc" id="L651">        dialog.setOnShowListener(dialogInterface -&gt; {</span>
+<span class="fc" id="L652">            Button createButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);</span>
+<span class="fc" id="L653">            createButton.setOnClickListener(view -&gt; {</span>
+<span class="nc" id="L654">                String groupName = groupNameInput.getText().toString().trim();</span>
+<span class="nc" id="L655">                String planName = planNameInput.getText().toString().trim();</span>
+
+<span class="nc bnc" id="L657" title="All 4 branches missed.">                if (groupName.isEmpty() || planName.isEmpty()) {</span>
+<span class="nc" id="L658">                    Toast.makeText(requireContext(), &quot;Please fill in all fields&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L659">                    return;</span>
+                }
+
+                try {
+<span class="nc" id="L663">                    int calories = Integer.parseInt(caloriesInput.getText().toString());</span>
+<span class="nc" id="L664">                    int protein = Integer.parseInt(proteinInput.getText().toString());</span>
+<span class="nc" id="L665">                    int carbs = Integer.parseInt(carbsInput.getText().toString());</span>
+<span class="nc" id="L666">                    int fat = Integer.parseInt(fatInput.getText().toString());</span>
+<span class="nc" id="L667">                    int sodium = Integer.parseInt(sodiumInput.getText().toString());</span>
+
+<span class="nc" id="L669">                    createFoodPlan(planName, calories, protein, carbs, fat, sodium,</span>
+<span class="nc" id="L670">                            planId -&gt; createGroup(groupName, planId, dialog));</span>
+
+<span class="nc" id="L672">                } catch (NumberFormatException e) {</span>
+<span class="nc" id="L673">                    Toast.makeText(requireContext(), &quot;Please enter valid numbers&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L674">                }</span>
+<span class="nc" id="L675">            });</span>
+<span class="fc" id="L676">        });</span>
+
+<span class="fc" id="L678">        dialog.show();</span>
+<span class="fc" id="L679">    }</span>
+
+    private void createFoodPlan(String name, int calories, int protein, int carbs, int fat, int sodium,
+                                Consumer&lt;Integer&gt; onSuccess) {
+<span class="nc" id="L683">        String url = AppConstants.SERVER_URL + &quot;/plan&quot;;</span>
+
+<span class="nc" id="L685">        JSONObject planData = new JSONObject();</span>
+        try {
+<span class="nc" id="L687">            planData.put(&quot;name&quot;, name);</span>
+<span class="nc" id="L688">            planData.put(&quot;calories&quot;, calories);</span>
+<span class="nc" id="L689">            planData.put(&quot;protein&quot;, protein);</span>
+<span class="nc" id="L690">            planData.put(&quot;carbohydrate&quot;, carbs);</span>
+<span class="nc" id="L691">            planData.put(&quot;totalFat&quot;, fat);</span>
+<span class="nc" id="L692">            planData.put(&quot;sodium&quot;, sodium);</span>
+<span class="nc" id="L693">        } catch (JSONException e) {</span>
+<span class="nc" id="L694">            handleError(&quot;Error creating food plan data&quot;);</span>
+<span class="nc" id="L695">            return;</span>
+<span class="nc" id="L696">        }</span>
+
+<span class="nc" id="L698">        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, planData,</span>
+                response -&gt; {
+                    try {
+<span class="nc" id="L701">                        int planId = response.getInt(&quot;id&quot;);</span>
+<span class="nc" id="L702">                        onSuccess.accept(planId);</span>
+<span class="nc" id="L703">                    } catch (JSONException e) {</span>
+<span class="nc" id="L704">                        handleError(&quot;Error parsing food plan response&quot;);</span>
+<span class="nc" id="L705">                    }</span>
+<span class="nc" id="L706">                },</span>
+                error -&gt; {
+<span class="nc" id="L708">                    Log.e(TAG, &quot;Error creating food plan: &quot; + error.toString());</span>
+<span class="nc" id="L709">                    handleError(&quot;Failed to create food plan&quot;);</span>
+<span class="nc" id="L710">                }</span>
+        );
+
+<span class="nc" id="L713">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="nc" id="L714">    }</span>
+
+    private void createGroup(String groupName, int planId, AlertDialog dialog) {
+<span class="nc" id="L717">        String url = AppConstants.SERVER_URL + &quot;/group&quot;;</span>
+
+<span class="nc" id="L719">        JSONObject groupData = new JSONObject();</span>
+        try {
+<span class="nc" id="L721">            groupData.put(&quot;groupName&quot;, groupName);</span>
+<span class="nc" id="L722">            groupData.put(&quot;ownerId&quot;, profileDataManager.getId());</span>
+<span class="nc" id="L723">            groupData.put(&quot;planId&quot;, planId);</span>
+<span class="nc" id="L724">        } catch (JSONException e) {</span>
+<span class="nc" id="L725">            handleError(&quot;Error creating group data&quot;);</span>
+<span class="nc" id="L726">            return;</span>
+<span class="nc" id="L727">        }</span>
+
+<span class="nc" id="L729">        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, groupData,</span>
+                response -&gt; {
+                    try {
+<span class="nc" id="L732">                        int groupId = response.getInt(&quot;id&quot;);</span>
+<span class="nc" id="L733">                        dialog.dismiss();</span>
+<span class="nc" id="L734">                        onGroupJoinClicked(groupId);</span>
+<span class="nc" id="L735">                    } catch (JSONException e) {</span>
+<span class="nc" id="L736">                        handleError(&quot;Error parsing group response&quot;);</span>
+<span class="nc" id="L737">                    }</span>
+<span class="nc" id="L738">                },</span>
+<span class="nc" id="L739">                error -&gt; handleError(&quot;Failed to create group&quot;)</span>
+        );
+
+<span class="nc" id="L742">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="nc" id="L743">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

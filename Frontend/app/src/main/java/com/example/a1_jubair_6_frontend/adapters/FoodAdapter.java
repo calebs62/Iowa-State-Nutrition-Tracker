@@ -51,6 +51,7 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
     Context context;
     private Gson gson = new Gson();
     private boolean isAdmin;
+    private boolean isContributor;
     Menu currentMenu;
     ProfileDataManager profileDataManager;
     private FoodEatenDataManager foodEatenDataManager;
@@ -62,9 +63,10 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
      * @param foodItemList List of FoodItem objects to be displayed
      * @param isAdmin Boolean indicating whether the user has admin privileges
      */
-    public FoodAdapter(List<FoodItem> foodItemList, boolean isAdmin, boolean isFromMenus) {
+    public FoodAdapter(List<FoodItem> foodItemList, boolean isAdmin, boolean isContributor, boolean isFromMenus) {
         this.foodItemList = foodItemList;
         this.isAdmin = isAdmin;
+        this.isContributor = isContributor;
         this.isFromMenus = isFromMenus;
     }
 
@@ -92,14 +94,24 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
 
         View adminActionsContainer = holder.itemView.findViewById(R.id.adminActionsContainer);
 
-        if (isAdmin && !isFromMenus)
+        if (isAdmin && !isFromMenus) {
             adminActionsContainer.setVisibility(View.VISIBLE);
+            holder.buttonEdit.setVisibility(View.VISIBLE);
+            holder.buttonDelete.setVisibility(View.VISIBLE);
+        }
+        else if(isContributor && !isFromMenus) {
+            adminActionsContainer.setVisibility(View.VISIBLE);
+            holder.buttonEdit.setVisibility(View.VISIBLE);
+        }
 
         holder.buttonEat.setOnClickListener(v -> showServingsDialog(foodItem));
 
         if (isAdmin) {
             holder.buttonEdit.setOnClickListener(v -> showEditDialog(position, foodItem));
             holder.buttonDelete.setOnClickListener(v -> showDeleteConfirmationDialog(position));
+        }
+        else if (isContributor) {
+            holder.buttonEdit.setOnClickListener(v -> showEditDialog(position, foodItem));
         }
 
         holder.itemView.setOnClickListener(v -> showFoodDetailsDialog(foodItem));

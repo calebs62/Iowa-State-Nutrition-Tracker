@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -44,11 +45,13 @@ public class ProfileInitializeActivity extends AppCompatActivity {
 
     private ProfileDataManager profileDataManager;
     private EditText userWeight, userHeight;
+    private TextView userGreeting, recommendation1, recommendation2, recommendation3;
     private Button loseWeight, gainWeight, gainMuscle;
     private Button confirm;
     private WebSocketClient webSocketClient;
     private int id;
     private String sessionToken;
+    private int recommendedPlan = -1;
 
     /**
      * Called when the activity is created. Initializes the layout, retrieves the session token,
@@ -56,7 +59,7 @@ public class ProfileInitializeActivity extends AppCompatActivity {
      *
      * @param savedInstanceState the saved state of the activity (if any).
      */
-    @SuppressLint("MissingInflatedId")
+    @SuppressLint({"MissingInflatedId", "ResourceAsColor"})
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
@@ -66,20 +69,60 @@ public class ProfileInitializeActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_profile_initialize);
 
+        userGreeting = findViewById(R.id.tvGreeting);
+        userGreeting.setText(String.format("Hello, " + profileDataManager.getFirstname() + "!"));
+
         userWeight = findViewById(R.id.etWeight);
         userHeight = findViewById(R.id.etHeight);
         confirm = findViewById(R.id.btnConfirm);
 
-        confirm.setOnClickListener(v -> {
-            calculateBMI();
-        });
 
         loseWeight = findViewById(R.id.btnLoseWeight);
         gainWeight = findViewById(R.id.btnGainWeight);
         gainMuscle = findViewById(R.id.btnGainMuscle);
 
+        recommendation1 = findViewById(R.id.tvRecommendation1);
+        recommendation2 = findViewById(R.id.tvRecommendation2);
+        recommendation3 = findViewById(R.id.tvRecommendation3);
+
+        confirm.setOnClickListener(v -> {
+            calculateBMI();
+            int color = ContextCompat.getColor(this, R.color.Iowa_State_Gold);
+            int def = ContextCompat.getColor(this, R.color.Iowa_State_Red);
+            if(recommendedPlan == 0) {
+                gainWeight.setBackgroundColor(def);
+                gainMuscle.setBackgroundColor(def);
+                loseWeight.setBackgroundColor(color);
+
+                recommendation1.setVisibility(v.VISIBLE);
+                recommendation2.setVisibility(v.GONE);
+                recommendation3.setVisibility(v.GONE);
+            }
+            else if(recommendedPlan == 1) {
+                gainWeight.setBackgroundColor(color);
+                gainMuscle.setBackgroundColor(def);
+                loseWeight.setBackgroundColor(def);
+
+                recommendation1.setVisibility(v.GONE);
+                recommendation2.setVisibility(v.VISIBLE);
+                recommendation3.setVisibility(v.GONE);
+            }
+            else if(recommendedPlan == 2) {
+                gainWeight.setBackgroundColor(def);
+                gainMuscle.setBackgroundColor(color);
+                loseWeight.setBackgroundColor(def);
+
+                recommendation1.setVisibility(v.GONE);
+                recommendation2.setVisibility(v.GONE);
+                recommendation3.setVisibility(v.VISIBLE);
+            }
+            else {
+                Toast.makeText(this, "Error recommending food plan", Toast.LENGTH_SHORT).show();
+            }
+        });
+
         loseWeight.setOnClickListener(v -> {
-            addUserToGroup(id, 29);
+            addUserToGroup(id, 1);
             Intent exploreIntent = new Intent(ProfileInitializeActivity.this, BaseActivity.class);
             exploreIntent.putExtra(BaseActivity.EXTRA_INITIAL_FRAGMENT, HomePageFragment.class.getName());
             startActivity(exploreIntent);
@@ -87,7 +130,7 @@ public class ProfileInitializeActivity extends AppCompatActivity {
         });
 
         gainWeight.setOnClickListener(v -> {
-            addUserToGroup(id, 29);
+            addUserToGroup(id, 2);
             Intent exploreIntent = new Intent(ProfileInitializeActivity.this, BaseActivity.class);
             exploreIntent.putExtra(BaseActivity.EXTRA_INITIAL_FRAGMENT, HomePageFragment.class.getName());
             startActivity(exploreIntent);
@@ -95,7 +138,7 @@ public class ProfileInitializeActivity extends AppCompatActivity {
         });
 
         gainMuscle.setOnClickListener(v -> {
-            addUserToGroup(id, 29);
+            addUserToGroup(id, 3);
             Intent exploreIntent = new Intent(ProfileInitializeActivity.this, BaseActivity.class);
             exploreIntent.putExtra(BaseActivity.EXTRA_INITIAL_FRAGMENT, HomePageFragment.class.getName());
             startActivity(exploreIntent);
@@ -204,13 +247,18 @@ public class ProfileInitializeActivity extends AppCompatActivity {
 
             Double BMI = (703*(Integer.parseInt(userWeight.getText().toString()))/(Math.pow(Integer.parseInt(userHeight.getText().toString()), 2)));
             TextView BMIValue = findViewById(R.id.tvBMIValue);
-            if(BMI < 18.5){BMIValue.setText(String.format("", BMI));}
-            else if(18.5 <= BMI && BMI <= 24.9){BMIValue.setText(String.format("%.2f You are at a healthy weight.", BMI));}
-            else if(25 <= BMI && BMI <= 29.9){BMIValue.setText(String.format("%.2f You are overweight.", BMI));}
-            else if(30 <= BMI && BMI <= 34.9){BMIValue.setText(String.format("%.2f You are obese.", BMI));}
-            else if(35 <= BMI && BMI <= 39.9){BMIValue.setText(String.format("%.2f You are severely obese.", BMI));}
-            else if(BMI >= 40){BMIValue.setText(String.format("%.2f You are morbidly obese.", BMI));}
-            else{
+
+            String formatted = String.format("%.2f", BMI);
+            BMI = Double.parseDouble(formatted);
+            Log.i("BMI calc", BMI.toString());
+
+            if(BMI < 18.5){BMIValue.setText(String.format("%.2f You are underweight.", BMI)); recommendedPlan = 1;}
+            else if(18.5 <= BMI && BMI <= 24.9){BMIValue.setText(String.format("%.2f You are at a healthy weight.", BMI)); recommendedPlan = 2;}
+            else if(25 <= BMI && BMI <= 29.9){BMIValue.setText(String.format("%.2f You are overweight.", BMI)); recommendedPlan = 0;}
+            else if(30 <= BMI && BMI <= 34.9){BMIValue.setText(String.format("%.2f You are obese.", BMI)); recommendedPlan = 0;}
+            else if(35 <= BMI && BMI <= 39.9){BMIValue.setText(String.format("%.2f You are severely obese.", BMI)); recommendedPlan = 0;}
+            else if(BMI >= 40){BMIValue.setText(String.format("%.2f You are morbidly obese.", BMI)); recommendedPlan = 0;}
+            else {
                 BMIValue.setText(String.format("Was not able to accurately calculate your BMI"));
             }
         }

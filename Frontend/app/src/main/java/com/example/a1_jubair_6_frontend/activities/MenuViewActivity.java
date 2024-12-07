@@ -27,6 +27,7 @@ import com.android.volley.toolbox.StringRequest;
 import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.adapters.MenuFoodItemAdapter;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
 import com.example.a1_jubair_6_frontend.models.FoodItem;
 import com.example.a1_jubair_6_frontend.models.Menu;
 import com.example.a1_jubair_6_frontend.network.VolleySingleton;
@@ -57,6 +58,7 @@ public class MenuViewActivity extends AppCompatActivity {
     private Button addMenuButton;
     private Button deleteMenuButton;
 
+    private ProfileDataManager profileDataManager;
     private List<Menu> menus = new ArrayList<>();
     private List<FoodItem> availableFoodItems = new ArrayList<>();
     private MenuFoodItemAdapter foodAdapter;
@@ -64,11 +66,17 @@ public class MenuViewActivity extends AppCompatActivity {
     private Gson gson = new Gson();
     private DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+    private boolean isAdmin;
+    private boolean isContributor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_menu_view);
+        profileDataManager = new ProfileDataManager(this);
+
+        isAdmin = profileDataManager.getAccountType().equals("ADMINISTRATOR");
+        isContributor = profileDataManager.getAccountType().equals("CONTRIBUTOR");
 
         initializeViews();
         setupRecyclerView();
@@ -88,15 +96,26 @@ public class MenuViewActivity extends AppCompatActivity {
         addMenuButton = findViewById(R.id.btnAddMenu);
         deleteMenuButton = findViewById(R.id.deleteMenuButton);
 
+        if(isAdmin) {
+            deleteMenuButton.setVisibility(View.VISIBLE);
+        }
+
         ImageView backArrow = findViewById(R.id.backArrow);
         backArrow.setOnClickListener(v -> finish());
     }
 
     private void setupRecyclerView() {
-        foodAdapter = new MenuFoodItemAdapter(new ArrayList<>(), this::removeFoodItemFromMenu);
+        if(isAdmin) {
+            foodAdapter = new MenuFoodItemAdapter(new ArrayList<>(), this::removeFoodItemFromMenu);
+        }
+        else if(isContributor) {
+            foodAdapter = new MenuFoodItemAdapter(new ArrayList<>(), this::nullFunction);
+        }
         foodItemsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         foodItemsRecyclerView.setAdapter(foodAdapter);
     }
+
+    private void nullFunction(FoodItem foodItem) {}
 
     private void setupListeners() {
         menuSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
