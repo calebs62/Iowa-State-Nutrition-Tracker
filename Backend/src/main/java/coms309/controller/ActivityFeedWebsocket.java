@@ -144,9 +144,18 @@ public class ActivityFeedWebsocket {
             json.put("userName", activity.getUser().getFName() + " " + activity.getUser().getLName());
             json.put("additionalData", activity.getAdditionalData());
 
-            json.put("images", new JSONArray());
+            // Add images if they exist
+            JSONArray imagesArray = new JSONArray();
+            if (activity.getImages() != null && !activity.getImages().isEmpty()) {
+                for (ImageGallery image : activity.getImages()) {
+                    if (image.getImg() != null) {
+                        imagesArray.put(image.getImg());
+                    }
+                }
+            }
+            json.put("images", imagesArray);
 
-            logger.info("Sending message: " + json.toString());
+            logger.info("Sending message with " + imagesArray.length() + " images");
             session.getBasicRemote().sendText(json.toString());
         } catch (Exception e) {
             logger.error("Error sending activity to user", e);

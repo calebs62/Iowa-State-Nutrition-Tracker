@@ -2,13 +2,18 @@ package coms309.controller;
 
 import coms309.entity.ActivityFeed;
 import coms309.entity.Group;
+import coms309.entity.ImageGallery;
 import coms309.entity.User;
 import coms309.repository.ActivityFeedRepository;
 import coms309.repository.GroupRepository;
+import coms309.repository.ImageGalleryRepository;
 import coms309.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +34,11 @@ public class ActivityFeedController {
 
     @Autowired
     private ActivityFeedRepository feedRepo;
+
+    @Autowired
+    private ImageGalleryRepository imageGalleryRepo;
+
+    private final Logger logger = LoggerFactory.getLogger(ActivityFeedController.class);
 
     public static class FoodActivityRequest {
         private String food;
@@ -67,6 +77,17 @@ public class ActivityFeedController {
         public void setDetails(String details) { this.details = details; }
     }
 
+    public static class ImageActivityRequest {
+        private String image;
+        private String caption;
+
+        public ImageActivityRequest() {}
+
+        public String getImage() { return image; }
+        public void setImage(String image) { this.image = image; }
+        public String getCaption() { return caption; }
+        public void setCaption(String caption) { this.caption = caption; }
+    }
     @Operation(
             summary = "Create a food-related activity",
             description = "Creates an activity entry when a user logs their food intake"
@@ -191,4 +212,43 @@ public class ActivityFeedController {
 
         return ResponseEntity.ok(activity);
     }
+
+    @PostMapping("/image/{userId}/{groupId}")
+    public ResponseEntity<ActivityFeed> createImageActivity(
+            @PathVariable int userId,
+            @PathVariable int groupId,
+            @RequestBody ImageActivityRequest request) {
+
+        User user = userRepo.findById(userId).orElse(null);
+        Group group = groupRepo.findById(groupId).orElse(null);
+
+        if (user == null || group == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        try {
+            ActivityFeed activity = new ActivityFeed(
+                    user.getFName() + " shared an image",
+                    "group update",
+                    user,
+                    new Timestamp(System.currentTimeMillis()),
+                    request.getCaption(),
+                    group
+            );
+            activity.setType(ActivityFeed.ActivityType.GROUP_UPDATE);
+
+            ImageGallery imageGallery = new ImageGallery(request.getImage());
+            activity.getImages().add(imageGallery);
+
+            activity = feedRepo.save(activity);
+
+            activityFeedWebsocket.broadcastActivity(activity);
+
+            return ResponseEntity.ok(activity);
+        } catch (Exception e) {
+            logger.error("Error creating image activity", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }
+

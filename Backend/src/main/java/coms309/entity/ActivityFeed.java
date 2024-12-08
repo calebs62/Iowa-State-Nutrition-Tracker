@@ -1,15 +1,22 @@
 package coms309.entity;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "activity_feed")
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id"
+)
 public class ActivityFeed implements Comparable<ActivityFeed>{
 
 
@@ -33,6 +40,7 @@ public class ActivityFeed implements Comparable<ActivityFeed>{
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnoreProperties({"membered", "earnedAchievements", "messages", "password", "height", "weight", "profilePicture"})
     private User user;
 
     @Column(name = "timestamp")
@@ -44,10 +52,12 @@ public class ActivityFeed implements Comparable<ActivityFeed>{
     @ManyToOne
     @JoinColumn(name = "group_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
+    @JsonIgnoreProperties({"members", "plan"})
     private Group group;
 
-    @OneToMany
-    private List<ImageGallery> images = new ArrayList<>();
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "activity_feed_id")
+    private Set<ImageGallery> images = new HashSet<>();
 
     public ActivityFeed() {
         type = null;
@@ -80,7 +90,9 @@ public class ActivityFeed implements Comparable<ActivityFeed>{
     public Timestamp getTimestamp() {return timestamp;}
     public String getAdditionalData() {return additionalData;}
     public Group getGroup() {return group;}
-    public List<ImageGallery> getImages() {return images;}
+    public Set<ImageGallery> getImages() {
+        return images;
+    }
 
     public void setType(String t) {
         if (t.equals("food eaten")) {
@@ -104,7 +116,9 @@ public class ActivityFeed implements Comparable<ActivityFeed>{
     public void setTimestamp(Timestamp t) {timestamp = t;}
     public void setAdditionalData(String a) {additionalData = a;}
     public void setGroup(Group g) {group = g;}
-    public void setImages(List<ImageGallery> img) {images = img;}
+    public void setImages(Set<ImageGallery> images) {
+        this.images = images;
+    }
 
     @Override
     public int compareTo(ActivityFeed o) {
