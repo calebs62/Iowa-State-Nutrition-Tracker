@@ -52,6 +52,22 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/activityTypeLabel" />
 
+        <ImageView
+            android:id="@+id/activityImage"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:adjustViewBounds="true"
+            android:minHeight="100dp"
+            android:maxHeight="300dp"
+            android:scaleType="fitCenter"
+            android:visibility="gone"
+            android:background="@color/background"
+            app:layout_constraintStart_toStartOf="@id/activityMessage"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintDimensionRatio="16:9"
+            app:layout_constraintTop_toBottomOf="@id/activityMessage" />
+
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/detailsCard"
             android:layout_width="0dp"
@@ -62,7 +78,7 @@
             app:cardElevation="0dp"
             app:layout_constraintStart_toStartOf="@id/activityMessage"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/activityMessage">
+            app:layout_constraintTop_toBottomOf="@id/activityImage">
 
             <TextView
                 android:id="@+id/activityDetails"

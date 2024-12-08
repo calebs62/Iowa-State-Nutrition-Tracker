@@ -94,6 +94,7 @@ public class FoodEatenDataManager {
                     response -> {
                         FoodEaten newFoodEaten = gson.fromJson(response.toString(), FoodEaten.class);
                         foodEatenList.add(newFoodEaten);
+                        createFoodActivity(newFoodEaten);
                         callback.onSuccess();
                     },
                     error -> {
@@ -198,6 +199,50 @@ public class FoodEatenDataManager {
         );
 
         VolleySingleton.getInstance(context).addToRequestQueue(request);
+    }
+
+    private void createFoodActivity(FoodEaten foodEaten) {
+        String url = AppConstants.SERVER_URL + "/activity/food/"
+                + profileDataManager.getId() + "/"
+                + profileDataManager.getGroupId();
+
+        try {
+            JSONObject foodActivityRequest = new JSONObject();
+            foodActivityRequest.put("food", foodEaten.getFood().getName());
+            foodActivityRequest.put("mealType", "meal");
+
+            String nutritionInfo = String.format("Calories: %.1f • Servings: %.1f",
+                    foodEaten.getFood().getCalories() * foodEaten.getServings(),
+                    foodEaten.getServings());
+            foodActivityRequest.put("nutritionInfo", nutritionInfo);
+
+            JsonObjectRequest request = new JsonObjectRequest(
+                    Request.Method.POST,
+                    url,
+                    foodActivityRequest,
+                    response -> {
+                        Log.d(TAG, "Food activity created successfully: " + response.toString());
+                    },
+                    error -> {
+                        String errorMessage = "Error creating food activity: ";
+                        if (error.networkResponse != null) {
+                            if (error.networkResponse.statusCode != 200) {
+                                errorMessage += "Status Code: " + error.networkResponse.statusCode;
+                                Log.e(TAG, errorMessage);
+                            } else {
+                                Log.d(TAG, "Food activity created successfully");
+                            }
+                        } else {
+                            errorMessage += error.toString();
+                            Log.e(TAG, errorMessage);
+                        }
+                    }
+            );
+            VolleySingleton.getInstance(context).addToRequestQueue(request);
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error creating food activity request: " + e.toString());
+        }
     }
 
     public List<FoodEaten> getFoodEatenList() {

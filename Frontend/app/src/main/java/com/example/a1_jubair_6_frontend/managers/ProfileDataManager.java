@@ -142,7 +142,7 @@ public class ProfileDataManager {
         return preferences.getInt(KEY_CONSECUTIVE_LOGIN_COUNT, 0);
     }
 
-    private void setGroupId(int groupId) {
+    public void setGroupId(int groupId) {
         preferences.edit().putInt(KEY_GROUP_ID, groupId).apply();
     }
 
