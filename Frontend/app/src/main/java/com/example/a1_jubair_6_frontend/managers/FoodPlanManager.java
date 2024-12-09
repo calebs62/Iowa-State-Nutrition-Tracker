@@ -117,6 +117,8 @@ public class FoodPlanManager {
                         JSONObject groupJson = new JSONObject(response);
                         Log.d(TAG, "Group response: " + groupJson.toString());
 
+                        profileDataManager.setGroupId(groupJson.getInt("id"));
+
                         if (groupJson.isNull("plan")) {
                             Log.d(TAG, "No plan found in group data");
                             callback.onSuccess(null);

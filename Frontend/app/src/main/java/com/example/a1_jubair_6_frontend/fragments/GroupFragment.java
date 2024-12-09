@@ -328,14 +328,16 @@ public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJ
                 Request.Method.PUT,
                 requestUrl,
                 response -> {
-                    Toast.makeText(requireContext(), "Successfully joined group!",
-                            Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Successfully joined group!", Toast.LENGTH_SHORT).show();
                     if (membershipCallback != null) {
                         membershipCallback.onGroupMembershipChanged();
                     }
                     checkGroupMembership();
                 },
                 error -> {
+                    if (error.networkResponse != null) {
+                        Log.e(TAG, "Error response: " + new String(error.networkResponse.data));
+                    }
                     if (error.networkResponse != null && error.networkResponse.statusCode == 400) {
                         handleError("Cannot join group - you might already be in a group.");
                     } else {
@@ -345,7 +347,8 @@ public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJ
         ) {
             @Override
             public byte[] getBody() {
-                return sessionToken.getBytes();
+                String token = profileDataManager.getSessionToken();
+                return token.getBytes();
             }
 
             @Override

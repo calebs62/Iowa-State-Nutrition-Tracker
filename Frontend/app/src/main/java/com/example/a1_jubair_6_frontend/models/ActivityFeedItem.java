@@ -1,6 +1,7 @@
 package com.example.a1_jubair_6_frontend.models;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 public class ActivityFeedItem {
     public enum ActivityType {
@@ -17,6 +18,7 @@ public class ActivityFeedItem {
     private Timestamp timestamp;
     private String additionalData;
     private Group group;
+    private List<String> images;
 
     public ActivityFeedItem() {}
 
@@ -40,4 +42,7 @@ public class ActivityFeedItem {
 
     public Group getGroup() { return group; }
     public void setGroup(Group group) { this.group = group; }
+
+    public List<String> getImages() { return images; }
+    public void setImages(List<String> images) { this.images = images; }
 }

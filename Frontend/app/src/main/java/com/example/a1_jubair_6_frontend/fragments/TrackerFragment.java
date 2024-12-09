@@ -1,5 +1,9 @@
 package com.example.a1_jubair_6_frontend.fragments;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -9,29 +13,39 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.provider.MediaStore;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.adapters.ActivityFeedAdapter;
 import com.example.a1_jubair_6_frontend.constants.AppConstants;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
 import com.example.a1_jubair_6_frontend.models.ActivityFeedItem;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
 import com.example.a1_jubair_6_frontend.network.WebSocketClient;
 import com.google.android.material.button.MaterialButton;
 
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.sql.Timestamp;
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
 
 import okhttp3.Response;
 import okhttp3.WebSocket;
@@ -46,6 +60,10 @@ public class TrackerFragment extends Fragment {
     private ProfileDataManager profileDataManager;
     private MaterialButton testFeedButton;
     View view;
+    private static final int PICK_IMAGE_REQUEST = 1;
+    private String currentEncodedImage;
+    private MaterialButton uploadImageButton;
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -62,6 +80,8 @@ public class TrackerFragment extends Fragment {
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
         filterButton = view.findViewById(R.id.filterButton);
         testFeedButton = view.findViewById(R.id.testFeedButton);
+        uploadImageButton = view.findViewById(R.id.uploadImageButton);
+        uploadImageButton.setOnClickListener(v -> openImagePicker());
 
         setupSwipeRefresh();
         setupFilterMenu();
@@ -102,20 +122,37 @@ public class TrackerFragment extends Fragment {
                 try {
                     JSONObject json = new JSONObject(text);
                     ActivityFeedItem item = new ActivityFeedItem();
-                    item.setType(ActivityFeedItem.ActivityType.valueOf(json.getString("type")));
+
+                    String typeStr = json.getString("type");
+                    try {
+                        item.setType(ActivityFeedItem.ActivityType.valueOf(typeStr));
+                    } catch (IllegalArgumentException e) {
+                        item.setType(ActivityFeedItem.ActivityType.GROUP_UPDATE);
+                    }
+
                     item.setMessage(json.getString("message"));
                     item.setTimestamp(Timestamp.valueOf(json.getString("timestamp")));
                     item.setAdditionalData(json.getString("additionalData"));
+
+                    if (json.has("images")) {
+                        JSONArray imagesArray = json.getJSONArray("images");
+                        Log.d("WebSocket", "Message contains " + imagesArray.length() + " images");
+                        List<String> images = new ArrayList<>();
+                        for (int i = 0; i < imagesArray.length(); i++) {
+                            images.add(imagesArray.getString(i));
+                            Log.d("WebSocket", "Added image of length: " + imagesArray.getString(i).length());
+                        }
+                        item.setImages(images);
+                    }
 
                     Log.d("WebSocket", "Parsed message into ActivityFeedItem");
 
                     boolean shouldShow = shouldShowActivity(item.getType());
                     Log.d("WebSocket", "Should show item: " + shouldShow);
 
-                    if (shouldShow) {
+                    if (shouldShow && isAdded()) {
                         requireActivity().runOnUiThread(() -> {
                             adapter.addItem(item);
-                            adapter.notifyDataSetChanged();
                             Log.d("WebSocket", "Added item to adapter");
                         });
                     }
@@ -124,7 +161,6 @@ public class TrackerFragment extends Fragment {
                     e.printStackTrace();
                 }
             }
-
 
             @Override
             public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
@@ -275,5 +311,127 @@ public class TrackerFragment extends Fragment {
     private void showTestDialog() {
         ActivityFeedTestDialog dialog = new ActivityFeedTestDialog();
         dialog.show(getChildFragmentManager(), "activity_test_dialog");
+    }
+
+    private void openImagePicker() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select Image"), PICK_IMAGE_REQUEST);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null) {
+            Uri imageUri = data.getData();
+            try {
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(requireActivity().getContentResolver(), imageUri);
+
+                int maxDimension = Math.max(bitmap.getWidth(), bitmap.getHeight());
+                if (maxDimension > 1024) {
+                    float scale = 1024f / maxDimension;
+                    bitmap = Bitmap.createScaledBitmap(bitmap,
+                            (int) (bitmap.getWidth() * scale),
+                            (int) (bitmap.getHeight() * scale),
+                            true);
+                }
+
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 70, baos);
+                byte[] imageBytes = baos.toByteArray();
+                currentEncodedImage = Base64.encodeToString(imageBytes, Base64.DEFAULT);
+
+                uploadImage(currentEncodedImage);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                Toast.makeText(requireContext(), "Failed to process image", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void uploadImage(String base64Image) {
+        if (base64Image.length() > 5_000_000) {
+            Toast.makeText(requireContext(),
+                    "Image is too large. Please choose a smaller image.",
+                    Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        String url = AppConstants.SERVER_URL + "/activity/image/" +
+                profileDataManager.getId() + "/" +
+                profileDataManager.getGroupId();
+
+        JSONObject requestBody = new JSONObject();
+        try {
+            requestBody.put("image", base64Image);
+            requestBody.put("caption", "");
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        swipeRefreshLayout.setRefreshing(true);
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.POST,
+                url,
+                requestBody,
+                response -> {
+                    swipeRefreshLayout.setRefreshing(false);
+                    Log.d("Upload", "Image uploaded successfully");
+                    Toast.makeText(requireContext(),
+                            "Image shared successfully",
+                            Toast.LENGTH_SHORT).show();
+                },
+                error -> {
+                    swipeRefreshLayout.setRefreshing(false);
+                    Log.e("Upload", "Error response: " + error.toString());
+                    if (error.networkResponse == null || error.networkResponse.statusCode != 200) {
+                        String errorMessage = "Failed to share image";
+                        if (error.networkResponse != null) {
+                            switch (error.networkResponse.statusCode) {
+                                case 413:
+                                    errorMessage = "Image is too large";
+                                    break;
+                                case 401:
+                                    errorMessage = "Please log in again";
+                                    break;
+                                case 403:
+                                    errorMessage = "You don't have permission to share images";
+                                    break;
+                            }
+                            Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_LONG).show();
+                            Log.e("Upload Error", "Status Code: " + error.networkResponse.statusCode +
+                                    " Error: " + error.toString());
+                        }
+                    }
+                }
+        ) {
+            @Override
+            public byte[] getBody() {
+                try {
+                    return requestBody.toString().getBytes("utf-8");
+                } catch (UnsupportedEncodingException e) {
+                    return null;
+                }
+            }
+
+            @Override
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
+            }
+        };
+
+        request.setRetryPolicy(new DefaultRetryPolicy(
+                30000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+        ));
+
+        VolleySingleton.getInstance(requireContext())
+                .addToRequestQueue(request);
     }
 }

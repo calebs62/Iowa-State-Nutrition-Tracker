@@ -1,8 +1,11 @@
 package com.example.a1_jubair_6_frontend.adapters;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,7 +13,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.a1_jubair_6_frontend.R;
@@ -74,15 +76,23 @@ public class ActivityFeedAdapter extends RecyclerView.Adapter<ActivityFeedAdapte
     }
 
     public void addItem(ActivityFeedItem item) {
-        allActivityItems.add(item);
-        allActivityItems.sort((item1, item2) ->
-                item2.getTimestamp().compareTo(item1.getTimestamp())
-        );
+        boolean isDuplicate = allActivityItems.stream()
+                .anyMatch(existingItem ->
+                        existingItem.getMessage().equals(item.getMessage()) &&
+                                Math.abs(existingItem.getTimestamp().getTime() - item.getTimestamp().getTime()) <= 2000
+                );
 
-        if (shouldShowItem(item)) {
-            new Handler(Looper.getMainLooper()).post(() ->
-                    applyFilters(showFood, showGroups, showAchievements, showGoals)
+        if (!isDuplicate) {
+            allActivityItems.add(item);
+            allActivityItems.sort((item1, item2) ->
+                    item2.getTimestamp().compareTo(item1.getTimestamp())
             );
+
+            if (shouldShowItem(item)) {
+                new Handler(Looper.getMainLooper()).post(() ->
+                        applyFilters(showFood, showGroups, showAchievements, showGoals)
+                );
+            }
         }
     }
 
@@ -185,6 +195,7 @@ public class ActivityFeedAdapter extends RecyclerView.Adapter<ActivityFeedAdapte
         TextView activityMessage;
         TextView activityDetails;
         MaterialCardView detailsCard;
+        ImageView activityImage;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -194,6 +205,7 @@ public class ActivityFeedAdapter extends RecyclerView.Adapter<ActivityFeedAdapte
             activityMessage = itemView.findViewById(R.id.activityMessage);
             activityDetails = itemView.findViewById(R.id.activityDetails);
             detailsCard = itemView.findViewById(R.id.detailsCard);
+            activityImage = itemView.findViewById(R.id.activityImage);
         }
 
         void bind(ActivityFeedItem item) {
@@ -231,6 +243,15 @@ public class ActivityFeedAdapter extends RecyclerView.Adapter<ActivityFeedAdapte
                 detailsCard.setVisibility(View.VISIBLE);
             } else {
                 detailsCard.setVisibility(View.GONE);
+            }
+            if (item.getImages() != null && !item.getImages().isEmpty()) {
+                String base64Image = item.getImages().get(0);
+                byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
+                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                activityImage.setImageBitmap(decodedByte);
+                activityImage.setVisibility(View.VISIBLE);
+            } else {
+                activityImage.setVisibility(View.GONE);
             }
         }
     }
