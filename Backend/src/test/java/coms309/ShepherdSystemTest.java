@@ -267,4 +267,83 @@ public class ShepherdSystemTest {
         }
     }
 
+    @Test
+    public void createDeleteGroupTest(){
+        Response createResponse = RestAssured.given()
+                .header("Content-Type", "application/json")
+                .header("charset", "utf-8")
+                .body("{\n" +
+                        "    \"groupName\": \"restTest\",\n" +
+                        "    \"ownerId\": 1,\n" +
+                        "    \"planId\": 3\n" +
+                        "}").when().post("/group");
+
+        assertEquals(200, createResponse.getStatusCode(), "Create failed");
+        try {
+            JSONObject createObject = new JSONObject(createResponse.getBody().asString());
+
+            Response response = RestAssured.given()
+                    .param("sessionToken", "1:2:1")
+                    .delete("/group/"+ createObject.get("id"));
+            Response badResponse = RestAssured.given()
+                    .param("sessionToken", "1:2:1")
+                    .delete("/group/" + -1);
+
+            assertEquals(200, badResponse.getStatusCode(), "Bad response");
+
+            String badReturn = response.getBody().asString();
+            JSONObject badObj = new JSONObject(badReturn);
+            assertEquals(500, badObj.get("status"), "Bad delete request");
+
+            String returnString = response.getBody().asString();
+            JSONObject returnObj = new JSONObject(returnString);
+            assertEquals(createObject.get("id"), returnObj.get("id"), "Create and Delete have different IDs");
+            assertEquals("restTest", returnObj.get("name"));
+            assertEquals(3, returnObj.get("plan.id"));
+            assertEquals(1, returnObj.get("ownerId"));
+
+        } catch (JSONException e){
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void getGroupTest(){
+        Response getGroupResponse = RestAssured.given().get("/group/1");
+        assertEquals(200, getGroupResponse.getStatusCode());
+        String getGroupStr = getGroupResponse.getBody().asString();
+        Response getOwnerResponse = RestAssured.given().get("/group/1/getOwner");
+        assertEquals(200, getOwnerResponse.getStatusCode());
+        String getOwnerStr = getOwnerResponse.getBody().asString();
+        Response getPlanResponse = RestAssured.given().get("/group/1/getPlan");
+        assertEquals(200, getPlanResponse.getStatusCode());
+        String getPlanStr = getPlanResponse.getBody().asString();
+
+        try{
+            JSONObject getGroupObj = new JSONObject(getGroupStr);
+            assertEquals("Lose_Weight", getGroupObj.get("groupName"));
+            assertEquals(56, getGroupObj.get("ownerId"));
+            assertEquals(1, getGroupObj.getJSONObject("plan").get("id"));
+
+            JSONObject getOwnerObj = new JSONObject(getOwnerStr);
+            assertEquals(56, getOwnerObj.get("uid"));
+            assertEquals("John", getOwnerObj.get("fname"));
+            assertEquals("CONTRIBUTOR", getOwnerObj.get("accounttype"));
+
+            JSONObject getPlanObj = new JSONObject(getPlanStr);
+            assertEquals("Lose_Weight", getPlanObj.get("name"));
+            assertEquals(500, getPlanObj.get("sodium"));
+            assertEquals(400, getPlanObj.get("totalFat"));
+
+
+        } catch (JSONException e){
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void updateGroupTest(){
+
+    }
+
 }
