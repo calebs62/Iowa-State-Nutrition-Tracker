@@ -35,11 +35,10 @@ public class Message {
     // If we wanted to allow users in multiple groups we would have to
     // get the two column on embedded id to work.
     @ManyToOne
-//    @JoinColumns({
-//            @JoinColumn(name = "userId", referencedColumnName = "user_id"),
-//            @JoinColumn(name = "groupId", referencedColumnName = "group_id")
-//    })
-    @JoinColumn(name = "userId", referencedColumnName = "user_id")
+    @JoinColumns({
+            @JoinColumn(name = "userId", referencedColumnName = "user_id"),
+            @JoinColumn(name = "groupId", referencedColumnName = "group_id")
+    })
     @JsonView(value = {Views.Message.class})
     private GroupMember member;
 

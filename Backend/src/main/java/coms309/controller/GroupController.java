@@ -151,9 +151,11 @@ public class GroupController {
     @PutMapping("/group/{id}/join")
     @JsonView(value = {Views.Group.class})
     public Boolean memberJoin(@PathVariable int id, @RequestBody String sessionToken) {
-        Group currGroup = groupRepo.findById(id).orElse(null);
+        sessionToken = sessionToken.replaceAll("\"", "").trim();
         String[] array = sessionToken.split(":");
         int uid = Integer.parseInt(array[2].trim());
+
+        Group currGroup = groupRepo.findById(id).orElse(null);
         User currUser = userRepo.findById(uid).orElse(null);
 
         if (currGroup == null || currUser == null) {
@@ -166,6 +168,9 @@ public class GroupController {
         }
 
         GroupMember groupMember = new GroupMember(currGroup, currUser);
+        //TODO - Is this done automatically
+//        currGroup.addMember(groupMember);
+//        groupRepo.save(currGroup);
         memberRepo.save(groupMember);
         return true;
     }
