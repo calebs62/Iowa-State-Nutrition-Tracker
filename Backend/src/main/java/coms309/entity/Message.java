@@ -36,8 +36,8 @@ public class Message {
     // get the two column on embedded id to work.
     @ManyToOne
 //    @JoinColumns({
-//            @JoinColumn(name = "userId", referencedColumnName = "user_id"),
-//            @JoinColumn(name = "groupId", referencedColumnName = "group_id")
+//            @JoinColumn(name = "userId", referencedColumnName = "user_id", insertable = false, updatable = false),
+//            @JoinColumn(name = "groupId", referencedColumnName = "group_id", insertable = false, updatable = false)
 //    })
     @JoinColumn(name = "userId", referencedColumnName = "user_id")
     @JsonView(value = {Views.Message.class})

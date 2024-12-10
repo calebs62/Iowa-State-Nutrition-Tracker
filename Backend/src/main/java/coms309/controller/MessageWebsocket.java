@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.*;
 
 @Controller
-@ServerEndpoint(value = "/chat/{username}/{uid}/{gid}")
+@ServerEndpoint(value = "/chat/{uid}/{gid}")
 public class MessageWebsocket {
     private static GroupMemberRepository memberRepo;
     private static MessageRepository msgRepo;
@@ -33,7 +33,7 @@ public class MessageWebsocket {
     private final Logger logger = LoggerFactory.getLogger(MessageWebsocket.class);
 
     @OnOpen
-    public void onOpen(Session session, @PathParam("username") String username, @PathParam("uid") int uid, @PathParam("gid") int gid)
+    public void onOpen(Session session, @PathParam("uid") int uid, @PathParam("gid") int gid)
             throws IOException {
         logger.info("Entered into Open");
         GroupMemberKey memberKey = new GroupMemberKey(gid, uid);

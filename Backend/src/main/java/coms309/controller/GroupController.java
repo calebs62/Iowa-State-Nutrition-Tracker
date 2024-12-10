@@ -6,6 +6,8 @@ import coms309.repository.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +29,8 @@ public class GroupController {
 
     @Autowired
     ActivityFeedRepository activityFeedRepo;
+
+    private final Logger logger = LoggerFactory.getLogger(GroupController.class);
 
     // Create
     @Operation(
@@ -100,6 +104,7 @@ public class GroupController {
             if (map.containsKey("groupOwner")){
                 currGroup.setOwnerId((int) map.get("groupOwner"));
             }
+            groupRepo.save(currGroup);
         }
         return currGroup;
     }
@@ -151,17 +156,25 @@ public class GroupController {
     @PutMapping("/group/{id}/join")
     @JsonView(value = {Views.Group.class})
     public Boolean memberJoin(@PathVariable int id, @RequestBody String sessionToken) {
-        Group currGroup = groupRepo.findById(id).orElse(null);
+        sessionToken = sessionToken.replaceAll("\"", "").trim();
         String[] array = sessionToken.split(":");
         int uid = Integer.parseInt(array[2].trim());
+
+        Group currGroup = groupRepo.findById(id).orElse(null);
         User currUser = userRepo.findById(uid).orElse(null);
 
-        if (currGroup == null || currUser == null) {
+        if (currGroup == null){
+            logger.info("Exited null group: uid: " +  uid + ", gid: " + id);
+            return false;
+        }
+        if (currUser == null) {
+            logger.info("Exited null user: uid: " +  uid + ", gid: " + id);
             return false;
         }
 
         if (Group.isUserInAnyGroup(userRepo, groupRepo, uid) ||
                 Group.isUserOwnerOfAnyGroup(groupRepo, uid)) {
+            logger.info("Exited on user already in group");
             return false;
         }
 
@@ -275,11 +288,13 @@ public class GroupController {
             int newOwnerId = (int) map.get("uid");
 
             if (Group.isUserOwnerOfAnyGroup(groupRepo, newOwnerId)) {
+                logger.info("User is already an owner");
                 return null;
             }
 
             GroupMember member = currGroup.findMember(newOwnerId);
             if (member == null || member.getPermissionLvl() == 2) {
+                logger.info("Member doesn't exist or member already owner Null?: " + (member == null));
                 return null;
             }
 

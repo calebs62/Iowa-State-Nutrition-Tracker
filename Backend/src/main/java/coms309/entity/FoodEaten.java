@@ -48,6 +48,12 @@ public class FoodEaten {
     public FoodItem getFood() {return food;};
     public int getServings() {return servings;}
     public LocalDateTime getDate() {return date;}
+    public Integer getUserId(){
+        return user != null ? user.getUid() : null;
+    }
+    public Integer getFoodItemId(){
+        return food != null ? food.getId() : null;
+    }
 
     public void setUser(User user) {this.user = user;}
     public void setFood(FoodItem food) {this.food = food;}

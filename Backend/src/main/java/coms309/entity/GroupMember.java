@@ -17,7 +17,6 @@ public class GroupMember {
     }
 
     @EmbeddedId
-//    @Column(name="groupmemberid")
     @JsonView(value = {Views.Public.class})
     private GroupMemberKey id;
 
@@ -42,7 +41,12 @@ public class GroupMember {
     @JsonView(value = {Views.Public.class})
     private Date joinDate = new Date();
 
-    @OneToMany(mappedBy = "member")
+    @OneToMany(
+            mappedBy = "member",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
     @JsonView(value = {Views.GroupMember.class})
     private List<Message> messages = new ArrayList<>();
 
@@ -53,6 +57,7 @@ public class GroupMember {
         this.group = group;
         this.user = user;
         this.permissionLvl = Permission_Level.User;
+        this.messages = new ArrayList<>();
     }
 
     public Group getGroup() {return group;}
