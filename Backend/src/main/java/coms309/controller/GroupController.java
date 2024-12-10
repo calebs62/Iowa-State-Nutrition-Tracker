@@ -104,6 +104,7 @@ public class GroupController {
             if (map.containsKey("groupOwner")){
                 currGroup.setOwnerId((int) map.get("groupOwner"));
             }
+            groupRepo.save(currGroup);
         }
         return currGroup;
     }
@@ -162,8 +163,12 @@ public class GroupController {
         Group currGroup = groupRepo.findById(id).orElse(null);
         User currUser = userRepo.findById(uid).orElse(null);
 
-        if (currGroup == null || currUser == null) {
-            logger.info("Exited null");
+        if (currGroup == null){
+            logger.info("Exited null group: uid: " +  uid + ", gid: " + id);
+            return false;
+        }
+        if (currUser == null) {
+            logger.info("Exited null user: uid: " +  uid + ", gid: " + id);
             return false;
         }
 
@@ -286,11 +291,13 @@ public class GroupController {
             int newOwnerId = (int) map.get("uid");
 
             if (Group.isUserOwnerOfAnyGroup(groupRepo, newOwnerId)) {
+                logger.info("User is already an owner");
                 return null;
             }
 
             GroupMember member = currGroup.findMember(newOwnerId);
             if (member == null || member.getPermissionLvl() == 2) {
+                logger.info("Member doesn't exist or member already owner Null?: " + (member == null));
                 return null;
             }
 
