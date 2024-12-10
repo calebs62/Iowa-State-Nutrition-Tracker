@@ -104,7 +104,7 @@ public class FoodItemController {
             description="Get list of food item based on criteria"
     )
     // List all items
-    @GetMapping("/item")
+    @PutMapping("/item")
     @JsonView(value = {Views.FoodItem.class})
     public List<FoodItem> getAllFoodItems(@Parameter(description="Map containing search criteria to filter search results by")@RequestBody(required = false) Map<String, Object> searchTerms) {
         /*
