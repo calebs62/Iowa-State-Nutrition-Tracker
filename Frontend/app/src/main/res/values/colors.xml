@@ -8,7 +8,6 @@
     <color name="Iowa_State_Light_Brown">#9B945F</color>
     <color name="Iowa_State_White">#CAC7A7</color>
     <color name="dark_grey">#707372</color>
-    <color name="red">#FF0000</color>
     <color name="divider">#1F000000</color>
     <color name="activity_food">#E3F2FD</color>
     <color name="activity_group">#F3E5F5</color>
@@ -19,4 +18,10 @@
     <color name="gray_100">#F3F4F6</color>
     <color name="gray_600">#4B5563</color>
     <color name="gray_800">#1F2937</color>
+    <color name="blue">#0000FF</color>
+    <color name="green">#00FF00</color>
+    <color name="yellow">#F4A405</color>
+    <color name="orange">#FF5900</color>
+    <color name="red">#FF0000</color>
+    <color name="dark_red">#A50000</color>
 </resources>

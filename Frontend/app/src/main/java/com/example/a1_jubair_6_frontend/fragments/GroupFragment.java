@@ -1,9 +1,9 @@
 package com.example.a1_jubair_6_frontend.fragments;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -25,6 +25,8 @@ import com.airbnb.lottie.LottieAnimationView;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.example.a1_jubair_6_frontend.R;
@@ -47,9 +49,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJoinClickListener {
@@ -66,7 +66,8 @@ public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJ
     private View foodPlanDetails;
     private int currentGroupId = -1;
     private GroupMembershipCallback membershipCallback;
-    private boolean isOwner = false, isContributor = false, isAdmin = false;
+    private boolean isOwner = false, isContributor = false, isAdmin = false, isModerator = false;
+    private String groupName;
 
     public interface GroupMembershipCallback {
         void onGroupMembershipChanged();
@@ -137,6 +138,7 @@ public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJ
         MaterialButton enterChatButton = view.findViewById(R.id.enterChatButton);
         enterChatButton.setOnClickListener(v -> {
             Intent intent = new Intent(requireContext(), ChatActivity.class);
+            intent.putExtra("groupId", currentGroupId);
             startActivity(intent);
         });
 
@@ -160,49 +162,114 @@ public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJ
         MaterialButton addMember = view.findViewById(R.id.addMemberButton);
         addMember.setOnClickListener(v -> {
             AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-            builder.setTitle("Add Member");
 
-            EditText input = new EditText(requireContext());
-            input.setInputType(InputType.TYPE_CLASS_TEXT);
-            input.setHint("Enter Member ID");
+            LayoutInflater inflater = requireActivity().getLayoutInflater();
+            View dialogView = inflater.inflate(R.layout.dialog_member_actions, null);
 
-            builder.setView(input);
+            EditText input = dialogView.findViewById(R.id.inputMemberEmail);
+            Button btnCancel = dialogView.findViewById(R.id.btnCancel);
+            Button btnAdd = dialogView.findViewById(R.id.btnAction);
+            TextView title = dialogView.findViewById(R.id.dialogTitle);
 
-            builder.setPositiveButton("Add", (dialog, which) -> {
-                String memberId = input.getText().toString().trim();
-                if (!memberId.isEmpty()) {
-                    addMemberById(memberId);
+            title.setText("Add Member");
+            btnAdd.setText("Add");
+
+            builder.setView(dialogView);
+
+            AlertDialog dialog = builder.create();
+
+            btnCancel.setOnClickListener(vi -> dialog.dismiss());
+
+            btnAdd.setOnClickListener(vi -> {
+                String memberEmail = input.getText().toString().trim();
+                if (!memberEmail.isEmpty()) {
+                    findUserByEmail(memberEmail, 0);
+                    dialog.dismiss();
                 } else {
-                    Toast.makeText(requireContext(), "Member ID cannot be empty", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Member Email cannot be empty", Toast.LENGTH_SHORT).show();
                 }
             });
 
-            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-            builder.show();
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            }
+
+            dialog.show();
         });
 
         MaterialButton kickMember = view.findViewById(R.id.kickMemberButton);
         kickMember.setOnClickListener(v -> {
             AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-            builder.setTitle("Kick Member");
 
-            EditText input = new EditText(requireContext());
-            input.setInputType(InputType.TYPE_CLASS_TEXT);
-            input.setHint("Enter Member ID");
+            LayoutInflater inflater = requireActivity().getLayoutInflater();
+            View dialogView = inflater.inflate(R.layout.dialog_member_actions, null);
 
-            builder.setView(input);
+            EditText input = dialogView.findViewById(R.id.inputMemberEmail);
+            Button btnCancel = dialogView.findViewById(R.id.btnCancel);
+            Button btnKick = dialogView.findViewById(R.id.btnAction);
+            TextView title = dialogView.findViewById(R.id.dialogTitle);
 
-            builder.setPositiveButton("Kick", (dialog, which) -> {
-                String memberId = input.getText().toString().trim();
-                if (!memberId.isEmpty()) {
-                    kickMemberById(memberId);
+            title.setText("Kick Member");
+            btnKick.setText("Kick");
+
+            builder.setView(dialogView);
+
+            AlertDialog dialog = builder.create();
+
+            btnCancel.setOnClickListener(vi -> dialog.dismiss());
+
+            btnKick.setOnClickListener(vi -> {
+                String memberEmail = input.getText().toString().trim();
+                if (!memberEmail.isEmpty()) {
+                    findUserByEmail(memberEmail, 1);
+                    dialog.dismiss();
                 } else {
-                    Toast.makeText(requireContext(), "Member ID cannot be empty", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Member Email cannot be empty", Toast.LENGTH_SHORT).show();
                 }
             });
 
-            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-            builder.show();
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            }
+
+            dialog.show();
+        });
+
+        MaterialButton makeMod = view.findViewById(R.id.makeModButton);
+        makeMod.setOnClickListener(v -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+
+            LayoutInflater inflater = requireActivity().getLayoutInflater();
+            View dialogView = inflater.inflate(R.layout.dialog_member_actions, null);
+
+            EditText input = dialogView.findViewById(R.id.inputMemberEmail);
+            Button btnCancel = dialogView.findViewById(R.id.btnCancel);
+            Button btnMod = dialogView.findViewById(R.id.btnAction);
+            TextView title = dialogView.findViewById(R.id.dialogTitle);
+
+            title.setText("Give Moderator");
+            btnMod.setText("Make Mod");
+
+            builder.setView(dialogView);
+
+            AlertDialog dialog = builder.create();
+
+            btnCancel.setOnClickListener(vi -> dialog.dismiss());
+
+            btnMod.setOnClickListener(vi -> {
+                String memberEmail = input.getText().toString().trim();
+                if (!memberEmail.isEmpty()) {
+                    findUserByEmail(memberEmail, 2);
+                    dialog.dismiss();
+                } else {
+                    Toast.makeText(requireContext(), "Member Email cannot be empty", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            }
+            dialog.show();
         });
     }
 
@@ -474,7 +541,7 @@ public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJ
 
         currentGroupId = groupData.getInt("id");
 
-        String groupName = groupData.getString("groupName");
+        groupName = groupData.getString("groupName");
         TextView groupNameView = requireView().findViewById(R.id.groupName);
         groupNameView.setText(groupName);
 
@@ -490,36 +557,45 @@ public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJ
                 isOwner = true;
                 break;
             }
+            else if(userId.getInt("userId") == currentUserId && memberJson.getInt("permissionLvl") == 1) {
+                isModerator = true;
+                break;
+            }
         }
 
         MaterialButton leaveButton = requireView().findViewById(R.id.leaveGroupButton);
         MaterialButton deleteButton = requireView().findViewById(R.id.deleteGroupButton);
         MaterialButton kickButton = requireView().findViewById(R.id.kickMemberButton);
         MaterialButton addButton = requireView().findViewById(R.id.addMemberButton);
+        MaterialButton makeMod = requireView().findViewById(R.id.makeModButton);
 
         if (isOwner) {
             leaveButton.setVisibility(View.GONE);
             deleteButton.setVisibility(View.VISIBLE);
             kickButton.setVisibility(View.VISIBLE);
             addButton.setVisibility(View.VISIBLE);
+            makeMod.setVisibility(View.VISIBLE);
         }
         else if (isAdmin) {
             leaveButton.setVisibility(View.VISIBLE);
             deleteButton.setVisibility(View.VISIBLE);
             kickButton.setVisibility(View.VISIBLE);
             addButton.setVisibility(View.VISIBLE);
+            makeMod.setVisibility(View.GONE);
         }
-        else if (isContributor) {
+        else if (isModerator) {
             leaveButton.setVisibility(View.VISIBLE);
             deleteButton.setVisibility(View.GONE);
-            kickButton.setVisibility(View.GONE);
+            kickButton.setVisibility(View.VISIBLE);
             addButton.setVisibility(View.VISIBLE);
+            makeMod.setVisibility(View.GONE);
         }
         else {
             leaveButton.setVisibility(View.VISIBLE);
             deleteButton.setVisibility(View.GONE);
             kickButton.setVisibility(View.GONE);
             addButton.setVisibility(View.GONE);
+            makeMod.setVisibility(View.GONE);
         }
 
         if (!groupData.isNull("plan")) {
@@ -543,7 +619,31 @@ public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJ
             User user = new User(userId.getInt("userId"));
             GroupMember member = new GroupMember(group, user);
 
-            member.setPermissionLvl(permissionLevel);
+            String requestUrl = AppConstants.SERVER_URL + "/user/" + member.getUser().getId();
+            JsonObjectRequest request = new JsonObjectRequest(
+                    Request.Method.GET,
+                    requestUrl,
+                    null,
+                    response -> {
+                        try {
+                            String accountType = response.getString("accounttype");
+                            if(accountType.equals("ADMINISTRATOR") && permissionLevel != 2 && permissionLevel != 1) {
+                                member.setPermissionLvl(4);
+                            }
+                            else if(accountType.equals("CONTRIBUTOR") && permissionLevel != 2 && permissionLevel != 1) {
+                                member.setPermissionLvl(3);
+                            }
+                            else {
+                                member.setPermissionLvl(permissionLevel);
+                            }
+                        } catch (JSONException e) {
+                            Log.e(TAG, "Failed to parse user info: " + e.getMessage());
+                        }
+                    },
+                    error -> Log.e(TAG, "Failed to load user info: " + error.getMessage())
+            );
+            VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
+
             members.add(member);
             loadMemberUserInfo(member);
         }
@@ -667,7 +767,7 @@ public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJ
     @Override
     public void showPlanDetails(JSONObject plan) {
         try {
-            String content = String.format(
+            @SuppressLint("DefaultLocale") String content = String.format(
                     "Plan: %s\n\n" +
                             "Calories: %d kcal\n" +
                             "Protein: %d g\n" +
@@ -839,6 +939,7 @@ public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJ
         );
 
         VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
+        checkGroupMembership();
     }
 
     private void kickMemberById(String memberId) {
@@ -849,7 +950,7 @@ public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJ
             jsonObject.put("sessionToken", "1:2:" + profileDataManager.getId());
             jsonObject.put("uid", Integer.parseInt(memberId));
         } catch (JSONException e) {
-            handleError("Error adding member to group.");
+            handleError(e.getMessage());
             return;
         }
 
@@ -858,10 +959,83 @@ public class GroupFragment extends Fragment implements GroupListAdapter.OnGroupJ
                 url,
                 jsonObject,
                 response -> {
-                    Toast.makeText(requireContext(), "Member with id: " + memberId + " removed successfully.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), "Member with id: " + memberId + " removed successfully.", Toast.LENGTH_SHORT).show();
                 },
                 error -> {
-                    Toast.makeText(requireContext(), "Failed to remove member. Please Try again.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), "Failed to remove member. Please Try again.", Toast.LENGTH_SHORT).show();
+                }
+        );
+
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
+        checkGroupMembership();
+    }
+
+    private void modMember(String memberId) {
+        String url = AppConstants.SERVER_URL + "/group/" + currentGroupId + "/promoteMod";
+
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("sessionToken", "1:2:" + profileDataManager.getId());
+            jsonObject.put("uid", Integer.parseInt(memberId));
+        } catch (JSONException e) {
+            handleError(e.getMessage());
+            return;
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.PUT,
+                url,
+                jsonObject,
+                response -> {
+                    Toast.makeText(getActivity(), "Member with id: " + memberId + " given mod successfully.", Toast.LENGTH_SHORT).show();
+                },
+                error -> {
+                    Toast.makeText(getActivity(), "Failed to mod member. Please try again.", Toast.LENGTH_SHORT).show();
+                }
+        );
+
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
+        checkGroupMembership();
+    }
+
+    private void findUserByEmail(String memberEmail, int option) {
+        String url = AppConstants.SERVER_URL + "/allusers";
+
+        JsonArrayRequest request = new JsonArrayRequest(
+                Request.Method.GET,
+                url,
+                null,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        try {
+                            for (int i = 0; i < response.length(); i++) {
+                                JSONObject userObject = response.getJSONObject(i);
+                                String username = userObject.getString("username");
+
+                                if (username.equals(memberEmail) && option == 0) {
+                                    String userId = String.valueOf(userObject.getInt("uid"));
+                                    addMemberById(userId);
+                                }
+                                else if(username.equals(memberEmail) && option == 1) {
+                                    String userId = String.valueOf(userObject.getInt("uid"));
+                                    kickMemberById(userId);
+                                }
+                                else if(username.equals(memberEmail) && option == 2) {
+                                    String userId = String.valueOf(userObject.getInt("uid"));
+                                    modMember(userId);
+                                }
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e(TAG, "Volley error: " + error.getMessage());
+                    }
                 }
         );
 

@@ -109,13 +109,11 @@ public class MenuViewActivity extends AppCompatActivity {
             foodAdapter = new MenuFoodItemAdapter(new ArrayList<>(), this::removeFoodItemFromMenu);
         }
         else if(isContributor) {
-            foodAdapter = new MenuFoodItemAdapter(new ArrayList<>(), this::nullFunction);
+            foodAdapter = new MenuFoodItemAdapter(new ArrayList<>(), this::removeFoodItemFromMenu);
         }
         foodItemsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         foodItemsRecyclerView.setAdapter(foodAdapter);
     }
-
-    private void nullFunction(FoodItem foodItem) {}
 
     private void setupListeners() {
         menuSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
