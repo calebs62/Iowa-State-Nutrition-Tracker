@@ -6,6 +6,8 @@ import coms309.repository.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +29,8 @@ public class GroupController {
 
     @Autowired
     ActivityFeedRepository activityFeedRepo;
+
+    private final Logger logger = LoggerFactory.getLogger(GroupController.class);
 
     // Create
     @Operation(
@@ -159,11 +163,13 @@ public class GroupController {
         User currUser = userRepo.findById(uid).orElse(null);
 
         if (currGroup == null || currUser == null) {
+            logger.info("Exited null");
             return false;
         }
 
         if (Group.isUserInAnyGroup(userRepo, groupRepo, uid) ||
                 Group.isUserOwnerOfAnyGroup(groupRepo, uid)) {
+            logger.info("Exited on user already in group");
             return false;
         }
 

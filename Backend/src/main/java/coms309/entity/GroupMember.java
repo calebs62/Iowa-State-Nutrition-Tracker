@@ -17,7 +17,6 @@ public class GroupMember {
     }
 
     @EmbeddedId
-//    @Column(name="groupmemberid")
     @JsonView(value = {Views.Public.class})
     private GroupMemberKey id;
 
