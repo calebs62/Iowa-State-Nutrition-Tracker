@@ -179,9 +179,6 @@ public class GroupController {
         }
 
         GroupMember groupMember = new GroupMember(currGroup, currUser);
-        //TODO - Is this done automatically
-//        currGroup.addMember(groupMember);
-//        groupRepo.save(currGroup);
         memberRepo.save(groupMember);
         return true;
     }
