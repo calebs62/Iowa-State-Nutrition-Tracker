@@ -10,31 +10,25 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.a1_jubair_6_frontend.R;
-import com.example.a1_jubair_6_frontend.activities.ChatActivity;
-import com.example.a1_jubair_6_frontend.constants.AppConstants;
 import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
 import com.example.a1_jubair_6_frontend.network.VolleySingleton;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.time.format.DateTimeFormatter;
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 
 
 public class GoalsFragment extends Fragment {
 
     private ProfileDataManager profileDataManager;
-    private TextView consecLoginGoal;
+    private ProgressBar pbGoal1, pbGoal2, pbGoal3;
+    private TextView tvGoal1, tvGoal2, tvGoal3;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -50,70 +44,57 @@ public class GoalsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         int id = profileDataManager.getId();
+        pbGoal1 = view.findViewById(R.id.pbConsecutiveLogins);
+        pbGoal2 = view.findViewById(R.id.pbProteinGoal);
+        pbGoal3 = view.findViewById(R.id.pbFoodPlans);
+        tvGoal1 = view.findViewById(R.id.tvProgress);
+        tvGoal2 = view.findViewById(R.id.tvProteinProgress);
+        tvGoal3 = view.findViewById(R.id.tvFoodPlansProgress);
 
-        consecLoginGoal = view.findViewById(R.id.consecLoginGoal);
-        getUserInfo(view, id);
-
+        getGoals();
     }
 
-    public void getUserInfo(View view, int id) {
-        String requestUrl = AppConstants.SERVER_URL + "/user/" + id;
+    private void getGoals() {
+        String url = "https://1a56c054-2e8f-4d72-9b60-22ca8b114808.mock.pstmn.io/goals";
 
-        JsonObjectRequest groupRequest = new JsonObjectRequest(
+        JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.GET,
-                requestUrl,
+                url,
                 null,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try {
-                            String lastLogin = response.getString("lastLogin");
-                            consecLoginGoal(lastLogin);
+                response -> {
+                    try {
+                        JSONArray goals = response.getJSONArray("goals");
 
-                        } catch (JSONException e) {
-                            Log.e("JSON Error", "Failed to parse user data: " + e.getMessage());
-                            Toast.makeText(requireContext(), "Failed to load user data.", Toast.LENGTH_SHORT).show();
+                        for (int i = 0; i < goals.length(); i++) {
+                            JSONObject goal = goals.getJSONObject(i);
+                            String name = goal.getString("name");
+                            int progress = goal.getInt("progress");
+                            String complete = goal.getString("complete");
+
+                            if(name.equals("goal1")) {
+                                pbGoal1.setProgress(progress);
+                                tvGoal1.setText(String.valueOf(progress) + "/7");
+                            }
+                            else if(name.equals("goal2")) {
+                                pbGoal2.setProgress(progress);
+                                tvGoal2.setText(String.valueOf(progress) + "/5");
+                            }
+                            else if(name.equals("goal3")) {
+                                pbGoal3.setProgress(progress);
+                                tvGoal3.setText(String.valueOf(progress) + "/7");
+                            }
                         }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        Log.e("getGoals", "Error parsing JSON response: " + e.getMessage());
                     }
                 },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.e("Volley Error", "User data retrieval failed: " + error.getMessage());
-                        Toast.makeText(requireContext(), "User data retrieval failed.", Toast.LENGTH_SHORT).show();
-                    }
+                error -> {
+                    Log.e("getGoals", "Volley Error: " + error.getMessage());
                 }
         );
-        VolleySingleton.getInstance(getContext()).addToRequestQueue(groupRequest);
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
     }
 
-    public void consecLoginGoal(String info) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
-        // Parse the last login date from the string
-        LocalDate lastLoginDate = LocalDate.parse(info, formatter);
-        LocalDate currentDate = LocalDate.now();
-        String lastLog = lastLoginDate.toString();
-        String curDate = currentDate.toString();
-
-        Log.i("Dates: cur, last", currentDate.toString() + " " + lastLoginDate.toString());
-
-        int loginCount = profileDataManager.getConsecutiveLoginCount();
-
-        // Check if the last login date is before the current date
-        if (!(lastLog.equals(curDate))) {
-
-            loginCount += 1;
-
-            Log.i("Login count: ", String.valueOf(loginCount));
-
-            // Update the displayed goal count and save the new count and login date
-            consecLoginGoal.setText(loginCount + "/5");
-            profileDataManager.setConsecutiveLoginCount(loginCount);
-            profileDataManager.setLastLoginDate(currentDate.toString());
-        }
-        else {
-            consecLoginGoal.setText(loginCount + "/5");
-        }
-    }
 }

@@ -5,6 +5,9 @@ import static android.text.TextUtils.isEmpty;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
@@ -241,26 +244,56 @@ public class ProfileInitializeActivity extends AppCompatActivity {
      * Calculates the user's BMI based on the input weight and height.
      * The result is displayed on the screen.
      */
-    public void calculateBMI(){
-        if(!isEmpty(userWeight.getText().toString()) && !isEmpty(userHeight.getText().toString())){
+    public void calculateBMI() {
+        if (!isEmpty(userWeight.getText().toString()) && !isEmpty(userHeight.getText().toString())) {
             saveNewValue(userWeight.getText().toString(), userHeight.getText().toString());
 
-            Double BMI = (703*(Integer.parseInt(userWeight.getText().toString()))/(Math.pow(Integer.parseInt(userHeight.getText().toString()), 2)));
+            Double BMI = (703 * (Integer.parseInt(userWeight.getText().toString())) /
+                    (Math.pow(Integer.parseInt(userHeight.getText().toString()), 2)));
             TextView BMIValue = findViewById(R.id.tvBMIValue);
 
             String formatted = String.format("%.2f", BMI);
             BMI = Double.parseDouble(formatted);
             Log.i("BMI calc", BMI.toString());
 
-            if(BMI < 18.5){BMIValue.setText(String.format("%.2f You are underweight.", BMI)); recommendedPlan = 1;}
-            else if(18.5 <= BMI && BMI <= 24.9){BMIValue.setText(String.format("%.2f You are at a healthy weight.", BMI)); recommendedPlan = 2;}
-            else if(25 <= BMI && BMI <= 29.9){BMIValue.setText(String.format("%.2f You are overweight.", BMI)); recommendedPlan = 0;}
-            else if(30 <= BMI && BMI <= 34.9){BMIValue.setText(String.format("%.2f You are obese.", BMI)); recommendedPlan = 0;}
-            else if(35 <= BMI && BMI <= 39.9){BMIValue.setText(String.format("%.2f You are severely obese.", BMI)); recommendedPlan = 0;}
-            else if(BMI >= 40){BMIValue.setText(String.format("%.2f You are morbidly obese.", BMI)); recommendedPlan = 0;}
-            else {
-                BMIValue.setText(String.format("Was not able to accurately calculate your BMI"));
+            int color;
+            String message;
+            if (BMI < 18.5) {
+                color = getResources().getColor(R.color.blue);
+                message = "You are underweight.";
+                recommendedPlan = 1;
+            } else if (18.5 <= BMI && BMI <= 24.9) {
+                color = getResources().getColor(R.color.green);
+                message = "You are at a healthy weight.";
+                recommendedPlan = 2;
+            } else if (25 <= BMI && BMI <= 29.9) {
+                color = getResources().getColor(R.color.yellow);
+                message = "You are overweight.";
+                recommendedPlan = 0;
+            } else if (30 <= BMI && BMI <= 34.9) {
+                color = getResources().getColor(R.color.orange);
+                message = "You are obese.";
+                recommendedPlan = 0;
+            } else if (35 <= BMI && BMI <= 39.9) {
+                color = getResources().getColor(R.color.red);
+                message = "You are severely obese.";
+                recommendedPlan = 0;
+            } else if (BMI >= 40) {
+                color = getResources().getColor(R.color.dark_red);
+                message = "You are morbidly obese.";
+                recommendedPlan = 0;
+            } else {
+                BMIValue.setText("Was not able to accurately calculate your BMI");
+                return;
             }
+
+            String bmiText = String.format("%.2f", BMI);
+            String fullMessage = bmiText + " " + message;
+
+            SpannableString spannable = new SpannableString(fullMessage);
+            spannable.setSpan(new ForegroundColorSpan(color), 0, bmiText.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            BMIValue.setText(spannable);
         }
     }
 

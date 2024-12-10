@@ -53,7 +53,7 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/leaveGroupButton"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Leave Group"
                             android:layout_marginTop="8dp"
@@ -61,7 +61,7 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/addMemberButton"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Add Member"
                             android:layout_marginTop="8dp"
@@ -69,8 +69,17 @@
                             android:visibility="gone"/>
 
                         <com.google.android.material.button.MaterialButton
+                            android:id="@+id/makeModButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Mod Member"
+                            android:layout_marginTop="8dp"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:visibility="gone"/>
+
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/kickMemberButton"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Kick Member"
                             android:layout_marginTop="8dp"
@@ -79,7 +88,7 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/deleteGroupButton"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Delete Group"
                             android:layout_marginTop="8dp"

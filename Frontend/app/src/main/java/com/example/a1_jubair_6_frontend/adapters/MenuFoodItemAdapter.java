@@ -66,15 +66,12 @@ public class MenuFoodItemAdapter extends RecyclerView.Adapter<MenuFoodItemAdapte
             }
         });
 
-        boolean isAdmin = profileDataManager.getAccountType().equals("ADMINISTRATOR");
-        if(isAdmin && holder.deleteButton != null) {
-            holder.deleteButton.setVisibility(View.VISIBLE);
-            holder.deleteButton.setOnClickListener(v -> {
-                if (listener != null) {
-                    listener.onFoodItemClick(item);
-                }
-            });
-        }
+        holder.deleteButton.setVisibility(View.VISIBLE);
+        holder.deleteButton.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onFoodItemClick(item);
+            }
+        });
     }
 
     @Override
