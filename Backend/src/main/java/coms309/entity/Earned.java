@@ -33,6 +33,7 @@ public class Earned {
     private Integer progress;
 
     @Column(name = "has_earned")
+    @JsonView(Views.Public.class)
     private Boolean hasEarned;
 
     public Earned() {}
