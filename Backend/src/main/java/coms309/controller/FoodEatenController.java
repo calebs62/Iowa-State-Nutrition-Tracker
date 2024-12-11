@@ -21,11 +21,15 @@ import java.util.Map;
 @RestController
 public class FoodEatenController {
     @Autowired
-    static FoodEatenRepository eatenRepo;
-    @Autowired
     UserRepository userRepo;
     @Autowired
     FoodItemRepository itemRepo;
+
+    private static FoodEatenRepository eatenRepo;
+    @Autowired
+    public void setRepo(FoodEatenRepository eRepo){
+        eatenRepo = eRepo;
+    }
 
     @PostMapping("/eaten")
     @JsonView(value = {Views.FoodEaten.class})

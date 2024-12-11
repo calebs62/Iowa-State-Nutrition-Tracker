@@ -22,15 +22,15 @@ import java.util.Set;
 @RestController
 public class AchievementController {
     @Autowired
-    static EarnedRepository earnedRepo;
-    @Autowired
     UserRepository userRepo;
 
-    static AchievementRepository achievementRepo;
+    private static EarnedRepository earnedRepo;
+    private static AchievementRepository achievementRepo;
 
     @Autowired
-    public void setStaticRepo(AchievementRepository aRepo){
+    public void setStaticRepo(AchievementRepository aRepo, EarnedRepository eRepo){
         achievementRepo = aRepo;
+        earnedRepo = eRepo;
     }
 
     @Operation(
@@ -148,13 +148,14 @@ public class AchievementController {
 
     @PutMapping("/check/achievements/{uid}")
     @JsonView(value = {Views.Achievement.class})
-    public boolean checkUserAchs(@PathVariable int uid){
+    public Set<Earned> checkUserAchs(@PathVariable int uid){
         User user = userRepo.findById(uid).orElse(null);
         if (user == null) {
-            return false;
+            return null;
         }
         consecutiveProtein(user);
-        return true;
+        socialButterfly(user);
+        return user.getEarned();
     }
 
     //Auto on login
@@ -219,6 +220,28 @@ public class AchievementController {
             earn.setHasEarned(true);
         }
 
+        return earnedRepo.save(earn);
+    }
+
+    public Earned socialButterfly(User user){
+        Achievement achievement = achievementRepo.findById(4).orElse(null);
+        if (achievement == null || user == null) {
+            return null;
+        }
+        EarnedKey eid = new EarnedKey(user.getUid(), achievement.getId());
+        Earned earn = earnedRepo.findById(eid).orElse(null);
+        if (earn == null) {
+            earn = new Earned(user, achievement);
+        }
+
+        Set<GroupMember> memberSet = user.getMembered();
+        for (GroupMember member : memberSet){
+            int numMess = member.getMessages().size();
+            earn.setProgress(numMess);
+            if(!earn.getHasEarned() && numMess >= achievement.getGoal()){
+                earn.setHasEarned(true);
+            }
+        }
         return earnedRepo.save(earn);
     }
 
