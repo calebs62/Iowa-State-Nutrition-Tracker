@@ -32,6 +32,10 @@ public class Earned {
     @JsonView(Views.Public.class)
     private Integer progress;
 
+    @Column(name = "goal")
+    @JsonView(Views.Public.class)
+    private Integer goal;
+
     @Column(name = "has_earned")
     @JsonView(Views.Public.class)
     private Boolean hasEarned;
@@ -44,6 +48,7 @@ public class Earned {
         this.achievement = achievement;
         this.progress = 0;
         this.hasEarned = false;
+        this.goal = achievement.getGoal();
     }
 
     public EarnedKey getId() {
@@ -100,5 +105,13 @@ public class Earned {
                 ", user=" + user +
                 ", achievement=" + achievement +
                 '}';
+    }
+
+    public Integer getGoal() {
+        return goal;
+    }
+
+    public void setGoal(Integer goal) {
+        this.goal = goal;
     }
 }
