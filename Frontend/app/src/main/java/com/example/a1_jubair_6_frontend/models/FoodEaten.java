@@ -5,6 +5,7 @@ import com.google.gson.annotations.SerializedName;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 import java.util.TimeZone;
 
 public class FoodEaten {
@@ -13,9 +14,13 @@ public class FoodEaten {
     @SerializedName("date")
     private Date time;
 
-    private User user;
+    private transient int userId;
+
     private FoodItem food;
     private float servings;
+
+    @SerializedName("user")
+    private Object userRaw;
 
     private static final SimpleDateFormat ISO_FORMAT;
     private static final TimeZone CST_TIMEZONE = TimeZone.getTimeZone("America/Chicago");
@@ -41,8 +46,17 @@ public class FoodEaten {
     public Date getTime() { return time; }
     public void setTime(Date time) { this.time = time; }
 
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
+    public int getUserId() {
+        if (userRaw instanceof Integer) {
+            return (Integer) userRaw;
+        } else if (userRaw instanceof Map) {
+            return ((Double) ((Map) userRaw).get("uid")).intValue();
+        }
+        return -1;
+    }
+    public void setUserId(int userId) { this.userId = userId; }
+
+
 
     public FoodItem getFood() { return food; }
     public void setFood(FoodItem food) { this.food = food; }

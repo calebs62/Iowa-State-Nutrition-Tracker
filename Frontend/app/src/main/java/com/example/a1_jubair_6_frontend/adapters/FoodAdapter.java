@@ -94,6 +94,10 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
 
         View adminActionsContainer = holder.itemView.findViewById(R.id.adminActionsContainer);
 
+        if (!isFromMenus) {
+            holder.buttonEat.setVisibility(View.GONE);
+        }
+
         if (isAdmin && !isFromMenus) {
             adminActionsContainer.setVisibility(View.VISIBLE);
             holder.buttonEdit.setVisibility(View.VISIBLE);
