@@ -295,6 +295,12 @@ public class ProfileInitializeActivity extends AppCompatActivity {
 
             BMIValue.setText(spannable);
         }
+        else if(isEmpty(userWeight.getText().toString())) {
+            Toast.makeText(this, "Weight cannot be empty.", Toast.LENGTH_SHORT).show();
+        }
+        else if(isEmpty(userHeight.getText().toString())) {
+            Toast.makeText(this, "Height cannot be empty.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**

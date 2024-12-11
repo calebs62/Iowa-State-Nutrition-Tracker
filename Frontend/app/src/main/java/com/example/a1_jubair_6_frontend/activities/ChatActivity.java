@@ -57,8 +57,8 @@ public class ChatActivity extends AppCompatActivity {
         username = profileDataManager.getFirstname() + profileDataManager.getLastname();
         userId = profileDataManager.getId();
 
-        //String url = AppConstants.WEBSOCKET_MESSAGE_SERVER_URL + username + "/" + userId + "/" + groupChatId;
-        String url = "ws://10.0.2.2:8080"; //Local hosted mock websocket
+        String url = AppConstants.WEBSOCKET_MESSAGE_SERVER_URL + userId + "/" + groupId;
+        //String url = "ws://10.0.2.2:8080"; //Local hosted mock websocket
 
         webSocketClient = new WebSocketClient(new WebSocketListener() {
             @Override
