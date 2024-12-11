@@ -25,8 +25,13 @@ public class AchievementController {
     static EarnedRepository earnedRepo;
     @Autowired
     UserRepository userRepo;
-    @Autowired
+
     static AchievementRepository achievementRepo;
+
+    @Autowired
+    public void setStaticRepo(AchievementRepository aRepo){
+        achievementRepo = aRepo;
+    }
 
     @Operation(
             summary = "Create achievement",
@@ -34,7 +39,13 @@ public class AchievementController {
     )
     @PostMapping("/achievement")
     @JsonView(value = {Views.Achievement.class})
-    public Achievement createAchievement(@Parameter(description = "Achievement object")@RequestBody Achievement achievement){
+    public Achievement createAchievement(@Parameter(description = "Achievement object")@RequestBody Map<String, Object> map){
+        String name = (String) map.get("name");
+        String description = (String) map.get("description");
+        String icon = (String) map.get("icon");
+        Integer goal = (Integer) map.get("goal");
+
+        Achievement achievement = new Achievement(name, description, icon, goal);
         return achievementRepo.save(achievement);
     }
 
@@ -210,7 +221,6 @@ public class AchievementController {
 
         return earnedRepo.save(earn);
     }
-
 
 
 }

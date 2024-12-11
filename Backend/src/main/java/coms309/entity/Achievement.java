@@ -38,10 +38,11 @@ public class Achievement {
 
     public Achievement() {}
 
-    public Achievement(String name, String description, String icon) {
+    public Achievement(String name, String description, String icon, int goal) {
         this.name = name;
         this.description = description;
         this.icon = icon;
+        this.goal = goal;
     }
 
     public String getName() {
