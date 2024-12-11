@@ -78,17 +78,20 @@ public class AchievementController {
     )
     @PutMapping("/achievement/update/{id}")
     @JsonView(value = {Views.Achievement.class})
-    public Achievement updateAchievement(@Parameter(description = "Achievement id")@PathVariable int id, @Parameter(description = "Map containing key value pairs corresponding to fields to be changed.")@RequestBody Map<String, String> map){
+    public Achievement updateAchievement(@Parameter(description = "Achievement id")@PathVariable int id, @Parameter(description = "Map containing key value pairs corresponding to fields to be changed.")@RequestBody Map<String, Object> map){
         Achievement achievement = achievementRepo.findById(id).orElse(null);
         if (achievement != null) {
             if (map.containsKey("name")){
-                achievement.setName(map.get("name"));
+                achievement.setName((String) map.get("name"));
             }
             if (map.containsKey("description")){
-                achievement.setDescription(map.get("description"));
+                achievement.setDescription((String) map.get("description"));
             }
             if (map.containsKey("icon")){
-                achievement.setIcon(map.get("icon"));
+                achievement.setIcon((String) map.get("icon"));
+            }
+            if (map.containsKey("goal")){
+                achievement.setGoal((Integer) map.get("goal"));
             }
             achievementRepo.save(achievement);
         }
@@ -132,6 +135,18 @@ public class AchievementController {
         return achievement;
     }
 
+    @PutMapping("/check/achievements/{uid}")
+    @JsonView(value = {Views.Achievement.class})
+    public boolean checkUserAchs(@PathVariable int uid){
+        User user = userRepo.findById(uid).orElse(null);
+        if (user == null) {
+            return false;
+        }
+        consecutiveProtein(user);
+        return true;
+    }
+
+    //Auto on login
     public static Earned consecutiveLogins(User user, Timestamp lastLogin){
         Timestamp today = new Timestamp(System.currentTimeMillis());
         Timestamp safeTime = new Timestamp(lastLogin.getTime() + (1000 * 60 * 60 * 24));
@@ -150,21 +165,52 @@ public class AchievementController {
             }
             earned.addProgress();
             earned.setEarnDate(new Date()); //Sets time to now
+            if (earned.getProgress() >= achievement.getGoal()){
+                earned.setHasEarned(true);
+            }
             return earnedRepo.save(earned);
         }
         return null;
     }
 
-//    public Earned consecutiveProtein(int uid){
-//        Achievement achievement = achievementRepo.findById(3).orElse(null);
-//        if (achievement == null) {
-//            return null;
-//        }
-//
-//        List<FoodEaten> userEatenList = FoodEatenController.getEatenByUserTime(uid, LocalDateTime.now().minusWeeks(1).toString(), LocalDateTime.now().toString());
-//
-//
-//        return null;
-//    }
+    // Manually check with endpoint
+    public Earned consecutiveProtein(User user){
+        Achievement achievement = achievementRepo.findById(3).orElse(null);
+        if (achievement == null || user == null) {
+            return null;
+        }
+        EarnedKey eid = new EarnedKey(user.getUid(), 3);
+        Earned earn = earnedRepo.findById(eid).orElse(null);
+
+        if (earn == null) {
+            earn = new Earned(user, achievement);
+        }
+
+        List<FoodEaten> userEatenList = FoodEatenController.getEatenByUserTime(user.getUid(), LocalDateTime.now().minusWeeks(1).toString(), LocalDateTime.now().toString());
+        int totalProtein = 0;
+        for (FoodEaten eaten : userEatenList) {
+            totalProtein += eaten.getFood().getProtein();
+        }
+
+        Set<GroupMember> membered = user.getMembered();
+        int planProtein = 0;
+        for (GroupMember mem: membered){
+            Group group = mem.getGroup();
+            FoodPlan plan = group.getPlan();
+            planProtein = plan.getProtein();
+        }
+
+        if (planProtein <= totalProtein && totalProtein > 0){
+            earn.addProgress();
+        }
+
+        if (!earn.getHasEarned() && earn.getProgress() >= achievement.getGoal()){
+            earn.setHasEarned(true);
+        }
+
+        return earnedRepo.save(earn);
+    }
+
+
 
 }

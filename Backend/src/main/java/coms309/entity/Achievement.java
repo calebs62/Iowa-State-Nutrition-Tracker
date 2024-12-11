@@ -23,6 +23,10 @@ public class Achievement {
     @JsonView(value = {Views.Achievement.class})
     private String description;
 
+    @Column(name = "goal")
+    @JsonView(value = {Views.Public.class})
+    private Integer goal;
+
     @Column(name = "icon",
             columnDefinition = "LONGTEXT")
     @JsonView(value = {Views.Achievement.class})
@@ -82,6 +86,14 @@ public class Achievement {
 
     public void removeEarnedBy(Earned earnedBy){
         this.earnedBy.remove(earnedBy);
+    }
+
+    public Integer getGoal() {
+        return goal;
+    }
+
+    public void setGoal(Integer goal) {
+        this.goal = goal;
     }
 
     public Earned findUser(int uid){

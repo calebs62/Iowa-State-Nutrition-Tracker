@@ -32,6 +32,9 @@ public class Earned {
     @JsonView(Views.Public.class)
     private Integer progress;
 
+    @Column(name = "has_earned")
+    private Boolean hasEarned;
+
     public Earned() {}
 
     public Earned(User user, Achievement achievement){
@@ -39,6 +42,7 @@ public class Earned {
         this.user = user;
         this.achievement = achievement;
         this.progress = 0;
+        this.hasEarned = false;
     }
 
     public EarnedKey getId() {
@@ -77,6 +81,14 @@ public class Earned {
     }
     public void addProgress(){
         progress += 1;
+    }
+
+    public Boolean getHasEarned() {
+        return hasEarned;
+    }
+
+    public void setHasEarned(Boolean hasEarned) {
+        this.hasEarned = hasEarned;
     }
 
     @Override

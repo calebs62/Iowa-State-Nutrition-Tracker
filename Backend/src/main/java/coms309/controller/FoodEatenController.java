@@ -21,7 +21,7 @@ import java.util.Map;
 @RestController
 public class FoodEatenController {
     @Autowired
-    FoodEatenRepository eatenRepo;
+    static FoodEatenRepository eatenRepo;
     @Autowired
     UserRepository userRepo;
     @Autowired
@@ -72,7 +72,7 @@ public class FoodEatenController {
 
     @GetMapping("/eaten/user/{uid}/time")
     @JsonView(value = {Views.FoodEaten.class})
-    public List<FoodEaten> getEatenByUserTime(@PathVariable(name = "uid") int uid, @RequestParam(required = false) String start, @RequestParam(required = false) String end) {
+    public static List<FoodEaten> getEatenByUserTime(@PathVariable(name = "uid") int uid, @RequestParam(required = false) String start, @RequestParam(required = false) String end) {
         LocalDateTime startTime = start != null ? LocalDateTime.parse(start): LocalDateTime.now().minusMonths(1);   //Default to last month
         LocalDateTime endTime = start != null ? LocalDateTime.parse(end): LocalDateTime.now(); //Default to now
 
