@@ -341,9 +341,4 @@ public class ShepherdSystemTest {
         }
     }
 
-    @Test
-    public void updateGroupTest(){
-
-    }
-
 }
