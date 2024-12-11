@@ -173,6 +173,8 @@ public class FoodEatenDataManager {
         String url = AppConstants.SERVER_URL + "/eaten/user/" + profileDataManager.getId() +
                 "/time?startTime=" + startTimeStr + "&endTime=" + endTimeStr;
 
+        Log.d(TAG, "Getting Food Eaten Data from url: " + url);
+
         JsonArrayRequest request = new JsonArrayRequest(
                 Request.Method.GET,
                 url,

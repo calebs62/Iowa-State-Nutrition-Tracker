@@ -1,18 +1,17 @@
 package com.example.a1_jubair_6_frontend.adapters;
 
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.a1_jubair_6_frontend.R;
 import com.example.a1_jubair_6_frontend.models.Menu;
 
-import java.text.SimpleDateFormat;
 import java.util.List;
 
 public class MenuSelectionAdapter extends RecyclerView.Adapter<MenuSelectionAdapter.MenuViewHolder> {
@@ -33,27 +32,29 @@ public class MenuSelectionAdapter extends RecyclerView.Adapter<MenuSelectionAdap
     @Override
     public MenuViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(android.R.layout.simple_list_item_1, parent, false);
+                .inflate(R.layout.item_menu_selection, parent, false);
         return new MenuViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull MenuViewHolder holder, int position) {
         Menu menu = menuList.get(position);
+        boolean isSelected = selectedPosition == position;
 
-        String displayText = String.format("%s - %s",
-                menu.getLocation(),
-                menu.getDate() != null ? menu.getDate() : "No Date");
+        String locationText = String.format("%s - %s",
+                menu.getLocation() != null ? menu.getLocation() : "",
+                menu.getMeal() != null ? menu.getMeal() : "");
+        holder.locationView.setText(locationText);
 
-        holder.textView.setText(displayText);
+        String dateText = menu.getDate() != null ? menu.getDate() : "No Date";
+        holder.dateView.setText(dateText);
 
-        holder.textView.setBackgroundColor(selectedPosition == position ?
-                holder.itemView.getContext().getColor(R.color.Iowa_State_Red) :
-                Color.TRANSPARENT);
+        holder.locationView.setTextColor(ContextCompat.getColor(holder.itemView.getContext(),
+                isSelected ? android.R.color.white : android.R.color.black));
+        holder.dateView.setTextColor(ContextCompat.getColor(holder.itemView.getContext(),
+                isSelected ? android.R.color.white : android.R.color.darker_gray));
 
-        holder.textView.setTextColor(selectedPosition == position ?
-                Color.WHITE :
-                Color.BLACK);
+        holder.itemView.setSelected(isSelected);
     }
 
     @Override
@@ -69,12 +70,13 @@ public class MenuSelectionAdapter extends RecyclerView.Adapter<MenuSelectionAdap
     }
 
     class MenuViewHolder extends RecyclerView.ViewHolder {
-        TextView textView;
+        final TextView locationView;
+        final TextView dateView;
 
         MenuViewHolder(@NonNull View itemView) {
             super(itemView);
-            textView = (TextView) itemView;
-            textView.setPadding(32, 24, 32, 24);
+            locationView = itemView.findViewById(R.id.tvLocation);
+            dateView = itemView.findViewById(R.id.tvDate);
 
             itemView.setOnClickListener(v -> {
                 int position = getAdapterPosition();

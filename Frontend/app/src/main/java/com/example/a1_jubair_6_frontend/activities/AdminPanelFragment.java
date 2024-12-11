@@ -108,7 +108,7 @@ public class AdminPanelFragment extends Fragment {
         String url = AppConstants.SERVER_URL + "/item";
 
         JsonArrayRequest request = new JsonArrayRequest(
-                Request.Method.GET,
+                Request.Method.PUT,
                 url,
                 null,
                 response -> {
