@@ -42,7 +42,7 @@ public class MenuController {
     @GetMapping("/menu/{id}")
     @JsonView(value = {Views.Menu.class})
     public Menu getMenubyId(@Parameter(description = "Menu id")@PathVariable int id){
-        return menuRepo.findById(id).get();
+        return menuRepo.findById(id).orElse(null);
     }
 
     // Update
