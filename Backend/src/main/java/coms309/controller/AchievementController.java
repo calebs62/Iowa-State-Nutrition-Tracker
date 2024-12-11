@@ -1,10 +1,7 @@
 package coms309.controller;
 
 import com.fasterxml.jackson.annotation.JsonView;
-import coms309.entity.Achievement;
-import coms309.entity.Earned;
-import coms309.entity.User;
-import coms309.entity.Views;
+import coms309.entity.*;
 import coms309.repository.AchievementRepository;
 import coms309.repository.EarnedRepository;
 import coms309.repository.UserRepository;
@@ -14,6 +11,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,11 +22,11 @@ import java.util.Set;
 @RestController
 public class AchievementController {
     @Autowired
-    EarnedRepository earnedRepo;
+    static EarnedRepository earnedRepo;
     @Autowired
     UserRepository userRepo;
     @Autowired
-    AchievementRepository achievementRepo;
+    static AchievementRepository achievementRepo;
 
     @Operation(
             summary = "Create achievement",
@@ -132,5 +132,39 @@ public class AchievementController {
         return achievement;
     }
 
+    public static Earned consecutiveLogins(User user, Timestamp lastLogin){
+        Timestamp today = new Timestamp(System.currentTimeMillis());
+        Timestamp safeTime = new Timestamp(lastLogin.getTime() + (1000 * 60 * 60 * 24));
+
+        if (today.before(safeTime)){
+            Achievement achievement = achievementRepo.findById(2).orElse(null);
+            if (achievement == null) {
+                return null;
+            }
+            EarnedKey id = new EarnedKey(user.getUid(), 2);
+            Earned earned = earnedRepo.findById(id).orElse(null);
+            if (earned == null) {
+                Earned newEarned = new Earned(user, achievement);
+                newEarned.setProgress(1);
+                return earnedRepo.save(newEarned);
+            }
+            earned.addProgress();
+            earned.setEarnDate(new Date()); //Sets time to now
+            return earnedRepo.save(earned);
+        }
+        return null;
+    }
+
+//    public Earned consecutiveProtein(int uid){
+//        Achievement achievement = achievementRepo.findById(3).orElse(null);
+//        if (achievement == null) {
+//            return null;
+//        }
+//
+//        List<FoodEaten> userEatenList = FoodEatenController.getEatenByUserTime(uid, LocalDateTime.now().minusWeeks(1).toString(), LocalDateTime.now().toString());
+//
+//
+//        return null;
+//    }
 
 }

@@ -28,12 +28,17 @@ public class Earned {
     @JsonView(Views.Earned.class)
     private Achievement achievement;
 
+    @Column(name = "progress")
+    @JsonView(Views.Public.class)
+    private Integer progress;
+
     public Earned() {}
 
     public Earned(User user, Achievement achievement){
         this.id = new EarnedKey(user.getUid(), achievement.getId());
         this.user = user;
         this.achievement = achievement;
+        this.progress = 0;
     }
 
     public EarnedKey getId() {
@@ -62,6 +67,16 @@ public class Earned {
 
     public void setAchievement(Achievement achievement) {
         this.achievement = achievement;
+    }
+
+    public Integer getProgress(){
+        return this.progress;
+    }
+    public void setProgress(Integer count){
+        progress = count;
+    }
+    public void addProgress(){
+        progress += 1;
     }
 
     @Override
