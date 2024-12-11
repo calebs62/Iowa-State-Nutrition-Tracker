@@ -1,0 +1,606 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HomePageFragment.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.fragments</a> &gt; <span class="el_source">HomePageFragment.java</span></div><h1>HomePageFragment.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.fragments;
+
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.airbnb.lottie.LottieAnimationView;
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.activities.BaseActivity;
+import com.example.a1_jubair_6_frontend.adapters.FoodEatenAdapter;
+import com.example.a1_jubair_6_frontend.managers.FoodEatenDataManager;
+import com.example.a1_jubair_6_frontend.managers.FoodPlanManager;
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.example.a1_jubair_6_frontend.models.FoodEaten;
+import com.example.a1_jubair_6_frontend.models.FoodPlan;
+import com.example.a1_jubair_6_frontend.utils.FoodEatenPagination;
+import com.example.a1_jubair_6_frontend.widgets.NutrientProgressView;
+import com.google.android.material.tabs.TabLayout;
+
+import java.sql.Timestamp;
+import java.time.DayOfWeek;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+
+<span class="fc" id="L42">public class HomePageFragment extends Fragment implements GroupFragment.GroupMembershipCallback {</span>
+
+    private NutrientProgressView nutrientProgress;
+    private ProfileDataManager profileDataManager;
+    private FoodEatenDataManager foodEatenManager;
+    private FoodPlanManager foodPlanManager;
+    private TabLayout timeRangeTab;
+    private Button enter;
+    private FoodEatenPagination pagination;
+    private Button btnPrevious;
+    private Button btnNext;
+    private TextView txtPageIndicator;
+    private RecyclerView foodEatenRecyclerView;
+    private View emptyStateContainer;
+    private View nutrientProgressContainer;
+    private View foodEatenContainer;
+    private View groupInformationContainer;
+    Button btnViewGroups;
+    private static final String TAG = &quot;HomePageFragment&quot;;
+    private LottieAnimationView loadingAnimation;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+<span class="fc" id="L65">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L66">        pagination = new FoodEatenPagination();</span>
+<span class="fc" id="L67">        profileDataManager = new ProfileDataManager(requireContext());</span>
+<span class="fc" id="L68">        foodEatenManager = new FoodEatenDataManager(requireContext());</span>
+<span class="fc" id="L69">        foodPlanManager = new FoodPlanManager(requireContext());</span>
+<span class="fc" id="L70">    }</span>
+
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+<span class="fc" id="L74">        View view = inflater.inflate(R.layout.fragment_home_page, container, false);</span>
+<span class="fc" id="L75">        nutrientProgress = view.findViewById(R.id.nutrientProgress);</span>
+<span class="fc" id="L76">        timeRangeTab = view.findViewById(R.id.timeRangeTab);</span>
+
+<span class="fc" id="L78">        loadingAnimation = view.findViewById(R.id.loadingAnimation);</span>
+
+<span class="fc" id="L80">        foodEatenRecyclerView = view.findViewById(R.id.foodEatenRecyclerView);</span>
+<span class="fc" id="L81">        foodEatenRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));</span>
+
+<span class="fc" id="L83">        emptyStateContainer = view.findViewById(R.id.emptyStateContainer);</span>
+<span class="fc" id="L84">        nutrientProgressContainer = view.findViewById(R.id.nutrientProgressContainer);</span>
+<span class="fc" id="L85">        foodEatenContainer = view.findViewById(R.id.foodEatenContainer);</span>
+<span class="fc" id="L86">        groupInformationContainer = view.findViewById(R.id.groupInformationContainer);</span>
+
+<span class="fc" id="L88">        btnViewGroups = view.findViewById(R.id.btnViewGroups);</span>
+<span class="fc" id="L89">        btnViewGroups.setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L90">            GroupFragment groupFragment = new GroupFragment();</span>
+<span class="fc" id="L91">            groupFragment.setGroupMembershipCallback(this);</span>
+<span class="fc" id="L92">            navigateToSubFragment(groupFragment);</span>
+<span class="fc" id="L93">        });</span>
+
+<span class="fc" id="L95">        FoodEatenAdapter adapter = new FoodEatenAdapter(foodEaten -&gt;</span>
+<span class="nc" id="L96">                foodEatenManager.removeFoodEaten(foodEaten.getId(), new FoodEatenDataManager.FoodEatenCallback() {</span>
+                    @Override
+                    public void onSuccess() {
+<span class="nc" id="L99">                        refreshAllData();</span>
+<span class="nc" id="L100">                    }</span>
+
+                    @Override
+                    public void onError(String message) {
+<span class="nc" id="L104">                        Toast.makeText(requireContext(), &quot;Error removing food: &quot; + message,</span>
+<span class="nc" id="L105">                                Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L106">                    }</span>
+                }));
+
+<span class="fc" id="L109">        foodEatenRecyclerView.setAdapter(adapter);</span>
+<span class="fc" id="L110">        btnPrevious = view.findViewById(R.id.btnPrevious);</span>
+<span class="fc" id="L111">        btnNext = view.findViewById(R.id.btnNext);</span>
+<span class="fc" id="L112">        txtPageIndicator = view.findViewById(R.id.txtPageIndicator);</span>
+
+<span class="fc" id="L114">        setupPaginationButtons();</span>
+
+<span class="fc" id="L116">        return view;</span>
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+<span class="fc" id="L121">        super.onViewCreated(view, savedInstanceState);</span>
+<span class="fc" id="L122">        enter = view.findViewById(R.id.btnEnter);</span>
+<span class="fc" id="L123">        enter.setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L124">            GroupFragment groupFragment = new GroupFragment();</span>
+<span class="fc" id="L125">            groupFragment.setGroupMembershipCallback(this);</span>
+<span class="fc" id="L126">            navigateToSubFragment(groupFragment);</span>
+<span class="fc" id="L127">        });</span>
+<span class="fc" id="L128">        setupTabListener();</span>
+<span class="fc" id="L129">        showLoading();</span>
+<span class="fc" id="L130">        loadAllData();</span>
+<span class="fc" id="L131">    }</span>
+
+    private void updateUIState() {
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">        if (!canUpdateUI()) {</span>
+<span class="nc" id="L135">            Log.d(TAG, &quot;Cannot update UI - fragment not in valid state&quot;);</span>
+<span class="nc" id="L136">            return;</span>
+        }
+
+<span class="fc bfc" id="L139" title="All 2 branches covered.">        boolean hasPlan = foodPlanManager.getCurrentPlan() != null;</span>
+<span class="fc" id="L140">        Log.d(TAG, &quot;Updating UI state. Has plan: &quot; + hasPlan);</span>
+
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">        if (loadingAnimation != null) {</span>
+<span class="fc" id="L143">            loadingAnimation.setVisibility(View.GONE);</span>
+        }
+
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">        if (emptyStateContainer != null) {</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">            emptyStateContainer.setVisibility(hasPlan ? View.GONE : View.VISIBLE);</span>
+<span class="fc" id="L148">            Log.d(TAG, &quot;Empty state container visibility: &quot; +</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">                    (hasPlan ? &quot;GONE&quot; : &quot;VISIBLE&quot;));</span>
+        }
+
+<span class="pc bpc" id="L152" title="1 of 2 branches missed.">        if (nutrientProgressContainer != null) {</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">            nutrientProgressContainer.setVisibility(hasPlan ? View.VISIBLE : View.GONE);</span>
+        }
+
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">        if (foodEatenContainer != null) {</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">            foodEatenContainer.setVisibility(hasPlan ? View.VISIBLE : View.GONE);</span>
+        }
+
+<span class="pc bpc" id="L160" title="1 of 2 branches missed.">        if (groupInformationContainer != null) {</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">            groupInformationContainer.setVisibility(hasPlan ? View.VISIBLE : View.GONE);</span>
+        }
+
+<span class="pc bpc" id="L164" title="1 of 2 branches missed.">        if (btnViewGroups != null) {</span>
+<span class="fc" id="L165">            btnViewGroups.setVisibility(View.VISIBLE);</span>
+        }
+
+<span class="pc bpc" id="L168" title="1 of 2 branches missed.">        if (timeRangeTab != null) {</span>
+<span class="fc" id="L169">            timeRangeTab.setEnabled(hasPlan);</span>
+<span class="fc bfc" id="L170" title="All 2 branches covered.">            timeRangeTab.setAlpha(hasPlan ? 1.0f : 0.5f);</span>
+        }
+<span class="fc" id="L172">    }</span>
+
+    private void setupTabListener() {
+<span class="fc" id="L175">        timeRangeTab.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {</span>
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+<span class="nc" id="L178">                refreshAllData();</span>
+<span class="nc" id="L179">            }</span>
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+<span class="nc" id="L183">            }</span>
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+<span class="nc" id="L187">                refreshAllData();</span>
+<span class="nc" id="L188">            }</span>
+        });
+<span class="fc" id="L190">    }</span>
+
+    private void updateFoodEatenList(int tabPosition) {
+<span class="pc bpc" id="L193" title="1 of 2 branches missed.">        if (!canUpdateUI()) return;</span>
+
+<span class="fc" id="L195">        ZoneOffset systemOffset = ZoneOffset.systemDefault().getRules().getOffset(LocalDateTime.now());</span>
+
+<span class="fc" id="L197">        LocalDateTime now = LocalDateTime.now();</span>
+<span class="fc" id="L198">        LocalDateTime startTime = getStartTimeForTab(now, tabPosition);</span>
+<span class="fc" id="L199">        LocalDateTime endTime = now.withHour(23).withMinute(59).withSecond(59).withNano(999999999);</span>
+
+<span class="fc" id="L201">        Date startDate = Date.from(startTime.toInstant(systemOffset));</span>
+<span class="fc" id="L202">        Date endDate = Date.from(endTime.toInstant(systemOffset));</span>
+
+<span class="fc" id="L204">        Log.d(TAG, &quot;Fetching food items from &quot; + startDate + &quot; to &quot; + endDate);</span>
+
+<span class="fc" id="L206">        foodEatenManager.getFoodEatenForTimeRange(startDate, endDate,</span>
+<span class="fc" id="L207">                new FoodEatenDataManager.FoodEatenListCallback() {</span>
+                    @Override
+                    public void onSuccess(List&lt;FoodEaten&gt; foodEatenList) {
+<span class="pc bpc" id="L210" title="1 of 2 branches missed.">                        if (!canUpdateUI()) return;</span>
+
+<span class="fc" id="L212">                        List&lt;FoodEaten&gt; filteredList = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L213" title="All 2 branches covered.">                        for (FoodEaten food : foodEatenList) {</span>
+<span class="pc bpc" id="L214" title="1 of 2 branches missed.">                            if (food.getTime() != null) {</span>
+<span class="pc bpc" id="L215" title="1 of 4 branches missed.">                                if (!food.getTime().before(startDate) &amp;&amp; !food.getTime().after(endDate)) {</span>
+<span class="fc" id="L216">                                    filteredList.add(food);</span>
+<span class="fc" id="L217">                                    Log.d(TAG, String.format(&quot;Including food item: %s with server date: %s&quot;,</span>
+<span class="fc" id="L218">                                            food.getFood().getName(),</span>
+<span class="fc" id="L219">                                            food.getTime()));</span>
+                                } else {
+<span class="fc" id="L221">                                    Log.d(TAG, String.format(&quot;Excluding food item: %s with server date: %s&quot;,</span>
+<span class="fc" id="L222">                                            food.getFood().getName(),</span>
+<span class="fc" id="L223">                                            food.getTime()));</span>
+                                }
+                            }
+<span class="fc" id="L226">                        }</span>
+
+<span class="fc" id="L228">                        Collections.sort(filteredList, (a, b) -&gt; b.getTime().compareTo(a.getTime()));</span>
+
+<span class="fc" id="L230">                        Log.d(TAG, String.format(&quot;Filtered list contains %d items&quot;, filteredList.size()));</span>
+
+<span class="fc" id="L232">                        pagination.setItems(filteredList);</span>
+<span class="fc" id="L233">                        RecyclerView recyclerView = getView().findViewById(R.id.foodEatenRecyclerView);</span>
+<span class="fc" id="L234">                        FoodEatenAdapter adapter = (FoodEatenAdapter) recyclerView.getAdapter();</span>
+<span class="pc bpc" id="L235" title="1 of 2 branches missed.">                        if (adapter != null) {</span>
+<span class="fc" id="L236">                            adapter.updateFoodList(pagination.getCurrentPageItems());</span>
+                        }
+<span class="fc" id="L238">                        updatePaginationUI();</span>
+<span class="fc" id="L239">                    }</span>
+
+                    @Override
+                    public void onError(String message) {
+<span class="nc bnc" id="L243" title="All 2 branches missed.">                        if (!canUpdateUI()) return;</span>
+<span class="nc" id="L244">                        Log.e(TAG, &quot;Error loading food items: &quot; + message);</span>
+<span class="nc" id="L245">                        Toast.makeText(requireContext(), &quot;Error loading food items: &quot; + message,</span>
+<span class="nc" id="L246">                                Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L247">                    }</span>
+                });
+<span class="fc" id="L249">    }</span>
+
+    private void loadFoodPlanAndUpdateProgress() {
+<span class="nc" id="L252">        Log.d(TAG, &quot;Starting to load food plan&quot;);</span>
+
+<span class="nc bnc" id="L254" title="All 2 branches missed.">        if (foodPlanManager.getCurrentPlan() != null) {</span>
+<span class="nc" id="L255">            Log.i(TAG, &quot;Food Plan already grabbed&quot;);</span>
+<span class="nc" id="L256">            updateNutrientProgress(timeRangeTab.getSelectedTabPosition());</span>
+<span class="nc" id="L257">            return;</span>
+        }
+
+<span class="nc" id="L260">        foodPlanManager.getFoodPlanFromGroup(new FoodPlanManager.FoodPlanCallback() {</span>
+            @Override
+            public void onSuccess(FoodPlan plan) {
+<span class="nc bnc" id="L263" title="All 2 branches missed.">                if (plan != null) {</span>
+<span class="nc" id="L264">                    Log.d(TAG, &quot;Food plan loaded successfully: &quot; + plan.toString());</span>
+<span class="nc" id="L265">                    updateNutrientProgress(timeRangeTab.getSelectedTabPosition());</span>
+                } else {
+<span class="nc" id="L267">                    Log.e(TAG, &quot;No food plan returned from getAllPlans&quot;);</span>
+<span class="nc" id="L268">                    Toast.makeText(requireContext(), &quot;No food plan found. Please join a group to get a food plan.&quot;, Toast.LENGTH_LONG).show();</span>
+                }
+<span class="nc" id="L270">            }</span>
+
+            @Override
+            public void onError(String message) {
+<span class="nc" id="L274">                Log.e(TAG, &quot;Error loading food plan: &quot; + message);</span>
+<span class="nc" id="L275">                Toast.makeText(requireContext(), &quot;Error loading food plan&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L276">            }</span>
+        });
+<span class="nc" id="L278">    }</span>
+
+    private void updateNutrientProgress(int tabPosition) {
+<span class="pc bpc" id="L281" title="1 of 2 branches missed.">        if (!canUpdateUI()) return;</span>
+        // Get current food plan from the user's group
+<span class="fc" id="L283">        FoodPlan currentPlan = foodPlanManager.getCurrentPlan();</span>
+<span class="pc bpc" id="L284" title="1 of 2 branches missed.">        if (currentPlan == null) {</span>
+<span class="nc" id="L285">            Log.e(TAG, &quot;No food plan available in updateNutrientProgress&quot;);</span>
+<span class="nc" id="L286">            return;</span>
+        }
+
+<span class="fc" id="L289">        ZoneOffset systemOffset = ZoneOffset.systemDefault().getRules().getOffset(LocalDateTime.now());</span>
+
+        // Calculate time range
+<span class="fc" id="L292">        LocalDateTime now = LocalDateTime.now();</span>
+<span class="fc" id="L293">        LocalDateTime startTime = getStartTimeForTab(now, tabPosition);</span>
+<span class="fc" id="L294">        LocalDateTime endTime = now.withHour(23).withMinute(59).withSecond(59).withNano(999999999);</span>
+
+<span class="fc" id="L296">        Date startDate = Date.from(startTime.toInstant(systemOffset));</span>
+<span class="fc" id="L297">        Date endDate = Date.from(endTime.toInstant(systemOffset));</span>
+
+<span class="fc" id="L299">        Log.d(TAG, &quot;Fetching food between &quot; + startDate + &quot; and &quot; + endDate);</span>
+
+<span class="fc" id="L301">        foodEatenManager.getFoodEatenForTimeRange(startDate, endDate,</span>
+<span class="fc" id="L302">                new FoodEatenDataManager.FoodEatenListCallback() {</span>
+                    @Override
+                    public void onSuccess(List&lt;FoodEaten&gt; foodEatenList) {
+<span class="pc bpc" id="L305" title="1 of 2 branches missed.">                        if (!canUpdateUI()) return;</span>
+
+<span class="fc" id="L307">                        Log.d(TAG, &quot;Retrieved &quot; + foodEatenList.size() + &quot; food items&quot;);</span>
+<span class="fc bfc" id="L308" title="All 2 branches covered.">                        for (FoodEaten food : foodEatenList) {</span>
+<span class="fc" id="L309">                            Log.d(TAG, &quot;Food item date: &quot; + food.getTime() + &quot; - &quot; + food.getFood().getName());</span>
+<span class="fc" id="L310">                        }</span>
+
+<span class="fc" id="L312">                        Timestamp startTimestamp = new Timestamp(startDate.getTime());</span>
+<span class="fc" id="L313">                        NutrientTotals totals = calculateNutrientTotals(foodEatenList, startTimestamp);</span>
+<span class="fc" id="L314">                        updateNutrientView(totals, currentPlan, tabPosition);</span>
+<span class="fc" id="L315">                    }</span>
+
+                    @Override
+                    public void onError(String message) {
+<span class="nc bnc" id="L319" title="All 2 branches missed.">                        if (!canUpdateUI()) return;</span>
+<span class="nc" id="L320">                        Log.e(TAG, &quot;Error fetching food eaten data: &quot; + message);</span>
+<span class="nc" id="L321">                        updateNutrientView(new NutrientTotals(), currentPlan, tabPosition);</span>
+<span class="nc" id="L322">                    }</span>
+                });
+<span class="fc" id="L324">    }</span>
+
+<span class="fc" id="L326">    private static class NutrientTotals {</span>
+<span class="fc" id="L327">        float calories = 0;</span>
+<span class="fc" id="L328">        float protein = 0;</span>
+<span class="fc" id="L329">        float carbs = 0;</span>
+<span class="fc" id="L330">        float fat = 0;</span>
+<span class="fc" id="L331">        float salt = 0;</span>
+    }
+
+    private NutrientTotals calculateNutrientTotals(List&lt;FoodEaten&gt; foodEatenList, Timestamp startTime) {
+<span class="fc" id="L335">        NutrientTotals totals = new NutrientTotals();</span>
+
+<span class="fc" id="L337">        Log.d(TAG, &quot;Calculating totals for &quot; + foodEatenList.size() + &quot; food items&quot;);</span>
+
+<span class="fc bfc" id="L339" title="All 2 branches covered.">        for (FoodEaten foodEaten : foodEatenList) {</span>
+<span class="fc bfc" id="L340" title="All 2 branches covered.">            if (foodEaten.getTime().after(startTime)) {</span>
+<span class="fc" id="L341">                float servings = foodEaten.getServings();</span>
+<span class="fc" id="L342">                Log.d(TAG, &quot;Processing food: &quot; + foodEaten.getFood().getName() +</span>
+                        &quot; servings: &quot; + servings);
+
+<span class="fc" id="L345">                totals.calories += foodEaten.getFood().getCalories() * servings;</span>
+<span class="fc" id="L346">                totals.protein += foodEaten.getFood().getProtein() * servings;</span>
+<span class="fc" id="L347">                totals.carbs += foodEaten.getFood().getCarbohydrate() * servings;</span>
+<span class="fc" id="L348">                totals.fat += foodEaten.getFood().getTotalFat() * servings;</span>
+<span class="fc" id="L349">                totals.salt += foodEaten.getFood().getSodium() * servings;</span>
+            }
+<span class="fc" id="L351">        }</span>
+<span class="fc" id="L352">        return totals;</span>
+    }
+
+    private LocalDateTime getStartTimeForTab(LocalDateTime now, int tabPosition) {
+<span class="fc" id="L356">        ZoneOffset systemOffset = ZoneOffset.systemDefault().getRules().getOffset(now);</span>
+
+<span class="fc" id="L358">        LocalDateTime start = now.truncatedTo(ChronoUnit.DAYS);</span>
+
+        LocalDateTime result;
+<span class="pc bpc" id="L361" title="3 of 4 branches missed.">        switch (tabPosition) {</span>
+            case 1: // Week
+<span class="nc" id="L363">                result = start.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY));</span>
+<span class="nc" id="L364">                break;</span>
+            case 2: // Month
+<span class="nc" id="L366">                result = start.with(TemporalAdjusters.firstDayOfMonth());</span>
+<span class="nc" id="L367">                break;</span>
+            case 3: // Year
+<span class="nc" id="L369">                result = start.with(TemporalAdjusters.firstDayOfYear());</span>
+<span class="nc" id="L370">                break;</span>
+            default: // Today
+<span class="fc" id="L372">                result = start;</span>
+                break;
+        }
+
+<span class="fc" id="L376">        Date startDate = Date.from(result.toInstant(systemOffset));</span>
+<span class="fc" id="L377">        Date endDate = Date.from(now.withHour(23).withMinute(59).withSecond(59)</span>
+<span class="fc" id="L378">                .withNano(999999999).toInstant(systemOffset));</span>
+<span class="fc" id="L379">        Log.d(TAG, String.format(&quot;Date range - Start: %s (timestamp: %d)&quot;,</span>
+<span class="fc" id="L380">                startDate, startDate.getTime()));</span>
+<span class="fc" id="L381">        Log.d(TAG, String.format(&quot;            End: %s (timestamp: %d)&quot;,</span>
+<span class="fc" id="L382">                endDate, endDate.getTime()));</span>
+
+<span class="fc" id="L384">        return result;</span>
+    }
+
+    private float getTimeMultiplier(int tabPosition) {
+<span class="pc bpc" id="L388" title="3 of 4 branches missed.">        switch (tabPosition) {</span>
+            case 1: // Week
+<span class="nc" id="L390">                return 7f;</span>
+            case 2: // Month
+<span class="nc" id="L392">                return 30f;</span>
+            case 3: // Year
+<span class="nc" id="L394">                return 365f;</span>
+            default: // Today
+<span class="fc" id="L396">                return 1f;</span>
+        }
+    }
+
+    private void navigateToSubFragment(Fragment fragment) {
+<span class="pc bpc" id="L401" title="1 of 2 branches missed.">        if (getActivity() instanceof BaseActivity) {</span>
+<span class="fc" id="L402">            ((BaseActivity) getActivity()).loadFragment(fragment, true);</span>
+        }
+<span class="fc" id="L404">    }</span>
+
+    @Override
+    public void onResume() {
+<span class="fc" id="L408">        super.onResume();</span>
+<span class="pc bpc" id="L409" title="1 of 2 branches missed.">        if (foodPlanManager.getCurrentPlan() == null) {</span>
+<span class="fc" id="L410">            loadAllData();</span>
+        }
+<span class="fc" id="L412">    }</span>
+
+    private void updateNutrientView(NutrientTotals totals, FoodPlan plan, int tabPosition) {
+<span class="pc bpc" id="L415" title="2 of 4 branches missed.">        if (!canUpdateUI() || plan == null) {</span>
+<span class="nc" id="L416">            Log.w(TAG, &quot;Cannot update nutrient view - fragment not attached or no plan available&quot;);</span>
+<span class="nc" id="L417">            return;</span>
+        }
+
+<span class="fc" id="L420">        float multiplier = getTimeMultiplier(tabPosition);</span>
+
+<span class="fc" id="L422">        Log.d(TAG, &quot;Updating nutrient view with:&quot;);</span>
+<span class="pc bpc" id="L423" title="1 of 2 branches missed.">        Log.d(TAG, &quot;Calories - Current: &quot; + (totals != null ? totals.calories : 0) +</span>
+<span class="fc" id="L424">                &quot; Goal: &quot; + (plan.getCalories() * multiplier));</span>
+<span class="pc bpc" id="L425" title="1 of 2 branches missed.">        Log.d(TAG, &quot;Protein - Current: &quot; + (totals != null ? totals.protein : 0) +</span>
+<span class="fc" id="L426">                &quot; Goal: &quot; + (plan.getProtein() * multiplier));</span>
+
+<span class="fc" id="L428">        List&lt;NutrientProgressView.NutrientData&gt; nutrientDataList = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L430">        nutrientDataList.add(new NutrientProgressView.NutrientData(</span>
+                &quot;Calories&quot;,
+<span class="pc bpc" id="L432" title="1 of 2 branches missed.">                totals != null ? totals.calories : 0f,</span>
+<span class="fc" id="L433">                plan.getCalories() * multiplier,</span>
+<span class="fc" id="L434">                getResources().getColor(R.color.black)));</span>
+
+<span class="fc" id="L436">        nutrientDataList.add(new NutrientProgressView.NutrientData(</span>
+                &quot;Protein&quot;,
+<span class="pc bpc" id="L438" title="1 of 2 branches missed.">                totals != null ? totals.protein : 0f,</span>
+<span class="fc" id="L439">                plan.getProtein() * multiplier,</span>
+<span class="fc" id="L440">                getResources().getColor(R.color.Iowa_State_Red)));</span>
+
+<span class="fc" id="L442">        nutrientDataList.add(new NutrientProgressView.NutrientData(</span>
+                &quot;Carbs&quot;,
+<span class="pc bpc" id="L444" title="1 of 2 branches missed.">                totals != null ? totals.carbs : 0f,</span>
+<span class="fc" id="L445">                plan.getCarbohydrate() * multiplier,</span>
+<span class="fc" id="L446">                getResources().getColor(R.color.Iowa_State_Gold)));</span>
+
+<span class="fc" id="L448">        nutrientDataList.add(new NutrientProgressView.NutrientData(</span>
+                &quot;Fat&quot;,
+<span class="pc bpc" id="L450" title="1 of 2 branches missed.">                totals != null ? totals.fat : 0f,</span>
+<span class="fc" id="L451">                plan.getTotalFat() * multiplier,</span>
+<span class="fc" id="L452">                getResources().getColor(R.color.Iowa_State_Brown)));</span>
+
+<span class="fc" id="L454">        nutrientDataList.add(new NutrientProgressView.NutrientData(</span>
+                &quot;Salt&quot;,
+<span class="pc bpc" id="L456" title="1 of 2 branches missed.">                totals != null ? totals.salt / 1000 : 0f,</span>
+<span class="fc" id="L457">                plan.getSodium() * multiplier / 1000,</span>
+<span class="fc" id="L458">                getResources().getColor(R.color.Iowa_State_Light_Brown)));</span>
+
+<span class="pc bpc" id="L460" title="1 of 2 branches missed.">        if (nutrientProgress != null) {</span>
+<span class="fc" id="L461">            nutrientProgress.updateAllNutrients(nutrientDataList);</span>
+        }
+<span class="fc" id="L463">    }</span>
+
+    private void refreshAllData() {
+<span class="nc" id="L466">        loadAllData();</span>
+<span class="nc" id="L467">    }</span>
+
+    private void setupPaginationButtons() {
+<span class="fc" id="L470">        btnPrevious.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L471">            pagination.previousPage();</span>
+<span class="nc" id="L472">            updatePaginationUI();</span>
+<span class="nc" id="L473">        });</span>
+
+<span class="fc" id="L475">        btnNext.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L476">            pagination.nextPage();</span>
+<span class="nc" id="L477">            updatePaginationUI();</span>
+<span class="nc" id="L478">        });</span>
+<span class="fc" id="L479">    }</span>
+
+    private void updatePaginationUI() {
+<span class="fc" id="L482">        FoodEatenAdapter adapter = (FoodEatenAdapter) foodEatenRecyclerView.getAdapter();</span>
+<span class="pc bpc" id="L483" title="1 of 2 branches missed.">        if (adapter != null) {</span>
+<span class="fc" id="L484">            adapter.updateFoodList(pagination.getCurrentPageItems());</span>
+        }
+
+<span class="fc" id="L487">        btnPrevious.setEnabled(pagination.hasPreviousPage());</span>
+<span class="fc" id="L488">        btnNext.setEnabled(pagination.hasNextPage());</span>
+<span class="fc" id="L489">        txtPageIndicator.setText(String.format(&quot;Page %d of %d&quot;,</span>
+<span class="fc" id="L490">                pagination.getCurrentPage(), pagination.getTotalPages()));</span>
+<span class="fc" id="L491">    }</span>
+
+    @Override
+    public void onGroupMembershipChanged() {
+<span class="fc" id="L495">        Log.d(TAG, &quot;Group membership changed called&quot;);</span>
+
+<span class="pc bpc" id="L497" title="1 of 2 branches missed.">        if (!canUpdateUI()) {</span>
+<span class="fc" id="L498">            Log.d(TAG, &quot;Skip membership change - fragment not in valid state&quot;);</span>
+<span class="fc" id="L499">            return;</span>
+        }
+
+<span class="nc bnc" id="L502" title="All 2 branches missed.">        if (getActivity() == null) {</span>
+<span class="nc" id="L503">            Log.d(TAG, &quot;Skip membership change - activity is null&quot;);</span>
+<span class="nc" id="L504">            return;</span>
+        }
+
+<span class="nc" id="L507">        getActivity().runOnUiThread(() -&gt; {</span>
+<span class="nc" id="L508">            foodPlanManager.clearCurrentPlan();</span>
+<span class="nc" id="L509">            Log.d(TAG, &quot;Current plan cleared&quot;);</span>
+
+<span class="nc" id="L511">            updateUIState();</span>
+<span class="nc" id="L512">            Log.d(TAG, &quot;UI State updated&quot;);</span>
+
+<span class="nc" id="L514">            new android.os.Handler().postDelayed(() -&gt; {</span>
+<span class="nc bnc" id="L515" title="All 2 branches missed.">                if (canUpdateUI()) {</span>
+<span class="nc" id="L516">                    loadAllData();</span>
+<span class="nc" id="L517">                    Log.d(TAG, &quot;Data reload initiated&quot;);</span>
+                }
+<span class="nc" id="L519">            }, 150);</span>
+<span class="nc" id="L520">        });</span>
+<span class="nc" id="L521">    }</span>
+
+    private boolean canUpdateUI() {
+<span class="pc bpc" id="L524" title="2 of 6 branches missed.">        return isAdded() &amp;&amp; !isDetached() &amp;&amp; getContext() != null;</span>
+    }
+
+    @Override
+    public void onDestroyView() {
+<span class="fc" id="L529">        super.onDestroyView();</span>
+<span class="fc" id="L530">        nutrientProgress = null;</span>
+<span class="fc" id="L531">    }</span>
+
+
+    private void loadAllData() {
+<span class="pc bpc" id="L535" title="1 of 2 branches missed.">        if (!canUpdateUI()) {</span>
+<span class="nc" id="L536">            Log.d(TAG, &quot;Cannot load data - fragment not in valid state&quot;);</span>
+<span class="nc" id="L537">            return;</span>
+        }
+
+<span class="fc" id="L540">        Log.d(TAG, &quot;Starting loadAllData()&quot;);</span>
+<span class="fc" id="L541">        showLoading();</span>
+
+<span class="fc" id="L543">        Log.d(TAG, &quot;Requesting food plan from FoodPlanManager&quot;);</span>
+<span class="fc" id="L544">        foodPlanManager.getFoodPlanFromGroup(new FoodPlanManager.FoodPlanCallback() {</span>
+            @Override
+            public void onSuccess(FoodPlan plan) {
+<span class="pc bpc" id="L547" title="1 of 2 branches missed.">                Log.d(TAG, &quot;FoodPlanManager callback received - success. Plan: &quot; + (plan != null ? &quot;found&quot; : &quot;null&quot;));</span>
+
+<span class="pc bpc" id="L549" title="1 of 2 branches missed.">                if (!canUpdateUI()) {</span>
+<span class="nc" id="L550">                    Log.d(TAG, &quot;Cannot update UI in callback - fragment not in valid state&quot;);</span>
+<span class="nc" id="L551">                    return;</span>
+                }
+
+<span class="fc" id="L554">                hideLoading();</span>
+
+<span class="pc bpc" id="L556" title="1 of 2 branches missed.">                if (plan == null) {</span>
+<span class="nc" id="L557">                    Log.d(TAG, &quot;No food plan found - showing empty state&quot;);</span>
+<span class="nc" id="L558">                    updateUIState();</span>
+                } else {
+<span class="fc" id="L560">                    Log.d(TAG, &quot;Food plan found - loading data&quot;);</span>
+<span class="fc" id="L561">                    updateNutrientProgress(timeRangeTab.getSelectedTabPosition());</span>
+<span class="fc" id="L562">                    updateFoodEatenList(timeRangeTab.getSelectedTabPosition());</span>
+<span class="fc" id="L563">                    updateUIState();</span>
+                }
+<span class="fc" id="L565">            }</span>
+
+            @Override
+            public void onError(String message) {
+<span class="fc" id="L569">                Log.e(TAG, &quot;FoodPlanManager callback received - error: &quot; + message);</span>
+
+<span class="pc bpc" id="L571" title="1 of 2 branches missed.">                if (!canUpdateUI()) {</span>
+<span class="nc" id="L572">                    Log.d(TAG, &quot;Cannot update UI in error callback - fragment not in valid state&quot;);</span>
+<span class="nc" id="L573">                    return;</span>
+                }
+
+<span class="fc" id="L576">                hideLoading();</span>
+<span class="fc" id="L577">                updateUIState();</span>
+<span class="fc" id="L578">                Toast.makeText(requireContext(),</span>
+                        &quot;Unable to load food plan: &quot; + message,
+<span class="fc" id="L580">                        Toast.LENGTH_SHORT).show();</span>
+<span class="fc" id="L581">            }</span>
+        });
+<span class="fc" id="L583">    }</span>
+
+    private void showLoading() {
+<span class="pc bpc" id="L586" title="1 of 2 branches missed.">        if (loadingAnimation != null) {</span>
+<span class="fc" id="L587">            loadingAnimation.setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L588">            loadingAnimation.setAnimation(&quot;loading.json&quot;);</span>
+<span class="fc" id="L589">            loadingAnimation.loop(true);</span>
+<span class="fc" id="L590">            loadingAnimation.playAnimation();</span>
+        }
+
+<span class="pc bpc" id="L593" title="1 of 2 branches missed.">        if (emptyStateContainer != null) emptyStateContainer.setVisibility(View.GONE);</span>
+<span class="pc bpc" id="L594" title="1 of 2 branches missed.">        if (nutrientProgressContainer != null) nutrientProgressContainer.setVisibility(View.GONE);</span>
+<span class="pc bpc" id="L595" title="1 of 2 branches missed.">        if (foodEatenContainer != null) foodEatenContainer.setVisibility(View.GONE);</span>
+<span class="pc bpc" id="L596" title="1 of 2 branches missed.">        if (groupInformationContainer != null) groupInformationContainer.setVisibility(View.GONE);</span>
+<span class="fc" id="L597">    }</span>
+
+    private void hideLoading() {
+<span class="pc bpc" id="L600" title="1 of 2 branches missed.">        if (loadingAnimation != null) {</span>
+<span class="fc" id="L601">            loadingAnimation.setVisibility(View.GONE);</span>
+<span class="fc" id="L602">            loadingAnimation.pauseAnimation();</span>
+        }
+<span class="fc" id="L604">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

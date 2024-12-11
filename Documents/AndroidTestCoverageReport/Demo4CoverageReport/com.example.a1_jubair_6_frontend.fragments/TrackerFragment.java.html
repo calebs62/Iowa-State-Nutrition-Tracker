@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TrackerFragment.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.fragments</a> &gt; <span class="el_source">TrackerFragment.java</span></div><h1>TrackerFragment.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.fragments;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Bundle;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+import android.provider.MediaStore;
+import android.util.Base64;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.PopupMenu;
+import android.widget.Toast;
+
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.adapters.ActivityFeedAdapter;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.example.a1_jubair_6_frontend.models.ActivityFeedItem;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
+import com.example.a1_jubair_6_frontend.network.WebSocketClient;
+import com.google.android.material.button.MaterialButton;
+
+import org.jetbrains.annotations.NotNull;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+
+import okhttp3.Response;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
+
+<span class="fc" id="L54">public class TrackerFragment extends Fragment {</span>
+    private SwipeRefreshLayout swipeRefreshLayout;
+    private MaterialButton filterButton;
+    private PopupMenu filterMenu;
+    private ActivityFeedAdapter adapter;
+    private WebSocketClient webSocketClient;
+    private ProfileDataManager profileDataManager;
+    private MaterialButton testFeedButton;
+    View view;
+    private static final int PICK_IMAGE_REQUEST = 1;
+    private String currentEncodedImage;
+    private MaterialButton uploadImageButton;
+
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+<span class="fc" id="L70">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L71">        profileDataManager = new ProfileDataManager(requireContext());</span>
+<span class="fc" id="L72">    }</span>
+
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+<span class="fc" id="L77">        view = inflater.inflate(R.layout.fragment_tracker, container, false);</span>
+
+        // Initialize views
+<span class="fc" id="L80">        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);</span>
+<span class="fc" id="L81">        filterButton = view.findViewById(R.id.filterButton);</span>
+<span class="fc" id="L82">        testFeedButton = view.findViewById(R.id.testFeedButton);</span>
+<span class="fc" id="L83">        uploadImageButton = view.findViewById(R.id.uploadImageButton);</span>
+<span class="pc" id="L84">        uploadImageButton.setOnClickListener(v -&gt; openImagePicker());</span>
+
+<span class="fc" id="L86">        setupSwipeRefresh();</span>
+<span class="fc" id="L87">        setupFilterMenu();</span>
+<span class="fc" id="L88">        setupRecyclerView(view);</span>
+<span class="fc" id="L89">        setupWebSocket();</span>
+<span class="fc" id="L90">        setupTestButton();</span>
+
+<span class="fc" id="L92">        return view;</span>
+    }
+
+
+    private void setupWebSocket() {
+<span class="fc" id="L97">        int userId = profileDataManager.getId();</span>
+
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">        if (userId == -1) {</span>
+<span class="nc" id="L100">            Log.e(&quot;WebSocket&quot;, &quot;User ID not found&quot;);</span>
+<span class="nc" id="L101">            Toast.makeText(requireContext(), &quot;Please log in to view activity feed&quot;, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L102">            return;</span>
+        }
+
+<span class="fc" id="L105">        String wsUrl = AppConstants.WEBSOCKET_SERVER_URL + userId;</span>
+<span class="fc" id="L106">        Log.d(&quot;WebSocket&quot;, &quot;Connecting to: &quot; + wsUrl);</span>
+
+<span class="fc" id="L108">        webSocketClient = new WebSocketClient(new WebSocketListener() {</span>
+            @Override
+            public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
+<span class="fc" id="L111">                Log.d(&quot;WebSocket&quot;, &quot;Connection established for user: &quot; + userId);</span>
+<span class="fc" id="L112">                requireActivity().runOnUiThread(() -&gt; {</span>
+<span class="fc" id="L113">                    Toast.makeText(requireContext(),</span>
+                            &quot;Connected to activity feed&quot;,
+<span class="fc" id="L115">                            Toast.LENGTH_SHORT).show();</span>
+<span class="fc" id="L116">                });</span>
+<span class="fc" id="L117">            }</span>
+
+            @Override
+            public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
+<span class="fc" id="L121">                Log.d(&quot;WebSocket&quot;, &quot;Received message: &quot; + text);</span>
+                try {
+<span class="fc" id="L123">                    JSONObject json = new JSONObject(text);</span>
+<span class="fc" id="L124">                    ActivityFeedItem item = new ActivityFeedItem();</span>
+
+<span class="fc" id="L126">                    String typeStr = json.getString(&quot;type&quot;);</span>
+                    try {
+<span class="fc" id="L128">                        item.setType(ActivityFeedItem.ActivityType.valueOf(typeStr));</span>
+<span class="nc" id="L129">                    } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L130">                        item.setType(ActivityFeedItem.ActivityType.GROUP_UPDATE);</span>
+<span class="fc" id="L131">                    }</span>
+
+<span class="fc" id="L133">                    item.setMessage(json.getString(&quot;message&quot;));</span>
+<span class="fc" id="L134">                    item.setTimestamp(Timestamp.valueOf(json.getString(&quot;timestamp&quot;)));</span>
+<span class="fc" id="L135">                    item.setAdditionalData(json.getString(&quot;additionalData&quot;));</span>
+
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">                    if (json.has(&quot;images&quot;)) {</span>
+<span class="fc" id="L138">                        JSONArray imagesArray = json.getJSONArray(&quot;images&quot;);</span>
+<span class="fc" id="L139">                        Log.d(&quot;WebSocket&quot;, &quot;Message contains &quot; + imagesArray.length() + &quot; images&quot;);</span>
+<span class="fc" id="L140">                        List&lt;String&gt; images = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">                        for (int i = 0; i &lt; imagesArray.length(); i++) {</span>
+<span class="fc" id="L142">                            images.add(imagesArray.getString(i));</span>
+<span class="fc" id="L143">                            Log.d(&quot;WebSocket&quot;, &quot;Added image of length: &quot; + imagesArray.getString(i).length());</span>
+                        }
+<span class="fc" id="L145">                        item.setImages(images);</span>
+                    }
+
+<span class="fc" id="L148">                    Log.d(&quot;WebSocket&quot;, &quot;Parsed message into ActivityFeedItem&quot;);</span>
+
+<span class="fc" id="L150">                    boolean shouldShow = shouldShowActivity(item.getType());</span>
+<span class="fc" id="L151">                    Log.d(&quot;WebSocket&quot;, &quot;Should show item: &quot; + shouldShow);</span>
+
+<span class="pc bpc" id="L153" title="2 of 4 branches missed.">                    if (shouldShow &amp;&amp; isAdded()) {</span>
+<span class="fc" id="L154">                        requireActivity().runOnUiThread(() -&gt; {</span>
+<span class="fc" id="L155">                            adapter.addItem(item);</span>
+<span class="fc" id="L156">                            Log.d(&quot;WebSocket&quot;, &quot;Added item to adapter&quot;);</span>
+<span class="fc" id="L157">                        });</span>
+                    }
+<span class="nc" id="L159">                } catch (JSONException e) {</span>
+<span class="nc" id="L160">                    Log.e(&quot;WebSocket&quot;, &quot;Error parsing message: &quot; + e.getMessage());</span>
+<span class="nc" id="L161">                    e.printStackTrace();</span>
+<span class="fc" id="L162">                }</span>
+<span class="fc" id="L163">            }</span>
+
+            @Override
+            public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
+<span class="nc" id="L167">                Log.e(&quot;WebSocket&quot;, &quot;Closing with code: &quot; + code + &quot;, reason: &quot; + reason);</span>
+<span class="nc" id="L168">            }</span>
+
+            @Override
+            public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
+<span class="nc" id="L172">                Log.d(&quot;WebSocket&quot;, &quot;Closed: &quot; + reason);</span>
+<span class="nc" id="L173">            }</span>
+
+            @Override
+            public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, @Nullable Response response) {
+<span class="fc" id="L177">                Log.e(&quot;WebSocket&quot;, &quot;Error: &quot; + t.getMessage(), t);</span>
+<span class="fc" id="L178">                t.printStackTrace();</span>
+<span class="pc bpc" id="L179" title="1 of 2 branches missed.">                String responseBody = response != null ? response.toString() : &quot;No response&quot;;</span>
+<span class="fc" id="L180">                Log.e(&quot;WebSocket&quot;, &quot;Response: &quot; + responseBody);</span>
+
+<span class="pc bpc" id="L182" title="1 of 2 branches missed.">                if (isAdded()) {</span>
+<span class="nc" id="L183">                    requireActivity().runOnUiThread(() -&gt; {</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">                        if (isAdded()) {</span>
+                            try {
+<span class="nc" id="L186">                                Toast.makeText(requireContext(),</span>
+                                        &quot;Connection lost. Retrying...&quot;,
+<span class="nc" id="L188">                                        Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L189">                                setupWebSocket();</span>
+<span class="nc" id="L190">                            } catch (IllegalStateException e) {</span>
+<span class="nc" id="L191">                                Log.e(&quot;WebSocket&quot;, &quot;Fragment not attached&quot;, e);</span>
+<span class="nc" id="L192">                            }</span>
+                        }
+<span class="nc" id="L194">                    });</span>
+                }
+<span class="fc" id="L196">            }</span>
+        });
+
+<span class="fc" id="L199">        webSocketClient.connect(wsUrl);</span>
+<span class="fc" id="L200">    }</span>
+
+    private boolean shouldShowActivity(ActivityFeedItem.ActivityType type) {
+<span class="pc bpc" id="L203" title="3 of 5 branches missed.">        switch (type) {</span>
+            case FOOD_EATEN:
+<span class="nc" id="L205">                return profileDataManager.getShowFood();</span>
+            case GOAL_UPDATE:
+<span class="fc" id="L207">                return profileDataManager.getShowGoals();</span>
+            case ACHIEVEMENT:
+<span class="nc" id="L209">                return profileDataManager.getShowAchievements();</span>
+            case GROUP_UPDATE:
+<span class="fc" id="L211">                return true;</span>
+            default:
+<span class="nc" id="L213">                return true;</span>
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+<span class="fc" id="L219">        super.onDestroy();</span>
+<span class="pc bpc" id="L220" title="1 of 2 branches missed.">        if (webSocketClient != null) {</span>
+<span class="fc" id="L221">            webSocketClient.close();</span>
+        }
+<span class="fc" id="L223">    }</span>
+
+
+    private void setupSwipeRefresh() {
+<span class="fc" id="L227">        swipeRefreshLayout.setColorSchemeResources(</span>
+                R.color.Iowa_State_Red,
+                R.color.dark_grey
+        );
+
+<span class="fc" id="L232">        swipeRefreshLayout.setOnRefreshListener(() -&gt; {</span>
+<span class="nc" id="L233">            refreshActivityFeed();</span>
+<span class="nc" id="L234">        });</span>
+<span class="fc" id="L235">    }</span>
+
+    private void setupFilterMenu() {
+<span class="fc" id="L238">        filterMenu = new PopupMenu(requireContext(), filterButton);</span>
+<span class="fc" id="L239">        filterMenu.getMenuInflater().inflate(R.menu.activity_filter_menu, filterMenu.getMenu());</span>
+
+        // Initialize menu items based on privacy settings
+<span class="fc" id="L242">        Menu menu = filterMenu.getMenu();</span>
+<span class="fc" id="L243">        menu.findItem(R.id.filter_food).setChecked(profileDataManager.getFoodSharingEnabled());</span>
+<span class="fc" id="L244">        menu.findItem(R.id.filter_goals).setChecked(profileDataManager.getGoalSharingEnabled());</span>
+<span class="fc" id="L245">        menu.findItem(R.id.filter_achievements).setChecked(profileDataManager.getAchievementSharingEnabled());</span>
+
+<span class="fc" id="L247">        filterMenu.setOnMenuItemClickListener(item -&gt; {</span>
+<span class="nc bnc" id="L248" title="All 2 branches missed.">            item.setChecked(!item.isChecked());</span>
+<span class="nc" id="L249">            applyFilters();</span>
+<span class="nc" id="L250">            return true;</span>
+        });
+
+<span class="pc" id="L253">        filterButton.setOnClickListener(v -&gt; filterMenu.show());</span>
+<span class="fc" id="L254">    }</span>
+
+    private void setupRecyclerView(View view) {
+<span class="fc" id="L257">        RecyclerView recyclerView = view.findViewById(R.id.activityFeedRecyclerView);</span>
+<span class="fc" id="L258">        adapter = new ActivityFeedAdapter(requireContext());</span>
+
+        // Add scroll listener for &quot;Load More&quot; functionality
+<span class="fc" id="L261">        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {</span>
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+<span class="fc" id="L264">                super.onScrolled(recyclerView, dx, dy);</span>
+
+<span class="fc" id="L266">                LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();</span>
+<span class="fc" id="L267">                int visibleItemCount = layoutManager.getChildCount();</span>
+<span class="fc" id="L268">                int totalItemCount = layoutManager.getItemCount();</span>
+<span class="fc" id="L269">                int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();</span>
+
+                // Check if end of list is reached
+<span class="pc bpc" id="L272" title="1 of 4 branches missed.">                if ((visibleItemCount + firstVisibleItemPosition) &gt;= totalItemCount</span>
+                        &amp;&amp; firstVisibleItemPosition &gt;= 0) {
+<span class="fc" id="L274">                    adapter.loadMoreItems();</span>
+                }
+<span class="fc" id="L276">            }</span>
+        });
+
+<span class="fc" id="L279">        recyclerView.setAdapter(adapter);</span>
+<span class="fc" id="L280">        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));</span>
+<span class="fc" id="L281">    }</span>
+
+    private void refreshActivityFeed() {
+<span class="nc" id="L284">        adapter.resetPagination();</span>
+<span class="nc" id="L285">        swipeRefreshLayout.setRefreshing(false);</span>
+<span class="nc" id="L286">    }</span>
+
+    private void applyFilters() {
+<span class="nc" id="L289">        Menu menu = filterMenu.getMenu();</span>
+<span class="nc" id="L290">        boolean showFood = menu.findItem(R.id.filter_food).isChecked();</span>
+<span class="nc" id="L291">        boolean showGroups = menu.findItem(R.id.filter_groups).isChecked();</span>
+<span class="nc" id="L292">        boolean showAchievements = menu.findItem(R.id.filter_achievements).isChecked();</span>
+<span class="nc" id="L293">        boolean showGoals = menu.findItem(R.id.filter_goals).isChecked();</span>
+
+<span class="nc" id="L295">        profileDataManager.setShowFood(showFood);</span>
+<span class="nc" id="L296">        profileDataManager.setShowGoals(showGoals);</span>
+<span class="nc" id="L297">        profileDataManager.setShowAchievements(showAchievements);</span>
+
+<span class="nc" id="L299">        adapter.applyFilters(showFood, showGroups, showAchievements, showGoals);</span>
+<span class="nc" id="L300">    }</span>
+
+    private void setupTestButton() {
+<span class="fc" id="L303">        testFeedButton = view.findViewById(R.id.testFeedButton);</span>
+<span class="pc bpc" id="L304" title="1 of 2 branches missed.">        if (profileDataManager.isAdminOrContributor()) {</span>
+<span class="fc" id="L305">            testFeedButton.setVisibility(View.VISIBLE);</span>
+<span class="pc" id="L306">            testFeedButton.setOnClickListener(v -&gt; showTestDialog());</span>
+        } else {
+<span class="nc" id="L308">            testFeedButton.setVisibility(View.GONE);</span>
+        }
+<span class="fc" id="L310">    }</span>
+    private void showTestDialog() {
+<span class="nc" id="L312">        ActivityFeedTestDialog dialog = new ActivityFeedTestDialog();</span>
+<span class="nc" id="L313">        dialog.show(getChildFragmentManager(), &quot;activity_test_dialog&quot;);</span>
+<span class="nc" id="L314">    }</span>
+
+    private void openImagePicker() {
+<span class="nc" id="L317">        Intent intent = new Intent();</span>
+<span class="nc" id="L318">        intent.setType(&quot;image/*&quot;);</span>
+<span class="nc" id="L319">        intent.setAction(Intent.ACTION_GET_CONTENT);</span>
+<span class="nc" id="L320">        startActivityForResult(Intent.createChooser(intent, &quot;Select Image&quot;), PICK_IMAGE_REQUEST);</span>
+<span class="nc" id="L321">    }</span>
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+<span class="nc" id="L325">        super.onActivityResult(requestCode, resultCode, data);</span>
+
+<span class="nc bnc" id="L327" title="All 6 branches missed.">        if (requestCode == PICK_IMAGE_REQUEST &amp;&amp; resultCode == Activity.RESULT_OK &amp;&amp; data != null) {</span>
+<span class="nc" id="L328">            Uri imageUri = data.getData();</span>
+            try {
+<span class="nc" id="L330">                Bitmap bitmap = MediaStore.Images.Media.getBitmap(requireActivity().getContentResolver(), imageUri);</span>
+
+<span class="nc" id="L332">                int maxDimension = Math.max(bitmap.getWidth(), bitmap.getHeight());</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">                if (maxDimension &gt; 1024) {</span>
+<span class="nc" id="L334">                    float scale = 1024f / maxDimension;</span>
+<span class="nc" id="L335">                    bitmap = Bitmap.createScaledBitmap(bitmap,</span>
+<span class="nc" id="L336">                            (int) (bitmap.getWidth() * scale),</span>
+<span class="nc" id="L337">                            (int) (bitmap.getHeight() * scale),</span>
+                            true);
+                }
+
+<span class="nc" id="L341">                ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="nc" id="L342">                bitmap.compress(Bitmap.CompressFormat.JPEG, 70, baos);</span>
+<span class="nc" id="L343">                byte[] imageBytes = baos.toByteArray();</span>
+<span class="nc" id="L344">                currentEncodedImage = Base64.encodeToString(imageBytes, Base64.DEFAULT);</span>
+
+<span class="nc" id="L346">                uploadImage(currentEncodedImage);</span>
+
+<span class="nc" id="L348">            } catch (IOException e) {</span>
+<span class="nc" id="L349">                e.printStackTrace();</span>
+<span class="nc" id="L350">                Toast.makeText(requireContext(), &quot;Failed to process image&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L351">            }</span>
+        }
+<span class="nc" id="L353">    }</span>
+
+    private void uploadImage(String base64Image) {
+<span class="nc bnc" id="L356" title="All 2 branches missed.">        if (base64Image.length() &gt; 5_000_000) {</span>
+<span class="nc" id="L357">            Toast.makeText(requireContext(),</span>
+                    &quot;Image is too large. Please choose a smaller image.&quot;,
+<span class="nc" id="L359">                    Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L360">            return;</span>
+        }
+
+<span class="nc" id="L363">        String url = AppConstants.SERVER_URL + &quot;/activity/image/&quot; +</span>
+<span class="nc" id="L364">                profileDataManager.getId() + &quot;/&quot; +</span>
+<span class="nc" id="L365">                profileDataManager.getGroupId();</span>
+
+<span class="nc" id="L367">        JSONObject requestBody = new JSONObject();</span>
+        try {
+<span class="nc" id="L369">            requestBody.put(&quot;image&quot;, base64Image);</span>
+<span class="nc" id="L370">            requestBody.put(&quot;caption&quot;, &quot;&quot;);</span>
+<span class="nc" id="L371">        } catch (JSONException e) {</span>
+<span class="nc" id="L372">            e.printStackTrace();</span>
+<span class="nc" id="L373">            return;</span>
+<span class="nc" id="L374">        }</span>
+
+<span class="nc" id="L376">        swipeRefreshLayout.setRefreshing(true);</span>
+
+<span class="nc" id="L378">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.POST,
+                url,
+                requestBody,
+                response -&gt; {
+<span class="nc" id="L383">                    swipeRefreshLayout.setRefreshing(false);</span>
+<span class="nc" id="L384">                    Log.d(&quot;Upload&quot;, &quot;Image uploaded successfully&quot;);</span>
+<span class="nc" id="L385">                    Toast.makeText(requireContext(),</span>
+                            &quot;Image shared successfully&quot;,
+<span class="nc" id="L387">                            Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L388">                },</span>
+                error -&gt; {
+<span class="nc" id="L390">                    swipeRefreshLayout.setRefreshing(false);</span>
+<span class="nc" id="L391">                    Log.e(&quot;Upload&quot;, &quot;Error response: &quot; + error.toString());</span>
+<span class="nc bnc" id="L392" title="All 4 branches missed.">                    if (error.networkResponse == null || error.networkResponse.statusCode != 200) {</span>
+<span class="nc" id="L393">                        String errorMessage = &quot;Failed to share image&quot;;</span>
+<span class="nc bnc" id="L394" title="All 2 branches missed.">                        if (error.networkResponse != null) {</span>
+<span class="nc bnc" id="L395" title="All 4 branches missed.">                            switch (error.networkResponse.statusCode) {</span>
+                                case 413:
+<span class="nc" id="L397">                                    errorMessage = &quot;Image is too large&quot;;</span>
+<span class="nc" id="L398">                                    break;</span>
+                                case 401:
+<span class="nc" id="L400">                                    errorMessage = &quot;Please log in again&quot;;</span>
+<span class="nc" id="L401">                                    break;</span>
+                                case 403:
+<span class="nc" id="L403">                                    errorMessage = &quot;You don't have permission to share images&quot;;</span>
+                                    break;
+                            }
+<span class="nc" id="L406">                            Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L407">                            Log.e(&quot;Upload Error&quot;, &quot;Status Code: &quot; + error.networkResponse.statusCode +</span>
+<span class="nc" id="L408">                                    &quot; Error: &quot; + error.toString());</span>
+                        }
+                    }
+<span class="nc" id="L411">                }</span>
+<span class="nc" id="L412">        ) {</span>
+            @Override
+            public byte[] getBody() {
+                try {
+<span class="nc" id="L416">                    return requestBody.toString().getBytes(&quot;utf-8&quot;);</span>
+<span class="nc" id="L417">                } catch (UnsupportedEncodingException e) {</span>
+<span class="nc" id="L418">                    return null;</span>
+                }
+            }
+
+            @Override
+            public String getBodyContentType() {
+<span class="nc" id="L424">                return &quot;application/json; charset=utf-8&quot;;</span>
+            }
+        };
+
+<span class="nc" id="L428">        request.setRetryPolicy(new DefaultRetryPolicy(</span>
+                30000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+        ));
+
+<span class="nc" id="L434">        VolleySingleton.getInstance(requireContext())</span>
+<span class="nc" id="L435">                .addToRequestQueue(request);</span>
+<span class="nc" id="L436">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

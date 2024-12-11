@@ -76,12 +76,13 @@ public class LoginSignupActivity extends AppCompatActivity {
                 loginError.setText(R.string.invalid_email_or_password_please_try_again);
                 loginError.setVisibility(TextView.VISIBLE);
             }
-            else
-                    profileDataManager.saveEmailAndPassword(email, password);
-            try {
-                getCredentialsFromServer(email, password);
-            } catch (JSONException e) {
-                Log.e("JSON Exception", e.getMessage());
+            else {
+                profileDataManager.saveEmailAndPassword(email, password);
+                try {
+                    getCredentialsFromServer(email, password);
+                } catch (JSONException e) {
+                    Log.e("JSON Exception", e.getMessage());
+                }
             }
         });
 

@@ -1,0 +1,500 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FoodAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.adapters</a> &gt; <span class="el_source">FoodAdapter.java</span></div><h1>FoodAdapter.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.adapters;
+
+import android.app.Dialog;
+import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.NumberPicker;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.managers.FoodEatenDataManager;
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.example.a1_jubair_6_frontend.models.FoodItem;
+import com.example.a1_jubair_6_frontend.models.Menu;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.gson.Gson;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.List;
+
+/**
+ * Adapter class for managing and displaying food items in a RecyclerView.
+ * This class handles the display, editing, and deletion of food items, with different
+ * functionality available for admin and non-admin users.
+ *
+ * @author Alexander Svobodny, Caleb Sanchez
+ */
+public class FoodAdapter extends RecyclerView.Adapter&lt;FoodAdapter.FoodViewHolder&gt; {
+
+    private List&lt;FoodItem&gt; foodItemList;
+    Context context;
+<span class="fc" id="L52">    private Gson gson = new Gson();</span>
+    private boolean isAdmin;
+    private boolean isContributor;
+    Menu currentMenu;
+    ProfileDataManager profileDataManager;
+    private FoodEatenDataManager foodEatenDataManager;
+    private boolean isFromMenus;
+
+    /**
+     * Constructs a new FoodAdapter with the specified list of food items and admin status.
+     *
+     * @param foodItemList List of FoodItem objects to be displayed
+     * @param isAdmin Boolean indicating whether the user has admin privileges
+     */
+<span class="fc" id="L66">    public FoodAdapter(List&lt;FoodItem&gt; foodItemList, boolean isAdmin, boolean isContributor, boolean isFromMenus) {</span>
+<span class="fc" id="L67">        this.foodItemList = foodItemList;</span>
+<span class="fc" id="L68">        this.isAdmin = isAdmin;</span>
+<span class="fc" id="L69">        this.isContributor = isContributor;</span>
+<span class="fc" id="L70">        this.isFromMenus = isFromMenus;</span>
+<span class="fc" id="L71">    }</span>
+
+    @NonNull
+    @Override
+    public FoodViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+<span class="fc" id="L76">        context = parent.getContext();</span>
+<span class="fc" id="L77">        View view = LayoutInflater.from(parent.getContext())</span>
+<span class="fc" id="L78">                .inflate(R.layout.food_item, parent, false);</span>
+
+<span class="fc" id="L80">        profileDataManager = new ProfileDataManager(context);</span>
+<span class="fc" id="L81">        foodEatenDataManager = new FoodEatenDataManager(context);</span>
+<span class="fc" id="L82">        return new FoodViewHolder(view);</span>
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull FoodViewHolder holder, int position) {
+<span class="fc" id="L87">        FoodItem foodItem = foodItemList.get(position);</span>
+
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">        String name = foodItem.getName() != null ? foodItem.getName() : &quot;Unknown&quot;;</span>
+<span class="fc" id="L90">        holder.foodName.setText(name);</span>
+
+<span class="fc" id="L92">        String caloriesText = String.format(&quot;%d Cal&quot;, foodItem.getCalories());</span>
+<span class="fc" id="L93">        holder.calories.setText(caloriesText);</span>
+
+<span class="fc" id="L95">        View adminActionsContainer = holder.itemView.findViewById(R.id.adminActionsContainer);</span>
+
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">        if (!isFromMenus) {</span>
+<span class="nc" id="L98">            holder.buttonEat.setVisibility(View.GONE);</span>
+        }
+
+<span class="pc bpc" id="L101" title="2 of 4 branches missed.">        if (isAdmin &amp;&amp; !isFromMenus) {</span>
+<span class="nc" id="L102">            adminActionsContainer.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L103">            holder.buttonEdit.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L104">            holder.buttonDelete.setVisibility(View.VISIBLE);</span>
+        }
+<span class="pc bpc" id="L106" title="3 of 4 branches missed.">        else if(isContributor &amp;&amp; !isFromMenus) {</span>
+<span class="nc" id="L107">            adminActionsContainer.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L108">            holder.buttonEdit.setVisibility(View.VISIBLE);</span>
+        }
+
+<span class="pc" id="L111">        holder.buttonEat.setOnClickListener(v -&gt; showServingsDialog(foodItem));</span>
+
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">        if (isAdmin) {</span>
+<span class="pc" id="L114">            holder.buttonEdit.setOnClickListener(v -&gt; showEditDialog(position, foodItem));</span>
+<span class="pc" id="L115">            holder.buttonDelete.setOnClickListener(v -&gt; showDeleteConfirmationDialog(position));</span>
+        }
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        else if (isContributor) {</span>
+<span class="nc" id="L118">            holder.buttonEdit.setOnClickListener(v -&gt; showEditDialog(position, foodItem));</span>
+        }
+
+<span class="pc" id="L121">        holder.itemView.setOnClickListener(v -&gt; showFoodDetailsDialog(foodItem));</span>
+<span class="fc" id="L122">    }</span>
+
+    private void showServingsDialog(FoodItem foodItem) {
+<span class="nc" id="L125">        AlertDialog.Builder builder = new AlertDialog.Builder(context);</span>
+<span class="nc" id="L126">        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_servings, null);</span>
+
+<span class="nc" id="L128">        NumberPicker servingsPicker = dialogView.findViewById(R.id.servingsPicker);</span>
+<span class="nc" id="L129">        servingsPicker.setMinValue(1);</span>
+<span class="nc" id="L130">        servingsPicker.setMaxValue(10);</span>
+<span class="nc" id="L131">        servingsPicker.setValue(1);</span>
+
+<span class="nc" id="L133">        builder.setView(dialogView)</span>
+<span class="nc" id="L134">                .setPositiveButton(&quot;Eat&quot;, (dialog, which) -&gt; {</span>
+<span class="nc" id="L135">                    int servings = servingsPicker.getValue();</span>
+<span class="nc" id="L136">                    addFoodEaten(foodItem, servings);</span>
+<span class="nc" id="L137">                })</span>
+<span class="nc" id="L138">                .setNegativeButton(&quot;Cancel&quot;, null);</span>
+
+<span class="nc" id="L140">        AlertDialog dialog = builder.create();</span>
+<span class="nc" id="L141">        dialog.show();</span>
+<span class="nc" id="L142">    }</span>
+
+    /**
+     * Shows a confirmation dialog before deleting a food item.
+     *
+     * @param position The position of the item to be deleted in the foodItemList
+     */
+    private void showDeleteConfirmationDialog(int position) {
+<span class="nc" id="L150">        new AlertDialog.Builder(context)</span>
+<span class="nc" id="L151">                .setTitle(&quot;Delete Food Item&quot;)</span>
+<span class="nc" id="L152">                .setMessage(&quot;Are you sure you want to delete this food item?&quot;)</span>
+<span class="nc" id="L153">                .setPositiveButton(&quot;Delete&quot;, (dialog, which) -&gt; deleteItem(position))</span>
+<span class="nc" id="L154">                .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="nc" id="L155">                .show();</span>
+<span class="nc" id="L156">    }</span>
+
+    @Override
+    public int getItemCount() {
+<span class="fc" id="L160">        return foodItemList.size();</span>
+    }
+
+    /**
+     * ViewHolder class for food items in the RecyclerView.
+     * Holds references to the views that display food item information.
+     */
+    public static class FoodViewHolder extends RecyclerView.ViewHolder {
+        TextView foodName;
+        TextView calories;
+        Button buttonEat;
+        Button buttonEdit;
+        Button buttonDelete;
+
+        /**
+         * Constructs a new FoodViewHolder and initializes its views.
+         *
+         * @param itemView The View object containing the layout for a single food item
+         */
+        public FoodViewHolder(@NonNull View itemView) {
+<span class="fc" id="L180">            super(itemView);</span>
+<span class="fc" id="L181">            foodName = itemView.findViewById(R.id.foodName);</span>
+<span class="fc" id="L182">            calories = itemView.findViewById(R.id.calories);</span>
+<span class="fc" id="L183">            buttonEat = itemView.findViewById(R.id.btnEat);</span>
+<span class="fc" id="L184">            buttonEdit = itemView.findViewById(R.id.btnEdit);</span>
+<span class="fc" id="L185">            buttonDelete = itemView.findViewById(R.id.btnDelete);</span>
+<span class="fc" id="L186">        }</span>
+    }
+
+    /**
+     * Sets the current menu context for the adapter.
+     *
+     * @param menu The Menu object to associate with this adapter
+     */
+    public void setCurrentMenu(Menu menu){
+<span class="nc" id="L195">        currentMenu = menu;</span>
+<span class="nc" id="L196">    }</span>
+
+    /**
+     * Displays a dialog showing detailed nutritional information for a food item.
+     *
+     * @param item The FoodItem whose details should be displayed
+     */
+    private void showFoodDetailsDialog(FoodItem item) {
+<span class="nc" id="L204">        Dialog dialog = new Dialog(context);</span>
+<span class="nc" id="L205">        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);</span>
+<span class="nc" id="L206">        dialog.setContentView(R.layout.nutrition_dialog);</span>
+
+<span class="nc" id="L208">        Window window = dialog.getWindow();</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">        if (window != null) {</span>
+<span class="nc" id="L210">            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT,</span>
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
+<span class="nc" id="L212">            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));</span>
+        }
+
+<span class="nc" id="L215">        TextView foodNameDialog = dialog.findViewById(R.id.foodNameDialog);</span>
+<span class="nc" id="L216">        TextView servingSize = dialog.findViewById(R.id.servingSize);</span>
+<span class="nc" id="L217">        TextView caloriesDialog = dialog.findViewById(R.id.caloriesDialog);</span>
+<span class="nc" id="L218">        TextView totalFat = dialog.findViewById(R.id.totalFat);</span>
+<span class="nc" id="L219">        TextView sodium = dialog.findViewById(R.id.sodium);</span>
+<span class="nc" id="L220">        TextView carbohydrate = dialog.findViewById(R.id.carbohydrate);</span>
+<span class="nc" id="L221">        TextView protein = dialog.findViewById(R.id.protein);</span>
+<span class="nc" id="L222">        ImageButton closeButton = dialog.findViewById(R.id.closeButton);</span>
+
+<span class="nc" id="L224">        foodNameDialog.setText(getStringOrDefault(item.getName()));</span>
+<span class="nc" id="L225">        servingSize.setText(String.format(&quot;Serving Size: %s&quot;, getStringOrDefault(item.getServingsize())));</span>
+<span class="nc" id="L226">        caloriesDialog.setText(String.format(&quot;Calories: %d&quot;, getIntOrDefault(item.getCalories())));</span>
+<span class="nc" id="L227">        totalFat.setText(String.format(&quot;Total Fat: %d&quot;, getIntOrDefault(item.getTotalFat())));</span>
+<span class="nc" id="L228">        sodium.setText(String.format(&quot;Sodium: %d&quot;, getIntOrDefault(item.getSodium())));</span>
+<span class="nc" id="L229">        carbohydrate.setText(String.format(&quot;Carbohydrate: %d&quot;, getIntOrDefault(item.getCarbohydrate())));</span>
+<span class="nc" id="L230">        protein.setText(String.format(&quot;Protein: %d&quot;, getIntOrDefault(item.getProtein())));</span>
+
+<span class="nc" id="L232">        closeButton.setOnClickListener(v -&gt; dialog.dismiss());</span>
+
+<span class="nc" id="L234">        dialog.show();</span>
+<span class="nc" id="L235">    }</span>
+
+    /**
+     * Displays a dialog for editing a food item's details.
+     *
+     * @param position The position of the item in the foodItemList
+     * @param item The FoodItem to be edited
+     */
+    private void showEditDialog(int position, FoodItem item) {
+<span class="nc" id="L244">        AlertDialog.Builder builder = new AlertDialog.Builder(context);</span>
+<span class="nc" id="L245">        View dialogView = LayoutInflater.from(context).inflate(R.layout.food_item_dialog, null);</span>
+
+<span class="nc" id="L247">        TextInputEditText nameInput = dialogView.findViewById(R.id.editTextName);</span>
+<span class="nc" id="L248">        TextInputEditText descriptionInput = dialogView.findViewById(R.id.editTextDescription);</span>
+<span class="nc" id="L249">        TextInputEditText servingSizeInput = dialogView.findViewById(R.id.editTextServingSize);</span>
+<span class="nc" id="L250">        TextInputEditText caloriesInput = dialogView.findViewById(R.id.editTextCalories);</span>
+<span class="nc" id="L251">        TextInputEditText totalFatInput = dialogView.findViewById(R.id.editTextTotalFat);</span>
+<span class="nc" id="L252">        TextInputEditText sodiumInput = dialogView.findViewById(R.id.editTextSodium);</span>
+<span class="nc" id="L253">        TextInputEditText carbohydrateInput = dialogView.findViewById(R.id.editTextCarbohydrate);</span>
+<span class="nc" id="L254">        TextInputEditText proteinInput = dialogView.findViewById(R.id.editTextProtein);</span>
+
+<span class="nc" id="L256">        nameInput.setText(item.getName());</span>
+<span class="nc" id="L257">        descriptionInput.setText(item.getDescription());</span>
+<span class="nc" id="L258">        servingSizeInput.setText(item.getServingsize());</span>
+<span class="nc" id="L259">        caloriesInput.setText(String.valueOf(item.getCalories()));</span>
+<span class="nc" id="L260">        totalFatInput.setText(String.valueOf(item.getTotalFat()));</span>
+<span class="nc" id="L261">        sodiumInput.setText(String.valueOf(item.getSodium()));</span>
+<span class="nc" id="L262">        carbohydrateInput.setText(String.valueOf(item.getCarbohydrate()));</span>
+<span class="nc" id="L263">        proteinInput.setText(String.valueOf(item.getProtein()));</span>
+
+<span class="nc" id="L265">        AlertDialog dialog = builder</span>
+<span class="nc" id="L266">                .setView(dialogView)</span>
+<span class="nc" id="L267">                .setTitle(&quot;Edit Food Item&quot;)</span>
+<span class="nc" id="L268">                .setPositiveButton(&quot;Save&quot;, null)</span>
+<span class="nc" id="L269">                .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="nc" id="L270">                .create();</span>
+
+<span class="nc" id="L272">        dialog.setOnShowListener(dialogInterface -&gt; {</span>
+<span class="nc" id="L273">            Button saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);</span>
+<span class="nc" id="L274">            saveButton.setOnClickListener(v -&gt; {</span>
+                try {
+<span class="nc" id="L276">                    FoodItem updatedItem = new FoodItem(</span>
+<span class="nc" id="L277">                            nameInput.getText().toString(),</span>
+<span class="nc" id="L278">                            Integer.parseInt(caloriesInput.getText().toString()),</span>
+<span class="nc" id="L279">                            Integer.parseInt(totalFatInput.getText().toString()),</span>
+<span class="nc" id="L280">                            Integer.parseInt(sodiumInput.getText().toString()),</span>
+<span class="nc" id="L281">                            Integer.parseInt(carbohydrateInput.getText().toString()),</span>
+<span class="nc" id="L282">                            Integer.parseInt(proteinInput.getText().toString()),</span>
+<span class="nc" id="L283">                            servingSizeInput.getText().toString(),</span>
+<span class="nc" id="L284">                            descriptionInput.getText().toString()</span>
+                    );
+
+<span class="nc" id="L287">                    updatedItem.setId(item.getId());</span>
+<span class="nc" id="L288">                    updatedItem.setQuantity(item.getQuantity());</span>
+
+<span class="nc" id="L290">                    editItem(position, updatedItem);</span>
+<span class="nc" id="L291">                    dialog.dismiss();</span>
+<span class="nc" id="L292">                } catch (NumberFormatException e) {</span>
+<span class="nc" id="L293">                    Toast.makeText(context, &quot;Please fill all numeric fields correctly&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L294">                } catch (JSONException e) {</span>
+<span class="nc" id="L295">                    Toast.makeText(context, &quot;Error updating food item&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L296">                }</span>
+<span class="nc" id="L297">            });</span>
+<span class="nc" id="L298">        });</span>
+
+<span class="nc" id="L300">        dialog.show();</span>
+
+<span class="nc" id="L302">        TextWatcher textWatcher = new TextWatcher() {</span>
+            @Override
+<span class="nc" id="L304">            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}</span>
+
+            @Override
+<span class="nc" id="L307">            public void onTextChanged(CharSequence s, int start, int before, int count) {}</span>
+
+            @Override
+            public void afterTextChanged(Editable s) {
+<span class="nc" id="L311">                Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);</span>
+<span class="nc" id="L312">                positiveButton.setEnabled(</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">                        !nameInput.getText().toString().trim().isEmpty() &amp;&amp;</span>
+<span class="nc bnc" id="L314" title="All 2 branches missed.">                                !servingSizeInput.getText().toString().trim().isEmpty() &amp;&amp;</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">                                !caloriesInput.getText().toString().trim().isEmpty() &amp;&amp;</span>
+<span class="nc bnc" id="L316" title="All 2 branches missed.">                                !totalFatInput.getText().toString().trim().isEmpty() &amp;&amp;</span>
+<span class="nc bnc" id="L317" title="All 2 branches missed.">                                !sodiumInput.getText().toString().trim().isEmpty() &amp;&amp;</span>
+<span class="nc bnc" id="L318" title="All 2 branches missed.">                                !carbohydrateInput.getText().toString().trim().isEmpty() &amp;&amp;</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">                                !proteinInput.getText().toString().trim().isEmpty()</span>
+                );
+<span class="nc" id="L321">            }</span>
+        };
+
+<span class="nc" id="L324">        nameInput.addTextChangedListener(textWatcher);</span>
+<span class="nc" id="L325">        servingSizeInput.addTextChangedListener(textWatcher);</span>
+<span class="nc" id="L326">        caloriesInput.addTextChangedListener(textWatcher);</span>
+<span class="nc" id="L327">        totalFatInput.addTextChangedListener(textWatcher);</span>
+<span class="nc" id="L328">        sodiumInput.addTextChangedListener(textWatcher);</span>
+<span class="nc" id="L329">        carbohydrateInput.addTextChangedListener(textWatcher);</span>
+<span class="nc" id="L330">        proteinInput.addTextChangedListener(textWatcher);</span>
+<span class="nc" id="L331">    }</span>
+
+    /**
+     * Returns the provided string or a default value if the string is null.
+     *
+     * @param value The string to check
+     * @return The original string if not null, &quot;N/A&quot; otherwise
+     */
+    private String getStringOrDefault(String value) {
+<span class="nc bnc" id="L340" title="All 2 branches missed.">        return value != null ? value : &quot;N/A&quot;;</span>
+    }
+
+    /**
+     * Returns the provided integer or a default value if the integer is null.
+     *
+     * @param value The Integer to check
+     * @return The original integer if not null, 0 otherwise
+     */
+    private int getIntOrDefault(Integer value) {
+<span class="nc bnc" id="L350" title="All 2 branches missed.">        return value != null ? value : 0;</span>
+    }
+
+    /**
+     * Deletes a food item from the list and the server.
+     *
+     * @param position The position of the item to delete in the foodItemList
+     */
+    public void deleteItem(int position){
+<span class="nc" id="L359">        int id = foodItemList.get(position).getId();</span>
+<span class="nc bnc" id="L360" title="All 2 branches missed.">        if( currentMenu != null)</span>
+<span class="nc" id="L361">            deleteMenuFoodItem(id);</span>
+        else
+<span class="nc" id="L363">            deleteFoodItem(id);</span>
+<span class="nc" id="L364">        foodItemList.remove(position);</span>
+<span class="nc" id="L365">        notifyItemRemoved(position);</span>
+<span class="nc" id="L366">        notifyItemRangeChanged(position, foodItemList.size());</span>
+<span class="nc" id="L367">    }</span>
+
+    /**
+     * Updates a food item's details both in the list and on the server.
+     *
+     * @param position The position of the item to update in the foodItemList
+     * @param updatedItem The new FoodItem data
+     * @throws JSONException If there's an error creating the JSON request
+     */
+    public void editItem(int position, FoodItem updatedItem) throws JSONException {
+<span class="nc" id="L377">        int id = updatedItem.getId();</span>
+<span class="nc bnc" id="L378" title="All 2 branches missed.">        if(currentMenu != null)</span>
+<span class="nc" id="L379">            updateMenuFoodItem(id, updatedItem);</span>
+        else
+<span class="nc" id="L381">            updateFoodItem(id, updatedItem);</span>
+<span class="nc" id="L382">        foodItemList.set(position, updatedItem);</span>
+<span class="nc" id="L383">        notifyItemChanged(position);</span>
+<span class="nc" id="L384">    }</span>
+
+    /**
+     * Sends a DELETE request to remove a food item from the server.
+     *
+     * @param id The ID of the food item to delete
+     */
+    private void deleteFoodItem(int id) {
+<span class="nc" id="L392">        String url = AppConstants.SERVER_URL + &quot;/item/&quot; + id;</span>
+
+<span class="nc" id="L394">        JsonObjectRequest request = new JsonObjectRequest(Request.Method.DELETE, url, null,</span>
+                response -&gt; {
+<span class="nc" id="L396">                    Log.i(&quot;Food Item Deletion&quot;, &quot;Food Item Deleted Successfully&quot;);</span>
+<span class="nc" id="L397">                },</span>
+                error -&gt; {
+<span class="nc" id="L399">                    Log.e(&quot;Request Error&quot;, String.valueOf(error.getMessage()));</span>
+<span class="nc" id="L400">                }</span>
+        );
+<span class="nc" id="L402">        VolleySingleton.getInstance(context).addToRequestQueue(request);</span>
+<span class="nc" id="L403">    }</span>
+
+    /**
+     * Sends a PUT request to update a food item's details on the server.
+     *
+     * @param id The ID of the food item to update
+     * @param foodItem The updated food item data
+     * @throws JSONException If there's an error creating the JSON request
+     */
+    private void updateFoodItem(int id, FoodItem foodItem) throws JSONException {
+<span class="nc" id="L413">        String url = AppConstants.SERVER_URL + &quot;/item/update/&quot; + id;</span>
+
+<span class="nc" id="L415">        JSONObject jsonBody = new JSONObject(gson.toJson(foodItem));</span>
+
+<span class="nc" id="L417">        JsonObjectRequest request = new JsonObjectRequest(Request.Method.PUT, url, jsonBody,</span>
+                response -&gt; {
+<span class="nc" id="L419">                    Toast.makeText(context, &quot;Successfully updated food item&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L420">                    Log.i(&quot;Food Item Update&quot;, &quot;Food Item updated successfully&quot;);</span>
+<span class="nc" id="L421">                },</span>
+                error -&gt; {
+<span class="nc" id="L423">                    Toast.makeText(context, &quot;Error updating food item [&quot; + error.networkResponse.statusCode + &quot;]&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L424">                    Log.e(&quot;Request Error&quot;, String.valueOf(error.getMessage()));</span>
+<span class="nc" id="L425">                }</span>
+        );
+<span class="nc" id="L427">        VolleySingleton.getInstance(context).addToRequestQueue(request);</span>
+<span class="nc" id="L428">    }</span>
+
+    /**
+     * Sends a DELETE request to remove a food item from a menu on the server.
+     *
+     * @param id The ID of the food item to remove from the menu
+     */
+    private void deleteMenuFoodItem(int id){
+<span class="nc" id="L436">        String url = AppConstants.SERVER_URL + &quot;/menu/&quot; + currentMenu.getId() + &quot;/remove/&quot; + id;</span>
+
+<span class="nc" id="L438">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.DELETE,
+                url,
+                null,
+                response -&gt; {
+<span class="nc" id="L443">                    Log.i(&quot;Update Menu&quot;, &quot;Successfully updated menu&quot; + currentMenu);</span>
+<span class="nc" id="L444">                    Toast.makeText(context, &quot;Successfully updated menu&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L445">                },</span>
+                error -&gt; {
+<span class="nc" id="L447">                    Log.e(&quot;Request Error&quot;, String.valueOf(error.getMessage()));</span>
+<span class="nc" id="L448">                    Toast.makeText(context, &quot;Error updating menu&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L449">                }</span>
+        );
+
+<span class="nc" id="L452">        VolleySingleton.getInstance(context).addToRequestQueue(request);</span>
+<span class="nc" id="L453">    }</span>
+
+    /**
+     * Sends a PUT request to add/update a food item in a menu on the server.
+     *
+     * @param id The ID of the food item to add/update in the menu
+     * @param foodItem The food item data to update
+     */
+    private void updateMenuFoodItem(int id, FoodItem foodItem){
+<span class="nc" id="L462">        String url = AppConstants.SERVER_URL + &quot;/menu/&quot; + currentMenu.getId() + &quot;/add/&quot; + id;</span>
+
+<span class="nc" id="L464">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.PUT,
+                url,
+                null,
+                response -&gt; {
+<span class="nc" id="L469">                    Log.i(&quot;Update Menu&quot;, &quot;Successfully updated menu&quot; + currentMenu);</span>
+<span class="nc" id="L470">                    Toast.makeText(context, &quot;Successfully updated menu&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L471">                },</span>
+                error -&gt; {
+<span class="nc" id="L473">                    Log.e(&quot;Request Error&quot;, String.valueOf(error.getMessage()));</span>
+<span class="nc" id="L474">                    Toast.makeText(context, &quot;Error updating menu&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L475">                }</span>
+        );
+
+<span class="nc" id="L478">        VolleySingleton.getInstance(context).addToRequestQueue(request);</span>
+<span class="nc" id="L479">    }</span>
+
+    private void addFoodEaten(FoodItem foodItem, int servings) {
+<span class="nc" id="L482">        foodEatenDataManager.addFoodEaten(foodItem, servings, new FoodEatenDataManager.FoodEatenCallback() {</span>
+            @Override
+            public void onSuccess() {
+<span class="nc" id="L485">                Toast.makeText(context,</span>
+<span class="nc" id="L486">                        String.format(&quot;Added %d serving(s) of %s&quot;, servings, foodItem.getName()),</span>
+<span class="nc" id="L487">                        Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L488">            }</span>
+
+            @Override
+            public void onError(String message) {
+<span class="nc" id="L492">                Toast.makeText(context,</span>
+                        &quot;Failed to add food: &quot; + message,
+<span class="nc" id="L494">                        Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L495">            }</span>
+        });
+<span class="nc" id="L497">    }</span>
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

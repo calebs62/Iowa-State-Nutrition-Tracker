@@ -1,0 +1,599 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MenuViewActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.activities</a> &gt; <span class="el_source">MenuViewActivity.java</span></div><h1>MenuViewActivity.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.activities;
+
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.adapters.MenuFoodItemAdapter;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.example.a1_jubair_6_frontend.models.FoodItem;
+import com.example.a1_jubair_6_frontend.models.Menu;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.datepicker.MaterialDatePicker;
+import com.google.gson.Gson;
+
+import org.json.JSONObject;
+
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+<span class="fc" id="L50">public class MenuViewActivity extends AppCompatActivity {</span>
+    private Spinner menuSpinner;
+    private EditText locationEdit;
+    private EditText mealTypeEdit;
+    private EditText dateEdit;
+    private RecyclerView foodItemsRecyclerView;
+    private Button addFoodButton;
+    private Button saveButton;
+    private Button addMenuButton;
+    private Button deleteMenuButton;
+
+    private ProfileDataManager profileDataManager;
+<span class="fc" id="L62">    private List&lt;Menu&gt; menus = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L63">    private List&lt;FoodItem&gt; availableFoodItems = new ArrayList&lt;&gt;();</span>
+    private MenuFoodItemAdapter foodAdapter;
+    private Menu currentMenu;
+<span class="fc" id="L66">    private Gson gson = new Gson();</span>
+<span class="fc" id="L67">    private DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd&quot;);</span>
+
+    private boolean isAdmin;
+    private boolean isContributor;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L74">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L75">        setContentView(R.layout.activity_menu_view);</span>
+<span class="fc" id="L76">        profileDataManager = new ProfileDataManager(this);</span>
+
+<span class="fc" id="L78">        isAdmin = profileDataManager.getAccountType().equals(&quot;ADMINISTRATOR&quot;);</span>
+<span class="fc" id="L79">        isContributor = profileDataManager.getAccountType().equals(&quot;CONTRIBUTOR&quot;);</span>
+
+<span class="fc" id="L81">        initializeViews();</span>
+<span class="fc" id="L82">        setupRecyclerView();</span>
+<span class="fc" id="L83">        fetchMenus();</span>
+<span class="fc" id="L84">        fetchAvailableFoodItems();</span>
+<span class="fc" id="L85">        setupListeners();</span>
+<span class="fc" id="L86">    }</span>
+
+    private void initializeViews() {
+<span class="fc" id="L89">        menuSpinner = findViewById(R.id.menuSpinner);</span>
+<span class="fc" id="L90">        locationEdit = findViewById(R.id.locationEdit);</span>
+<span class="fc" id="L91">        mealTypeEdit = findViewById(R.id.mealTypeEdit);</span>
+<span class="fc" id="L92">        dateEdit = findViewById(R.id.dateEdit);</span>
+<span class="fc" id="L93">        foodItemsRecyclerView = findViewById(R.id.foodItemsRecyclerView);</span>
+<span class="fc" id="L94">        addFoodButton = findViewById(R.id.addFoodButton);</span>
+<span class="fc" id="L95">        saveButton = findViewById(R.id.saveButton);</span>
+<span class="fc" id="L96">        addMenuButton = findViewById(R.id.btnAddMenu);</span>
+<span class="fc" id="L97">        deleteMenuButton = findViewById(R.id.deleteMenuButton);</span>
+
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">        if(isAdmin) {</span>
+<span class="fc" id="L100">            deleteMenuButton.setVisibility(View.VISIBLE);</span>
+        }
+
+<span class="fc" id="L103">        ImageView backArrow = findViewById(R.id.backArrow);</span>
+<span class="pc" id="L104">        backArrow.setOnClickListener(v -&gt; finish());</span>
+<span class="fc" id="L105">    }</span>
+
+    private void setupRecyclerView() {
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">        if(isAdmin) {</span>
+<span class="fc" id="L109">            foodAdapter = new MenuFoodItemAdapter(new ArrayList&lt;&gt;(), this::removeFoodItemFromMenu);</span>
+        }
+<span class="nc bnc" id="L111" title="All 2 branches missed.">        else if(isContributor) {</span>
+<span class="nc" id="L112">            foodAdapter = new MenuFoodItemAdapter(new ArrayList&lt;&gt;(), this::removeFoodItemFromMenu);</span>
+        }
+<span class="fc" id="L114">        foodItemsRecyclerView.setLayoutManager(new LinearLayoutManager(this));</span>
+<span class="fc" id="L115">        foodItemsRecyclerView.setAdapter(foodAdapter);</span>
+<span class="fc" id="L116">    }</span>
+
+    private void setupListeners() {
+<span class="fc" id="L119">        menuSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {</span>
+            @Override
+            public void onItemSelected(AdapterView&lt;?&gt; parent, View view, int position, long id) {
+<span class="fc" id="L122">                Menu selectedMenu = menus.get(position);</span>
+<span class="fc" id="L123">                fetchMenuById(selectedMenu.getId());</span>
+<span class="fc" id="L124">            }</span>
+
+            @Override
+<span class="nc" id="L127">            public void onNothingSelected(AdapterView&lt;?&gt; parent) {}</span>
+        });
+
+<span class="pc" id="L130">        dateEdit.setOnClickListener(v -&gt; showDatePicker());</span>
+<span class="pc" id="L131">        addFoodButton.setOnClickListener(v -&gt; showAddDialog());</span>
+<span class="pc" id="L132">        saveButton.setOnClickListener(v -&gt; saveMenuChanges());</span>
+<span class="pc" id="L133">        addMenuButton.setOnClickListener(v -&gt; showMenuAddDialog());</span>
+<span class="pc" id="L134">        deleteMenuButton.setOnClickListener(v -&gt; showDeleteConfirmationDialog());</span>
+<span class="fc" id="L135">    }</span>
+
+    private void showMenuAddDialog() {
+<span class="nc" id="L138">        BottomSheetDialog dialog = new BottomSheetDialog(this);</span>
+<span class="nc" id="L139">        View view = getLayoutInflater().inflate(R.layout.dialog_add_menu_item, null);</span>
+
+<span class="nc" id="L141">        Button addButton = view.findViewById(R.id.createMenuButton);</span>
+<span class="nc" id="L142">        EditText name = view.findViewById(R.id.menuNameEdit);</span>
+<span class="nc" id="L143">        EditText location = view.findViewById(R.id.menuLocationEdit);</span>
+<span class="nc" id="L144">        EditText mealType = view.findViewById(R.id.menuMealEdit);</span>
+<span class="nc" id="L145">        EditText date = view.findViewById(R.id.menuDateEdit);</span>
+<span class="nc" id="L146">        TextView formError = view.findViewById(R.id.tvFormError);</span>
+
+<span class="nc" id="L148">        dialog.setContentView(view);</span>
+<span class="nc" id="L149">        dialog.show();</span>
+
+<span class="nc" id="L151">        addButton.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L152">            String menuName = name.getText().toString();</span>
+<span class="nc" id="L153">            String menuLocation = location.getText().toString();</span>
+<span class="nc" id="L154">            String menuMealType = mealType.getText().toString().toLowerCase();</span>
+<span class="nc" id="L155">            String menuDateStr = date.getText().toString();</span>
+
+<span class="nc" id="L157">            formError.setVisibility(View.GONE);</span>
+
+<span class="nc bnc" id="L159" title="All 8 branches missed.">            if (menuName.isEmpty() || menuLocation.isEmpty() || menuMealType.isEmpty() || menuDateStr.isEmpty()) {</span>
+<span class="nc" id="L160">                formError.setText(&quot;All fields are required!&quot;);</span>
+<span class="nc" id="L161">                formError.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L162">                return;</span>
+            }
+
+<span class="nc bnc" id="L165" title="All 6 branches missed.">            if (!menuMealType.equals(&quot;breakfast&quot;) &amp;&amp; !menuMealType.equals(&quot;lunch&quot;) &amp;&amp; !menuMealType.equals(&quot;dinner&quot;)) {</span>
+<span class="nc" id="L166">                formError.setText(&quot;Invalid meal type! Use breakfast, lunch, or dinner.&quot;);</span>
+<span class="nc" id="L167">                formError.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L168">                return;</span>
+            }
+
+            try {
+<span class="nc" id="L172">                LocalDate menuDate = LocalDate.parse(menuDateStr, dateFormatter);</span>
+<span class="nc" id="L173">                Menu newMenu = new Menu(menuName, menuLocation, menuMealType, menuDate.format(dateFormatter));</span>
+<span class="nc" id="L174">                postNewMenuToServer(newMenu);</span>
+<span class="nc" id="L175">                dialog.dismiss();</span>
+<span class="nc" id="L176">            } catch (DateTimeParseException e) {</span>
+<span class="nc" id="L177">                formError.setText(&quot;Invalid date format!&quot;);</span>
+<span class="nc" id="L178">                formError.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L179">            }</span>
+<span class="nc" id="L180">        });</span>
+<span class="nc" id="L181">    }</span>
+
+    private void showDatePicker() {
+<span class="nc" id="L184">        MaterialDatePicker&lt;Long&gt; datePicker = MaterialDatePicker.Builder.datePicker()</span>
+<span class="nc" id="L185">                .setTitleText(&quot;Select date&quot;)</span>
+<span class="nc" id="L186">                .build();</span>
+
+<span class="nc" id="L188">        datePicker.addOnPositiveButtonClickListener(selection -&gt; {</span>
+<span class="nc" id="L189">            LocalDate selectedDate = LocalDate.ofEpochDay(selection / (24 * 60 * 60 * 1000));</span>
+<span class="nc" id="L190">            dateEdit.setText(selectedDate.format(dateFormatter));</span>
+<span class="nc" id="L191">        });</span>
+
+<span class="nc" id="L193">        datePicker.show(getSupportFragmentManager(), &quot;DATE_PICKER&quot;);</span>
+<span class="nc" id="L194">    }</span>
+
+    private void showAddDialog() {
+<span class="nc" id="L197">        BottomSheetDialog dialog = new BottomSheetDialog(this);</span>
+<span class="nc" id="L198">        View view = getLayoutInflater().inflate(R.layout.dialog_add_food_item, null);</span>
+<span class="nc" id="L199">        RecyclerView availableFoodRecyclerView = view.findViewById(R.id.availableFoodRecyclerView);</span>
+<span class="nc" id="L200">        EditText searchEdit = view.findViewById(R.id.searchEdit);</span>
+
+<span class="nc" id="L202">        List&lt;FoodItem&gt; filteredList = new ArrayList&lt;&gt;(availableFoodItems);</span>
+
+<span class="nc" id="L204">        MenuFoodItemAdapter adapter = new MenuFoodItemAdapter(filteredList, item -&gt; {</span>
+<span class="nc" id="L205">            addFoodItemToMenu(item);</span>
+<span class="nc" id="L206">            dialog.dismiss();</span>
+<span class="nc" id="L207">        });</span>
+
+<span class="nc" id="L209">        availableFoodRecyclerView.setLayoutManager(new LinearLayoutManager(this));</span>
+<span class="nc" id="L210">        availableFoodRecyclerView.setAdapter(adapter);</span>
+
+<span class="nc" id="L212">        searchEdit.addTextChangedListener(new TextWatcher() {</span>
+            @Override
+<span class="nc" id="L214">            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}</span>
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+<span class="nc" id="L218">                String searchText = s.toString().toLowerCase().trim();</span>
+<span class="nc" id="L219">                List&lt;FoodItem&gt; filtered = filterFoodItems(searchText);</span>
+<span class="nc" id="L220">                adapter.updateFoodItems(filtered);</span>
+<span class="nc" id="L221">            }</span>
+
+            @Override
+<span class="nc" id="L224">            public void afterTextChanged(Editable s) {}</span>
+        });
+
+<span class="nc" id="L227">        dialog.setContentView(view);</span>
+<span class="nc" id="L228">        dialog.show();</span>
+<span class="nc" id="L229">    }</span>
+
+    private List&lt;FoodItem&gt; filterFoodItems(String searchText) {
+<span class="nc bnc" id="L232" title="All 2 branches missed.">        if (searchText.isEmpty()) {</span>
+<span class="nc" id="L233">            return new ArrayList&lt;&gt;(availableFoodItems);</span>
+        }
+
+<span class="nc" id="L236">        List&lt;FoodItem&gt; filtered = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">        for (FoodItem item : availableFoodItems) {</span>
+            // Search in name and description
+<span class="nc bnc" id="L239" title="All 4 branches missed.">            if ((item.getName() != null &amp;&amp; item.getName().toLowerCase().contains(searchText)) ||</span>
+<span class="nc bnc" id="L240" title="All 4 branches missed.">                    (item.getDescription() != null &amp;&amp; item.getDescription().toLowerCase().contains(searchText))) {</span>
+<span class="nc" id="L241">                filtered.add(item);</span>
+            }
+<span class="nc" id="L243">        }</span>
+<span class="nc" id="L244">        return filtered;</span>
+    }
+
+    private void fetchMenus() {
+<span class="fc" id="L248">        String url = AppConstants.SERVER_URL + &quot;/allMenus&quot;;</span>
+
+<span class="fc" id="L250">        JsonArrayRequest request = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+                response -&gt; {
+<span class="fc" id="L255">                    menus.clear();</span>
+<span class="fc bfc" id="L256" title="All 2 branches covered.">                    for (int i = 0; i &lt; response.length(); i++) {</span>
+                        try {
+<span class="fc" id="L258">                            Menu menu = gson.fromJson(response.getJSONObject(i).toString(), Menu.class);</span>
+<span class="fc" id="L259">                            menus.add(menu);</span>
+<span class="nc" id="L260">                        } catch (Exception e) {</span>
+<span class="nc" id="L261">                            Log.e(&quot;MenuView&quot;, &quot;Error parsing menu: &quot; + e.getMessage());</span>
+<span class="fc" id="L262">                        }</span>
+                    }
+<span class="fc" id="L264">                    updateMenuSpinner();</span>
+<span class="fc" id="L265">                },</span>
+<span class="nc" id="L266">                error -&gt; Toast.makeText(this, &quot;Error fetching menus&quot;, Toast.LENGTH_SHORT).show()</span>
+        );
+
+<span class="fc" id="L269">        VolleySingleton.getInstance(this).addToRequestQueue(request);</span>
+<span class="fc" id="L270">    }</span>
+
+    private void fetchAvailableFoodItems() {
+<span class="fc" id="L273">        String url = AppConstants.SERVER_URL + &quot;/item&quot;;</span>
+
+<span class="fc" id="L275">        JsonArrayRequest request = new JsonArrayRequest(</span>
+                Request.Method.PUT,
+                url,
+                null,
+                response -&gt; {
+<span class="fc" id="L280">                    availableFoodItems.clear();</span>
+<span class="fc bfc" id="L281" title="All 2 branches covered.">                    for (int i = 0; i &lt; response.length(); i++) {</span>
+                        try {
+<span class="fc" id="L283">                            FoodItem item = gson.fromJson(response.getJSONObject(i).toString(), FoodItem.class);</span>
+<span class="fc" id="L284">                            availableFoodItems.add(item);</span>
+<span class="nc" id="L285">                        } catch (Exception e) {</span>
+<span class="nc" id="L286">                            Log.e(&quot;MenuView&quot;, &quot;Error parsing food item: &quot; + e.getMessage());</span>
+<span class="fc" id="L287">                        }</span>
+                    }
+<span class="fc" id="L289">                },</span>
+<span class="nc" id="L290">                error -&gt; Toast.makeText(this, &quot;Error fetching food items&quot;, Toast.LENGTH_SHORT).show()</span>
+        );
+
+<span class="fc" id="L293">        VolleySingleton.getInstance(this).addToRequestQueue(request);</span>
+<span class="fc" id="L294">    }</span>
+
+    private void updateMenuSpinner() {
+<span class="fc" id="L297">        ArrayAdapter&lt;Menu&gt; adapter = new ArrayAdapter&lt;&gt;(this,</span>
+                android.R.layout.simple_spinner_item, menus);
+<span class="fc" id="L299">        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);</span>
+<span class="fc" id="L300">        menuSpinner.setAdapter(adapter);</span>
+<span class="fc" id="L301">    }</span>
+
+    private void updateUIWithMenu(Menu menu) {
+        try {
+<span class="fc" id="L305">            locationEdit.setText(menu.getLocation());</span>
+<span class="fc" id="L306">            mealTypeEdit.setText(menu.getMeal());</span>
+
+<span class="fc" id="L308">            String dateStr = menu.getDate();</span>
+<span class="pc bpc" id="L309" title="2 of 4 branches missed.">            if (dateStr != null &amp;&amp; !dateStr.isEmpty()) {</span>
+<span class="fc" id="L310">                dateEdit.setText(dateStr);</span>
+            } else {
+<span class="nc" id="L312">                dateEdit.setText(&quot;&quot;);</span>
+            }
+
+<span class="pc bpc" id="L315" title="1 of 2 branches missed.">            if (menu.getFoodItems() != null) {</span>
+<span class="fc" id="L316">                foodAdapter.updateFoodItems(new ArrayList&lt;&gt;(menu.getFoodItems()));</span>
+            } else {
+<span class="nc" id="L318">                foodAdapter.updateFoodItems(new ArrayList&lt;&gt;());</span>
+            }
+
+<span class="fc" id="L321">            currentMenu = menu;</span>
+<span class="nc" id="L322">        } catch (Exception e) {</span>
+<span class="nc" id="L323">            Log.e(&quot;MenuView&quot;, &quot;Error updating UI with menu&quot;, e);</span>
+<span class="nc" id="L324">            Toast.makeText(this, &quot;Error displaying menu details&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="fc" id="L325">        }</span>
+<span class="fc" id="L326">    }</span>
+
+    private void showDeleteConfirmationDialog() {
+<span class="nc" id="L329">        String displayText = String.format(&quot;%s - %s&quot;,</span>
+<span class="nc" id="L330">                currentMenu.getLocation(),</span>
+<span class="nc bnc" id="L331" title="All 2 branches missed.">                currentMenu.getDate() != null ? currentMenu.getDate() : &quot;No Date&quot;);</span>
+
+<span class="nc" id="L333">        new AlertDialog.Builder(this)</span>
+<span class="nc" id="L334">                .setTitle(&quot;Delete Menu&quot;)</span>
+<span class="nc" id="L335">                .setMessage(&quot;Are you sure you want to delete the menu &quot; + displayText +&quot;?&quot;)</span>
+<span class="nc" id="L336">                .setPositiveButton(&quot;Delete&quot;, (dialog, which) -&gt; deleteCurrentMenuFromServer())</span>
+<span class="nc" id="L337">                .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="nc" id="L338">                .show();</span>
+<span class="nc" id="L339">    }</span>
+
+    private void saveMenuChanges() {
+<span class="nc bnc" id="L342" title="All 2 branches missed.">        if (currentMenu == null) return;</span>
+
+<span class="nc" id="L344">        currentMenu.setLocation(locationEdit.getText().toString());</span>
+<span class="nc" id="L345">        currentMenu.setMeal(mealTypeEdit.getText().toString());</span>
+<span class="nc" id="L346">        currentMenu.setDate(dateEdit.getText().toString());</span>
+
+<span class="nc" id="L348">        updateMenuOnServer();</span>
+<span class="nc" id="L349">    }</span>
+
+    private void updateMenuOnServer() {
+<span class="nc bnc" id="L352" title="All 2 branches missed.">        if (currentMenu == null) return;</span>
+
+<span class="nc" id="L354">        String url = AppConstants.SERVER_URL + &quot;/menu/update/&quot; + currentMenu.getId();</span>
+
+        try {
+<span class="nc" id="L357">            JSONObject jsonBody = new JSONObject();</span>
+<span class="nc" id="L358">            jsonBody.put(&quot;id&quot;, currentMenu.getId());</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">            jsonBody.put(&quot;name&quot;, currentMenu.getName() != null ? currentMenu.getName() : &quot;Menu &quot; + currentMenu.getId());</span>
+<span class="nc" id="L360">            jsonBody.put(&quot;location&quot;, locationEdit.getText().toString().trim());</span>
+<span class="nc" id="L361">            jsonBody.put(&quot;meal&quot;, mealTypeEdit.getText().toString().trim());</span>
+
+<span class="nc" id="L363">            String dateStr = dateEdit.getText().toString().trim();</span>
+<span class="nc bnc" id="L364" title="All 2 branches missed.">            if (!dateStr.isEmpty()) {</span>
+                try {
+<span class="nc" id="L366">                    LocalDate.parse(dateStr, dateFormatter);</span>
+<span class="nc" id="L367">                    jsonBody.put(&quot;date&quot;, dateStr);</span>
+<span class="nc" id="L368">                } catch (DateTimeParseException e) {</span>
+<span class="nc" id="L369">                    Toast.makeText(this, &quot;Invalid date format. Use YYYY-MM-DD&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L370">                    return;</span>
+<span class="nc" id="L371">                }</span>
+            }
+
+<span class="nc" id="L374">            JsonObjectRequest request = new JsonObjectRequest(</span>
+                    Request.Method.PUT,
+                    url,
+                    jsonBody,
+                    response -&gt; {
+<span class="nc" id="L379">                        Log.d(&quot;MenuView&quot;, &quot;Menu updated successfully: &quot; + response.toString());</span>
+<span class="nc" id="L380">                        Toast.makeText(this, &quot;Menu updated successfully&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L381">                        fetchMenuById(currentMenu.getId());</span>
+<span class="nc" id="L382">                    },</span>
+                    error -&gt; {
+<span class="nc" id="L384">                        String errorMessage = &quot;Unknown error&quot;;</span>
+<span class="nc bnc" id="L385" title="All 4 branches missed.">                        if (error.networkResponse != null &amp;&amp; error.networkResponse.data != null) {</span>
+                            try {
+<span class="nc" id="L387">                                String errorResponse = new String(error.networkResponse.data, StandardCharsets.UTF_8);</span>
+<span class="nc" id="L388">                                Log.e(&quot;MenuView&quot;, &quot;Server error response: &quot; + errorResponse);</span>
+<span class="nc" id="L389">                                errorMessage = errorResponse;</span>
+<span class="nc" id="L390">                            } catch (Exception e) {</span>
+<span class="nc" id="L391">                                Log.e(&quot;MenuView&quot;, &quot;Error parsing error response&quot;, e);</span>
+<span class="nc" id="L392">                            }</span>
+                        }
+<span class="nc" id="L394">                        Log.e(&quot;MenuView&quot;, &quot;Error updating menu: &quot; + errorMessage);</span>
+<span class="nc" id="L395">                        Toast.makeText(this, &quot;Error updating menu: &quot; + errorMessage, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L396">                    }</span>
+<span class="nc" id="L397">            ) {</span>
+                @Override
+                public Map&lt;String, String&gt; getHeaders() {
+<span class="nc" id="L400">                    Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L401">                    headers.put(&quot;Content-Type&quot;, &quot;application/json&quot;);</span>
+<span class="nc" id="L402">                    return headers;</span>
+                }
+            };
+
+<span class="nc" id="L406">            request.setRetryPolicy(new DefaultRetryPolicy(</span>
+                    30000,
+                    0,
+                    DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+            ));
+
+<span class="nc" id="L412">            VolleySingleton.getInstance(this).addToRequestQueue(request);</span>
+<span class="nc" id="L413">        } catch (Exception e) {</span>
+<span class="nc" id="L414">        Log.e(&quot;MenuView&quot;, &quot;Error creating update request&quot;, e);</span>
+<span class="nc" id="L415">        Toast.makeText(this, &quot;Error preparing update request: &quot; + e.getMessage(), Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L416">        }</span>
+<span class="nc" id="L417">    }</span>
+
+    private void addFoodItemToMenu(FoodItem foodItem) {
+<span class="nc bnc" id="L420" title="All 2 branches missed.">        if (currentMenu == null) return;</span>
+
+<span class="nc" id="L422">        String url = AppConstants.SERVER_URL + &quot;/menu/&quot; + currentMenu.getId() + &quot;/add/&quot; + foodItem.getId();</span>
+
+<span class="nc" id="L424">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.PUT,
+                url,
+                null,
+                response -&gt; {
+<span class="nc" id="L429">                    Log.d(&quot;MenuView&quot;, &quot;Food item added successfully&quot;);</span>
+<span class="nc" id="L430">                    Toast.makeText(this, &quot;Food item added to menu&quot;, Toast.LENGTH_SHORT).show();</span>
+
+<span class="nc" id="L432">                    fetchMenuById(currentMenu.getId());</span>
+<span class="nc" id="L433">                },</span>
+                error -&gt; {
+<span class="nc" id="L435">                    Log.e(&quot;MenuView&quot;, &quot;Error adding food item: &quot; + error.getMessage());</span>
+<span class="nc" id="L436">                    Toast.makeText(this, &quot;Error adding food item to menu&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L437">                }</span>
+        );
+
+<span class="nc" id="L440">        VolleySingleton.getInstance(this).addToRequestQueue(request);</span>
+<span class="nc" id="L441">    }</span>
+
+    private void removeFoodItemFromMenu(FoodItem foodItem) {
+<span class="nc bnc" id="L444" title="All 2 branches missed.">        if (currentMenu == null) return;</span>
+
+<span class="nc" id="L446">        String url = AppConstants.SERVER_URL + &quot;/menu/&quot; + currentMenu.getId() + &quot;/remove/&quot; + foodItem.getId();</span>
+
+<span class="nc" id="L448">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.PUT,
+                url,
+                null,
+                response -&gt; {
+<span class="nc" id="L453">                    Log.d(&quot;MenuView&quot;, &quot;Food item removed successfully&quot;);</span>
+<span class="nc" id="L454">                    Toast.makeText(this, &quot;Food item removed from menu&quot;, Toast.LENGTH_SHORT).show();</span>
+                    // Refresh the current menu to show updated food items
+<span class="nc" id="L456">                    fetchMenuById(currentMenu.getId());</span>
+<span class="nc" id="L457">                },</span>
+                error -&gt; {
+<span class="nc" id="L459">                    Log.e(&quot;MenuView&quot;, &quot;Error removing food item: &quot; + error.getMessage());</span>
+<span class="nc" id="L460">                    Toast.makeText(this, &quot;Error removing food item from menu&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L461">                }</span>
+        );
+
+<span class="nc" id="L464">        VolleySingleton.getInstance(this).addToRequestQueue(request);</span>
+<span class="nc" id="L465">    }</span>
+
+    private void fetchMenuById(int menuId) {
+<span class="fc" id="L468">        String url = AppConstants.SERVER_URL + &quot;/menu/&quot; + menuId;</span>
+
+<span class="fc" id="L470">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+                response -&gt; {
+                    try {
+<span class="fc" id="L476">                        currentMenu = gson.fromJson(response.toString(), Menu.class);</span>
+<span class="fc" id="L477">                        updateUIWithMenu(currentMenu);</span>
+<span class="nc" id="L478">                    } catch (Exception e) {</span>
+<span class="nc" id="L479">                        Log.e(&quot;MenuView&quot;, &quot;Error parsing menu response&quot;, e);</span>
+<span class="fc" id="L480">                    }</span>
+<span class="fc" id="L481">                },</span>
+                error -&gt; {
+<span class="nc" id="L483">                    Log.e(&quot;MenuView&quot;, &quot;Error fetching menu: &quot; + error.getMessage());</span>
+<span class="nc" id="L484">                    Toast.makeText(this, &quot;Error refreshing menu data&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L485">                }</span>
+        );
+
+<span class="fc" id="L488">        VolleySingleton.getInstance(this).addToRequestQueue(request);</span>
+<span class="fc" id="L489">    }</span>
+
+    private void postNewMenuToServer(Menu newMenu) {
+<span class="nc" id="L492">        String url = AppConstants.SERVER_URL + &quot;/menu&quot;;</span>
+
+        try {
+<span class="nc" id="L495">            JSONObject jsonBody = new JSONObject();</span>
+
+<span class="nc" id="L497">            String updatedMealType = newMenu.getMeal().substring(0, 1).toUpperCase() + newMenu.getMeal().substring(1);</span>
+
+<span class="nc" id="L499">            jsonBody.put(&quot;name&quot;, newMenu.getName());</span>
+<span class="nc" id="L500">            jsonBody.put(&quot;location&quot;, newMenu.getLocation());</span>
+<span class="nc" id="L501">            jsonBody.put(&quot;meal&quot;, updatedMealType);</span>
+<span class="nc" id="L502">            jsonBody.put(&quot;date&quot;, newMenu.getDate());</span>
+
+<span class="nc" id="L504">            JsonObjectRequest request = new JsonObjectRequest(</span>
+                    Request.Method.POST,
+                    url,
+                    jsonBody,
+                    response -&gt; {
+<span class="nc" id="L509">                        Log.d(&quot;MenuView&quot;, &quot;Menu added successfully: &quot; + response.toString());</span>
+<span class="nc" id="L510">                        Toast.makeText(this, &quot;Menu added successfully&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L511">                        fetchMenus();</span>
+<span class="nc" id="L512">                    },</span>
+                    error -&gt; {
+<span class="nc" id="L514">                        String errorMessage = &quot;Unknown error&quot;;</span>
+<span class="nc bnc" id="L515" title="All 4 branches missed.">                        if (error.networkResponse != null &amp;&amp; error.networkResponse.data != null) {</span>
+                            try {
+<span class="nc" id="L517">                                String errorResponse = new String(error.networkResponse.data, StandardCharsets.UTF_8);</span>
+<span class="nc" id="L518">                                Log.e(&quot;MenuView&quot;, &quot;Server error response: &quot; + errorResponse);</span>
+<span class="nc" id="L519">                                errorMessage = errorResponse;</span>
+<span class="nc" id="L520">                            } catch (Exception e) {</span>
+<span class="nc" id="L521">                                Log.e(&quot;MenuView&quot;, &quot;Error parsing error response&quot;, e);</span>
+<span class="nc" id="L522">                            }</span>
+                        }
+<span class="nc" id="L524">                        Log.e(&quot;MenuView&quot;, &quot;Error adding menu: &quot; + errorMessage);</span>
+<span class="nc" id="L525">                        Toast.makeText(this, &quot;Error adding menu: &quot; + errorMessage, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L526">                    }</span>
+<span class="nc" id="L527">            ) {</span>
+                @Override
+                public Map&lt;String, String&gt; getHeaders() {
+<span class="nc" id="L530">                    Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L531">                    headers.put(&quot;Content-Type&quot;, &quot;application/json&quot;);</span>
+<span class="nc" id="L532">                    return headers;</span>
+                }
+            };
+
+<span class="nc" id="L536">            request.setRetryPolicy(new DefaultRetryPolicy(</span>
+                    30000,
+                    0,
+                    DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+            ));
+
+<span class="nc" id="L542">            VolleySingleton.getInstance(this).addToRequestQueue(request);</span>
+<span class="nc" id="L543">        } catch (Exception e) {</span>
+<span class="nc" id="L544">            Log.e(&quot;MenuView&quot;, &quot;Error creating add request&quot;, e);</span>
+<span class="nc" id="L545">            Toast.makeText(this, &quot;Error preparing add request: &quot; + e.getMessage(), Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L546">        }</span>
+<span class="nc" id="L547">    }</span>
+
+    private void deleteCurrentMenuFromServer() {
+<span class="nc bnc" id="L550" title="All 2 branches missed.">        if (currentMenu == null) return;</span>
+
+<span class="nc" id="L552">        String url = AppConstants.SERVER_URL + &quot;/menu/&quot; + currentMenu.getId();</span>
+
+        try {
+<span class="nc" id="L555">            StringRequest request = new StringRequest(</span>
+                    Request.Method.DELETE,
+                    url,
+                    response -&gt; {
+<span class="nc" id="L559">                        Log.d(&quot;MenuView&quot;, &quot;Menu deleted successfully: &quot; + response.toString());</span>
+<span class="nc" id="L560">                        Toast.makeText(this, &quot;Menu deleted successfully&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L561">                        fetchMenus();</span>
+<span class="nc" id="L562">                    },</span>
+                    error -&gt; {
+<span class="nc" id="L564">                        String errorMessage = &quot;Unknown error&quot;;</span>
+<span class="nc bnc" id="L565" title="All 4 branches missed.">                        if (error.networkResponse != null &amp;&amp; error.networkResponse.data != null) {</span>
+                            try {
+<span class="nc" id="L567">                                String errorResponse = new String(error.networkResponse.data, StandardCharsets.UTF_8);</span>
+<span class="nc" id="L568">                                Log.e(&quot;MenuView&quot;, &quot;Server error response: &quot; + errorResponse);</span>
+<span class="nc" id="L569">                                errorMessage = errorResponse;</span>
+<span class="nc" id="L570">                            } catch (Exception e) {</span>
+<span class="nc" id="L571">                                Log.e(&quot;MenuView&quot;, &quot;Error parsing error response&quot;, e);</span>
+<span class="nc" id="L572">                            }</span>
+                        }
+<span class="nc" id="L574">                        Log.e(&quot;MenuView&quot;, &quot;Error deleting menu: &quot; + errorMessage);</span>
+<span class="nc" id="L575">                        Toast.makeText(this, &quot;Error deleting menu: &quot; + errorMessage, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L576">                    }</span>
+<span class="nc" id="L577">            ) {</span>
+                @Override
+                public Map&lt;String, String&gt; getHeaders() {
+<span class="nc" id="L580">                    Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L581">                    headers.put(&quot;Content-Type&quot;, &quot;application/json&quot;);</span>
+<span class="nc" id="L582">                    return headers;</span>
+                }
+            };
+
+<span class="nc" id="L586">            request.setRetryPolicy(new DefaultRetryPolicy(</span>
+                    30000,
+                    0,
+                    DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+            ));
+
+<span class="nc" id="L592">            VolleySingleton.getInstance(this).addToRequestQueue(request);</span>
+<span class="nc" id="L593">        } catch (Exception e) {</span>
+<span class="nc" id="L594">            Log.e(&quot;MenuView&quot;, &quot;Error creating delete request&quot;, e);</span>
+<span class="nc" id="L595">            Toast.makeText(this, &quot;Error preparing delete request: &quot; + e.getMessage(), Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L596">        }</span>
+<span class="nc" id="L597">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

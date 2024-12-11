@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GoalsFragment.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.fragments</a> &gt; <span class="el_source">GoalsFragment.java</span></div><h1>GoalsFragment.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.fragments;
+
+import android.os.Bundle;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+
+<span class="fc" id="L27">public class GoalsFragment extends Fragment {</span>
+
+    private ProfileDataManager profileDataManager;
+    private ProgressBar pbGoal1, pbGoal2, pbGoal3;
+    private TextView tvGoal1, tvGoal2, tvGoal3;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+<span class="fc" id="L35">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L36">        profileDataManager = new ProfileDataManager(requireContext());</span>
+<span class="fc" id="L37">    }</span>
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+<span class="fc" id="L41">        return inflater.inflate(R.layout.fragment_goals, container, false);</span>
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+<span class="fc" id="L46">        int id = profileDataManager.getId();</span>
+<span class="fc" id="L47">        pbGoal1 = view.findViewById(R.id.pbConsecutiveLogins);</span>
+<span class="fc" id="L48">        pbGoal2 = view.findViewById(R.id.pbProteinGoal);</span>
+<span class="fc" id="L49">        pbGoal3 = view.findViewById(R.id.pbFoodPlans);</span>
+<span class="fc" id="L50">        tvGoal1 = view.findViewById(R.id.tvProgress);</span>
+<span class="fc" id="L51">        tvGoal2 = view.findViewById(R.id.tvProteinProgress);</span>
+<span class="fc" id="L52">        tvGoal3 = view.findViewById(R.id.tvFoodPlansProgress);</span>
+
+<span class="fc" id="L54">        getGoals();</span>
+<span class="fc" id="L55">    }</span>
+
+    private void getGoals() {
+<span class="fc" id="L58">        String url = &quot;https://1a56c054-2e8f-4d72-9b60-22ca8b114808.mock.pstmn.io/goals&quot;;</span>
+
+<span class="fc" id="L60">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+                response -&gt; {
+                    try {
+<span class="fc" id="L66">                        JSONArray goals = response.getJSONArray(&quot;goals&quot;);</span>
+
+<span class="fc bfc" id="L68" title="All 2 branches covered.">                        for (int i = 0; i &lt; goals.length(); i++) {</span>
+<span class="fc" id="L69">                            JSONObject goal = goals.getJSONObject(i);</span>
+<span class="fc" id="L70">                            String name = goal.getString(&quot;name&quot;);</span>
+<span class="fc" id="L71">                            int progress = goal.getInt(&quot;progress&quot;);</span>
+<span class="fc" id="L72">                            String complete = goal.getString(&quot;complete&quot;);</span>
+
+<span class="fc bfc" id="L74" title="All 2 branches covered.">                            if(name.equals(&quot;goal1&quot;)) {</span>
+<span class="fc" id="L75">                                pbGoal1.setProgress(progress);</span>
+<span class="fc" id="L76">                                tvGoal1.setText(String.valueOf(progress) + &quot;/7&quot;);</span>
+                            }
+<span class="fc bfc" id="L78" title="All 2 branches covered.">                            else if(name.equals(&quot;goal2&quot;)) {</span>
+<span class="fc" id="L79">                                pbGoal2.setProgress(progress);</span>
+<span class="fc" id="L80">                                tvGoal2.setText(String.valueOf(progress) + &quot;/5&quot;);</span>
+                            }
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">                            else if(name.equals(&quot;goal3&quot;)) {</span>
+<span class="fc" id="L83">                                pbGoal3.setProgress(progress);</span>
+<span class="fc" id="L84">                                tvGoal3.setText(String.valueOf(progress) + &quot;/7&quot;);</span>
+                            }
+                        }
+<span class="nc" id="L87">                    } catch (JSONException e) {</span>
+<span class="nc" id="L88">                        e.printStackTrace();</span>
+<span class="nc" id="L89">                        Log.e(&quot;getGoals&quot;, &quot;Error parsing JSON response: &quot; + e.getMessage());</span>
+<span class="fc" id="L90">                    }</span>
+<span class="fc" id="L91">                },</span>
+                error -&gt; {
+<span class="nc" id="L93">                    Log.e(&quot;getGoals&quot;, &quot;Volley Error: &quot; + error.getMessage());</span>
+<span class="nc" id="L94">                }</span>
+        );
+<span class="fc" id="L96">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="fc" id="L97">    }</span>
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

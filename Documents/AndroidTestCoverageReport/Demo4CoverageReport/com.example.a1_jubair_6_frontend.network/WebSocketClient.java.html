@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebSocketClient.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.network</a> &gt; <span class="el_source">WebSocketClient.java</span></div><h1>WebSocketClient.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.network;
+
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+public class WebSocketClient extends WebSocketListener {
+    private static final String TAG = &quot;WebSocketClient&quot;;
+    private WebSocket webSocket;
+    private final WebSocketListener listener;
+    private final Handler handler;
+<span class="fc" id="L21">    private boolean isConnected = false;</span>
+
+<span class="fc" id="L23">    public WebSocketClient(WebSocketListener listener) {</span>
+<span class="fc" id="L24">        this.listener = listener;</span>
+<span class="fc" id="L25">        this.handler = new Handler(Looper.getMainLooper());</span>
+<span class="fc" id="L26">    }</span>
+
+    /**
+     * Connect to the WebSocket server.
+     *
+     * @param url The WebSocket server URL.
+     */
+    public void connect(String url) {
+<span class="pc bpc" id="L34" title="1 of 2 branches missed.">        if (isConnected) {</span>
+<span class="nc" id="L35">            Log.w(TAG, &quot;WebSocket is already connected&quot;);</span>
+<span class="nc" id="L36">            return;</span>
+        }
+<span class="fc" id="L38">        OkHttpClient client = new OkHttpClient();</span>
+<span class="fc" id="L39">        Request request = new Request.Builder().url(url).build();</span>
+<span class="fc" id="L40">        webSocket = client.newWebSocket(request, this);</span>
+<span class="fc" id="L41">    }</span>
+
+    /**
+     * Send a message through the WebSocket.
+     *
+     * @param message The message to send.
+     */
+    public void send(String message) {
+<span class="nc bnc" id="L49" title="All 4 branches missed.">        if (webSocket != null &amp;&amp; isConnected) {</span>
+<span class="nc" id="L50">            webSocket.send(message);</span>
+        } else {
+<span class="nc" id="L52">            Log.e(TAG, &quot;WebSocket is not connected. Cannot send message.&quot;);</span>
+        }
+<span class="nc" id="L54">    }</span>
+
+    /**
+     * Close the WebSocket connection.
+     */
+    public void close() {
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">        if (webSocket != null) {</span>
+<span class="fc" id="L61">            webSocket.close(1000, &quot;Closing connection&quot;);</span>
+        }
+<span class="fc" id="L63">    }</span>
+
+    @Override
+    public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
+<span class="fc" id="L67">        isConnected = true;</span>
+<span class="fc" id="L68">        handler.post(() -&gt; {</span>
+<span class="fc" id="L69">            Log.d(TAG, &quot;WebSocket connected&quot;);</span>
+<span class="fc" id="L70">            listener.onOpen(webSocket, response);</span>
+<span class="fc" id="L71">        });</span>
+<span class="fc" id="L72">    }</span>
+
+    @Override
+    public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
+<span class="fc" id="L76">        handler.post(() -&gt; listener.onMessage(webSocket, text));</span>
+<span class="fc" id="L77">    }</span>
+
+    @Override
+    public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
+<span class="nc" id="L81">        handler.post(() -&gt; {</span>
+<span class="nc" id="L82">            isConnected = false;</span>
+<span class="nc" id="L83">            Log.d(TAG, &quot;WebSocket closing: &quot; + reason);</span>
+<span class="nc" id="L84">            listener.onClosing(webSocket, code, reason);</span>
+<span class="nc" id="L85">        });</span>
+<span class="nc" id="L86">    }</span>
+
+    @Override
+    public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
+<span class="nc" id="L90">        isConnected = false;</span>
+<span class="nc" id="L91">        handler.post(() -&gt; {</span>
+<span class="nc" id="L92">            Log.d(TAG, &quot;WebSocket closed: &quot; + reason);</span>
+<span class="nc" id="L93">            listener.onClosed(webSocket, code, reason);</span>
+<span class="nc" id="L94">        });</span>
+<span class="nc" id="L95">    }</span>
+
+    @Override
+    public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, @Nullable Response response) {
+<span class="fc" id="L99">        isConnected = false;</span>
+<span class="fc" id="L100">        handler.post(() -&gt; {</span>
+<span class="fc" id="L101">            Log.e(TAG, &quot;WebSocket failure: &quot; + t.getMessage());</span>
+<span class="fc" id="L102">            listener.onFailure(webSocket, t, response);</span>
+<span class="fc" id="L103">        });</span>
+<span class="fc" id="L104">    }</span>
+
+    /**
+     * Returns whether the WebSocket is connected.
+     *
+     * @return True if connected, false otherwise.
+     */
+    public boolean isConnected() {
+<span class="nc" id="L112">        return isConnected;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

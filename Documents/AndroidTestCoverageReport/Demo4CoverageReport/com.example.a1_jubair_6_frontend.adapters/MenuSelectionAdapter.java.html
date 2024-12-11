@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MenuSelectionAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.adapters</a> &gt; <span class="el_source">MenuSelectionAdapter.java</span></div><h1>MenuSelectionAdapter.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.adapters;
+
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.models.Menu;
+
+import java.util.List;
+
+public class MenuSelectionAdapter extends RecyclerView.Adapter&lt;MenuSelectionAdapter.MenuViewHolder&gt; {
+    private List&lt;Menu&gt; menuList;
+<span class="nc" id="L19">    private int selectedPosition = -1;</span>
+    private OnMenuSelectedListener listener;
+
+    public interface OnMenuSelectedListener {
+        void onMenuSelected(int position, Menu menu);
+    }
+
+<span class="nc" id="L26">    public MenuSelectionAdapter(List&lt;Menu&gt; menuList, OnMenuSelectedListener listener) {</span>
+<span class="nc" id="L27">        this.menuList = menuList;</span>
+<span class="nc" id="L28">        this.listener = listener;</span>
+<span class="nc" id="L29">    }</span>
+
+    @NonNull
+    @Override
+    public MenuViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+<span class="nc" id="L34">        View view = LayoutInflater.from(parent.getContext())</span>
+<span class="nc" id="L35">                .inflate(R.layout.item_menu_selection, parent, false);</span>
+<span class="nc" id="L36">        return new MenuViewHolder(view);</span>
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull MenuViewHolder holder, int position) {
+<span class="nc" id="L41">        Menu menu = menuList.get(position);</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">        boolean isSelected = selectedPosition == position;</span>
+
+<span class="nc" id="L44">        String locationText = String.format(&quot;%s - %s&quot;,</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">                menu.getLocation() != null ? menu.getLocation() : &quot;&quot;,</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">                menu.getMeal() != null ? menu.getMeal() : &quot;&quot;);</span>
+<span class="nc" id="L47">        holder.locationView.setText(locationText);</span>
+
+<span class="nc bnc" id="L49" title="All 2 branches missed.">        String dateText = menu.getDate() != null ? menu.getDate() : &quot;No Date&quot;;</span>
+<span class="nc" id="L50">        holder.dateView.setText(dateText);</span>
+
+<span class="nc" id="L52">        holder.locationView.setTextColor(ContextCompat.getColor(holder.itemView.getContext(),</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">                isSelected ? android.R.color.white : android.R.color.black));</span>
+<span class="nc" id="L54">        holder.dateView.setTextColor(ContextCompat.getColor(holder.itemView.getContext(),</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">                isSelected ? android.R.color.white : android.R.color.darker_gray));</span>
+
+<span class="nc" id="L57">        holder.itemView.setSelected(isSelected);</span>
+<span class="nc" id="L58">    }</span>
+
+    @Override
+    public int getItemCount() {
+<span class="nc" id="L62">        return menuList.size();</span>
+    }
+
+    public void setSelectedPosition(int position) {
+<span class="nc" id="L66">        int oldPosition = selectedPosition;</span>
+<span class="nc" id="L67">        selectedPosition = position;</span>
+<span class="nc" id="L68">        notifyItemChanged(oldPosition);</span>
+<span class="nc" id="L69">        notifyItemChanged(selectedPosition);</span>
+<span class="nc" id="L70">    }</span>
+
+    class MenuViewHolder extends RecyclerView.ViewHolder {
+        final TextView locationView;
+        final TextView dateView;
+
+<span class="nc" id="L76">        MenuViewHolder(@NonNull View itemView) {</span>
+<span class="nc" id="L77">            super(itemView);</span>
+<span class="nc" id="L78">            locationView = itemView.findViewById(R.id.tvLocation);</span>
+<span class="nc" id="L79">            dateView = itemView.findViewById(R.id.tvDate);</span>
+
+<span class="nc" id="L81">            itemView.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L82">                int position = getAdapterPosition();</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">                if (position != RecyclerView.NO_POSITION) {</span>
+<span class="nc" id="L84">                    setSelectedPosition(position);</span>
+<span class="nc" id="L85">                    listener.onMenuSelected(position, menuList.get(position));</span>
+                }
+<span class="nc" id="L87">            });</span>
+<span class="nc" id="L88">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>
