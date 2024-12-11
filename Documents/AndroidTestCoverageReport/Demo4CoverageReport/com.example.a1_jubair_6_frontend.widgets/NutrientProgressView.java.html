@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NutrientProgressView.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.widgets</a> &gt; <span class="el_source">NutrientProgressView.java</span></div><h1>NutrientProgressView.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.widgets;
+
+import android.animation.ValueAnimator;
+import android.content.Context;
+import android.content.res.TypedArray;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.drawable.Drawable;
+import android.util.AttributeSet;
+import android.view.View;
+import android.view.animation.DecelerateInterpolator;
+
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+
+import com.example.a1_jubair_6_frontend.R;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class NutrientProgressView extends View {
+
+    private static final float OUTER_CIRCLE_RADIUS_PERCENT = 0.7f;
+    private static final float CENTER_CIRCLE_RADIUS_PERCENT = 0.3f;
+    private static final float STROKE_WIDTH = 20f;
+    private static final float CIRCLE_SPACING = 12f;
+    private static final float FLAME_ICON_SIZE_PERCENT = 0.35f;
+    private static final long ANIMATION_DURATION = 1000;
+
+    private List&lt;NutrientData&gt; nutrients;
+    private Paint paint;
+    private Paint textPaint;
+    private float centerX;
+    private float centerY;
+    private float radius;
+    private Drawable flameIcon;
+
+    private Paint bulletPaint;
+<span class="pc" id="L40">    private float bulletRadius = 8f; // Size of bullet point</span>
+<span class="pc" id="L41">    private float textStartPadding = 24f; // Padding after bullet point</span>
+<span class="pc" id="L42">    private float legendSpacing = 40f; // Spacing between legend items</span>
+<span class="pc" id="L43">    private float legendTextSize = 30f; // Legend text size</span>
+
+    private ValueAnimator progressAnimator;
+    private List&lt;Float&gt; currentProgress;
+    private List&lt;Float&gt; targetProgress;
+
+<span class="pc" id="L49">    private boolean isAttached = false;</span>
+
+    public NutrientProgressView(Context context) {
+<span class="nc" id="L52">        super(context);</span>
+<span class="nc" id="L53">        init();</span>
+<span class="nc" id="L54">    }</span>
+
+    public NutrientProgressView(Context context, @Nullable AttributeSet attrs) {
+<span class="fc" id="L57">        super(context, attrs);</span>
+
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">        if (attrs != null) {</span>
+<span class="fc" id="L60">            TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.NutrientProgressView);</span>
+            try {
+<span class="fc" id="L62">                legendTextSize = a.getDimension(R.styleable.NutrientProgressView_legendTextSize, legendTextSize);</span>
+<span class="fc" id="L63">                bulletRadius = a.getDimension(R.styleable.NutrientProgressView_bulletRadius, bulletRadius);</span>
+<span class="fc" id="L64">                legendSpacing = a.getDimension(R.styleable.NutrientProgressView_legendSpacing, legendSpacing);</span>
+<span class="fc" id="L65">                textStartPadding = a.getDimension(R.styleable.NutrientProgressView_textStartPadding, textStartPadding);</span>
+            } finally {
+<span class="fc" id="L67">                a.recycle();</span>
+            }
+        }
+
+<span class="fc" id="L71">        init();</span>
+<span class="fc" id="L72">    }</span>
+
+    public NutrientProgressView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+<span class="nc" id="L75">        super(context, attrs, defStyleAttr);</span>
+<span class="nc" id="L76">        init();</span>
+<span class="nc" id="L77">    }</span>
+
+    private void init() {
+<span class="fc" id="L80">        paint = new Paint(Paint.ANTI_ALIAS_FLAG);</span>
+<span class="fc" id="L81">        paint.setStyle(Paint.Style.STROKE);</span>
+<span class="fc" id="L82">        paint.setStrokeCap(Paint.Cap.ROUND);</span>
+
+<span class="fc" id="L84">        textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);</span>
+<span class="fc" id="L85">        textPaint.setColor(Color.BLACK);</span>
+<span class="fc" id="L86">        textPaint.setTextAlign(Paint.Align.CENTER);</span>
+<span class="fc" id="L87">        textPaint.setTextSize(40f);</span>
+
+<span class="fc" id="L89">        flameIcon = ContextCompat.getDrawable(getContext(), R.drawable.ic_flame);</span>
+
+<span class="fc" id="L91">        nutrients = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L93">        bulletPaint = new Paint(Paint.ANTI_ALIAS_FLAG);</span>
+<span class="fc" id="L94">        bulletPaint.setStyle(Paint.Style.FILL);</span>
+
+<span class="fc" id="L96">        textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);</span>
+<span class="fc" id="L97">        textPaint.setColor(Color.BLACK);</span>
+<span class="fc" id="L98">        textPaint.setTextAlign(Paint.Align.LEFT);</span>
+<span class="fc" id="L99">        textPaint.setTextSize(legendTextSize);</span>
+
+<span class="fc" id="L101">        currentProgress = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L102">        targetProgress = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L104">        progressAnimator = ValueAnimator.ofFloat(0f, 1f);</span>
+<span class="fc" id="L105">        progressAnimator.setDuration(ANIMATION_DURATION);</span>
+<span class="fc" id="L106">        progressAnimator.setInterpolator(new DecelerateInterpolator());</span>
+<span class="fc" id="L107">        progressAnimator.addUpdateListener(animation -&gt; {</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">            if (!isAttached) return;</span>
+<span class="fc" id="L109">            float fraction = (float) animation.getAnimatedValue();</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">            for (int i = 0; i &lt; nutrients.size(); i++) {</span>
+<span class="fc" id="L111">                float target = targetProgress.get(i);</span>
+<span class="fc" id="L112">                float current = currentProgress.get(i);</span>
+<span class="fc" id="L113">                nutrients.get(i).setCurrent(current + (target - current) * fraction);</span>
+            }
+<span class="fc" id="L115">            invalidate();</span>
+<span class="fc" id="L116">        });</span>
+<span class="fc" id="L117">    }</span>
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+<span class="fc" id="L121">        super.onSizeChanged(w, h, oldw, oldh);</span>
+<span class="fc" id="L122">        centerX = w / 2f;</span>
+<span class="fc" id="L123">        centerY = h / 2f;</span>
+<span class="fc" id="L124">        radius = Math.min(w, h) / 2f * OUTER_CIRCLE_RADIUS_PERCENT;</span>
+<span class="fc" id="L125">    }</span>
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+<span class="fc" id="L129">        super.onDraw(canvas);</span>
+
+<span class="fc bfc" id="L131" title="All 2 branches covered.">        if (nutrients.isEmpty()) {</span>
+<span class="fc" id="L132">            return;</span>
+        }
+
+<span class="fc" id="L135">        float maxRadius = radius;</span>
+<span class="fc" id="L136">        float circleRadius = maxRadius;</span>
+
+        // Draw background circles
+<span class="fc bfc" id="L139" title="All 2 branches covered.">        for (int i = nutrients.size() - 1; i &gt;= 0; i--) {</span>
+<span class="fc" id="L140">            paint.setColor(Color.LTGRAY);</span>
+<span class="fc" id="L141">            paint.setStrokeWidth(STROKE_WIDTH);</span>
+<span class="fc" id="L142">            paint.setAlpha(50);</span>
+<span class="fc" id="L143">            canvas.drawCircle(centerX, centerY, circleRadius, paint);</span>
+<span class="fc" id="L144">            circleRadius -= (STROKE_WIDTH + CIRCLE_SPACING);</span>
+        }
+
+        // Reset radius for progress arcs
+<span class="fc" id="L148">        circleRadius = maxRadius;</span>
+
+        // Draw progress arcs
+<span class="fc bfc" id="L151" title="All 2 branches covered.">        for (int i = nutrients.size() - 1; i &gt;= 0; i--) {</span>
+<span class="fc" id="L152">            NutrientData nutrient = nutrients.get(i);</span>
+<span class="fc" id="L153">            paint.setColor(nutrient.getColor());</span>
+<span class="fc" id="L154">            paint.setStrokeWidth(STROKE_WIDTH);</span>
+<span class="fc" id="L155">            paint.setAlpha(255);</span>
+
+<span class="fc" id="L157">            float sweepAngle = 360f * (nutrient.getCurrent() / nutrient.getMax());</span>
+
+<span class="fc" id="L159">            canvas.drawArc(</span>
+                    centerX - circleRadius,
+                    centerY - circleRadius,
+                    centerX + circleRadius,
+                    centerY + circleRadius,
+                    -90f,
+                    sweepAngle,
+                    false,
+                    paint
+            );
+
+<span class="fc" id="L170">            circleRadius -= (STROKE_WIDTH + CIRCLE_SPACING);</span>
+        }
+
+        // Calculate center area size
+<span class="fc" id="L174">        float centerAreaRadius = radius * CENTER_CIRCLE_RADIUS_PERCENT;</span>
+
+        // flame icon
+<span class="pc bpc" id="L177" title="1 of 2 branches missed.">        if (flameIcon != null) {</span>
+<span class="fc" id="L178">            int iconSize = (int)(centerAreaRadius * FLAME_ICON_SIZE_PERCENT);</span>
+<span class="fc" id="L179">            int iconTop = (int)(centerY - (centerAreaRadius * 0.6f));</span>
+<span class="fc" id="L180">            flameIcon.setBounds(</span>
+                    (int)(centerX - iconSize/2),
+                    iconTop,
+                    (int)(centerX + iconSize/2),
+                    iconTop + iconSize
+            );
+<span class="fc" id="L186">            flameIcon.draw(canvas);</span>
+        }
+
+        // Draw center text
+<span class="fc" id="L190">        String calorieText = (int)nutrients.get(0).getCurrent() + &quot;/&quot; + (int)nutrients.get(0).getMax();</span>
+<span class="fc" id="L191">        textPaint.setTextSize(centerAreaRadius * 0.25f);</span>
+<span class="fc" id="L192">        String kcalText = &quot;kcal&quot;;</span>
+<span class="fc" id="L193">        float kcalWidth = textPaint.measureText(kcalText);</span>
+
+<span class="fc" id="L195">        String currentCal = String.valueOf((int)nutrients.get(0).getCurrent());</span>
+<span class="fc" id="L196">        String maxCal = String.valueOf((int)nutrients.get(0).getMax());</span>
+
+<span class="fc" id="L198">        textPaint.setTextSize(centerAreaRadius * 0.4f);</span>
+<span class="fc" id="L199">        float slashWidth = textPaint.measureText(&quot;/&quot;);</span>
+<span class="fc" id="L200">        float currentWidth = textPaint.measureText(currentCal);</span>
+<span class="fc" id="L201">        float maxWidth = textPaint.measureText(maxCal);</span>
+
+<span class="fc" id="L203">        float slashX = centerX;</span>
+<span class="fc" id="L204">        float currentX = slashX - slashWidth/2 - currentWidth;</span>
+<span class="fc" id="L205">        float maxX = slashX + slashWidth/2;</span>
+
+<span class="fc" id="L207">        canvas.drawText(currentCal, currentX, centerY + centerAreaRadius * 0.2f, textPaint);</span>
+<span class="fc" id="L208">        canvas.drawText(&quot;/&quot;, slashX - slashWidth/2, centerY + centerAreaRadius * 0.2f, textPaint);</span>
+<span class="fc" id="L209">        canvas.drawText(maxCal, maxX, centerY + centerAreaRadius * 0.2f, textPaint);</span>
+<span class="fc" id="L210">        canvas.drawText(kcalText, centerX - kcalWidth, centerY + centerAreaRadius * 0.6f, textPaint);</span>
+
+<span class="fc" id="L212">        textPaint.setTextSize(centerAreaRadius * 0.25f);</span>
+
+<span class="fc" id="L214">        drawLegend(canvas);</span>
+<span class="fc" id="L215">    }</span>
+
+    public void updateNutrient(int index, float current, float max) {
+<span class="nc bnc" id="L218" title="All 4 branches missed.">        if (index &gt;= 0 &amp;&amp; index &lt; nutrients.size()) {</span>
+<span class="nc" id="L219">            nutrients.get(index).setCurrent(current);</span>
+<span class="nc" id="L220">            nutrients.get(index).setMax(max);</span>
+<span class="nc" id="L221">            invalidate();</span>
+        }
+<span class="nc" id="L223">    }</span>
+
+    public void updateAllNutrients(List&lt;NutrientData&gt; newData) {
+<span class="pc bpc" id="L226" title="2 of 4 branches missed.">        if (!isAttached || newData == null) return;</span>
+
+<span class="fc" id="L228">        currentProgress.clear();</span>
+<span class="fc" id="L229">        targetProgress.clear();</span>
+
+<span class="fc" id="L231">        nutrients.clear();</span>
+<span class="fc" id="L232">        nutrients.addAll(newData);</span>
+
+<span class="fc bfc" id="L234" title="All 2 branches covered.">        for (NutrientData nutrient : nutrients) {</span>
+<span class="fc" id="L235">            currentProgress.add(0f);</span>
+<span class="fc" id="L236">            targetProgress.add(nutrient.getCurrent());</span>
+<span class="fc" id="L237">            nutrient.setCurrent(0f);</span>
+<span class="fc" id="L238">        }</span>
+
+<span class="pc bpc" id="L240" title="1 of 2 branches missed.">        if (progressAnimator != null) {</span>
+<span class="pc bpc" id="L241" title="1 of 2 branches missed.">            if (progressAnimator.isRunning()) {</span>
+<span class="nc" id="L242">                progressAnimator.cancel();</span>
+            }
+<span class="fc" id="L244">            progressAnimator.start();</span>
+        }
+<span class="fc" id="L246">    }</span>
+
+    public static class NutrientData {
+        private String name;
+        private float current;
+        private float max;
+        private int color;
+
+<span class="fc" id="L254">        public NutrientData(String name, float current, float max, int color) {</span>
+<span class="fc" id="L255">            this.name = name;</span>
+<span class="fc" id="L256">            this.current = current;</span>
+<span class="fc" id="L257">            this.max = max;</span>
+<span class="fc" id="L258">            this.color = color;</span>
+<span class="fc" id="L259">        }</span>
+
+<span class="fc" id="L261">        public String getName() { return name; }</span>
+<span class="fc" id="L262">        public float getCurrent() { return current; }</span>
+<span class="fc" id="L263">        public float getMax() { return max; }</span>
+<span class="fc" id="L264">        public int getColor() { return color; }</span>
+
+<span class="fc" id="L266">        public void setCurrent(float current) { this.current = current; }</span>
+<span class="nc" id="L267">        public void setMax(float max) { this.max = max; }</span>
+    }
+
+    private void drawLegend(Canvas canvas) {
+<span class="fc" id="L271">        float startX = 10f;</span>
+<span class="fc" id="L272">        float startY = centerY + radius + 40f;</span>
+
+        // For each nutrient (except calories which is index 0)
+<span class="fc bfc" id="L275" title="All 2 branches covered.">        for (int i = 1; i &lt; nutrients.size(); i++) {</span>
+<span class="fc" id="L276">            NutrientData nutrient = nutrients.get(i);</span>
+
+            // Draw bullet point
+<span class="fc" id="L279">            bulletPaint.setColor(nutrient.getColor());</span>
+<span class="fc" id="L280">            canvas.drawCircle(startX + bulletRadius, startY - bulletRadius/2, bulletRadius, bulletPaint);</span>
+
+            // Draw text
+<span class="fc" id="L283">            textPaint.setTextSize(legendTextSize);</span>
+<span class="fc" id="L284">            String legendText = String.format(&quot;%s %d/%dgr&quot;,</span>
+<span class="fc" id="L285">                    nutrient.getName(),</span>
+<span class="fc" id="L286">                    (int)nutrient.getCurrent(),</span>
+<span class="fc" id="L287">                    (int)nutrient.getMax());</span>
+<span class="fc" id="L288">            canvas.drawText(legendText, startX + bulletRadius*2 + textStartPadding, startY, textPaint);</span>
+
+            // Move to next line
+<span class="fc" id="L291">            startY += legendSpacing;</span>
+        }
+<span class="fc" id="L293">    }</span>
+
+    @Override
+    protected void onDetachedFromWindow() {
+<span class="fc" id="L297">        super.onDetachedFromWindow();</span>
+<span class="fc" id="L298">        isAttached = false;</span>
+<span class="pc bpc" id="L299" title="1 of 2 branches missed.">        if (progressAnimator != null) {</span>
+<span class="fc" id="L300">            progressAnimator.cancel();</span>
+        }
+<span class="fc" id="L302">    }</span>
+
+    @Override
+    protected void onAttachedToWindow() {
+<span class="fc" id="L306">        super.onAttachedToWindow();</span>
+<span class="fc" id="L307">        isAttached = true;</span>
+<span class="fc" id="L308">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

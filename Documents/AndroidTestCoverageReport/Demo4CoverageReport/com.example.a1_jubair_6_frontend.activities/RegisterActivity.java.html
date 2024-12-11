@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RegisterActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.activities</a> &gt; <span class="el_source">RegisterActivity.java</span></div><h1>RegisterActivity.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.activities;
+
+import android.content.Intent;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.util.Log;
+import android.util.Patterns;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.StringRequest;
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.example.a1_jubair_6_frontend.models.User;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
+<span class="fc" id="L35">public class RegisterActivity extends AppCompatActivity {</span>
+
+    private User user;
+    private ProfileDataManager profileDataManager;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L42">        super.onCreate(savedInstanceState);</span>
+
+<span class="fc" id="L44">        Log.d(&quot;RegisterActivity&quot;, &quot;onCreate called&quot;);</span>
+
+<span class="fc" id="L46">        EdgeToEdge.enable(this);</span>
+<span class="fc" id="L47">        setContentView(R.layout.activity_register);</span>
+<span class="fc" id="L48">        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.register_activity), (v, insets) -&gt; {</span>
+<span class="fc" id="L49">            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());</span>
+<span class="fc" id="L50">            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);</span>
+<span class="fc" id="L51">            return insets;</span>
+        });
+
+<span class="fc" id="L54">        profileDataManager = new ProfileDataManager(this);</span>
+
+<span class="fc" id="L56">        Button registerButton = findViewById(R.id.btnRegister);</span>
+<span class="fc" id="L57">        TextView emptyFormError = findViewById(R.id.tvFormEmptyError);</span>
+<span class="fc" id="L58">        TextView invalidEmailError = findViewById(R.id.tvInvalidEmailError);</span>
+<span class="fc" id="L59">        TextView invalidPassLengthError = findViewById(R.id.tvPasswordLengthError);</span>
+
+<span class="fc" id="L61">        EditText emailView = findViewById(R.id.emailText);</span>
+<span class="fc" id="L62">        EditText password = findViewById(R.id.registerPasswordText);</span>
+<span class="fc" id="L63">        EditText confirmPassword = findViewById(R.id.registerPasswordConfirmText);</span>
+<span class="fc" id="L64">        EditText firstnameText = findViewById(R.id.firstNameText);</span>
+<span class="fc" id="L65">        EditText lastnameText = findViewById(R.id.lastNameText);</span>
+
+<span class="fc" id="L67">        registerButton.setOnClickListener(view -&gt; {</span>
+            //Make sure none of the errors are showing if user is trying again
+<span class="fc" id="L69">            emptyFormError.setVisibility(TextView.GONE);</span>
+<span class="fc" id="L70">            invalidEmailError.setVisibility(TextView.GONE);</span>
+<span class="fc" id="L71">            invalidPassLengthError.setVisibility(TextView.GONE);</span>
+
+<span class="fc" id="L73">            String email = emailView.getText().toString();</span>
+<span class="fc" id="L74">            String pass = password.getText().toString();</span>
+<span class="fc" id="L75">            String confirmPass = confirmPassword.getText().toString();</span>
+<span class="fc" id="L76">            String firstname = firstnameText.getText().toString();</span>
+<span class="fc" id="L77">            String lastname = lastnameText.getText().toString();</span>
+
+<span class="pc bpc" id="L79" title="4 of 10 branches missed.">            if(email.isEmpty() || pass.isEmpty() || confirmPass.isEmpty() || firstname.isEmpty() || lastname.isEmpty()){</span>
+<span class="fc" id="L80">                Log.e(&quot;Form Empty Error&quot;, &quot;One or more of the register forms were empty!&quot;);</span>
+<span class="fc" id="L81">                emptyFormError.setVisibility(TextView.VISIBLE);</span>
+<span class="fc" id="L82">                return;</span>
+            }
+
+<span class="fc bfc" id="L85" title="All 2 branches covered.">            if(!Patterns.EMAIL_ADDRESS.matcher(email).matches()){</span>
+<span class="fc" id="L86">                Log.e(&quot;Invalid Email Error&quot;, &quot;Email is not a valid email!&quot;);</span>
+<span class="fc" id="L87">                invalidEmailError.setText(String.format(&quot;%s is not a valid email!&quot;, email));</span>
+<span class="fc" id="L88">                invalidEmailError.setVisibility(TextView.VISIBLE);</span>
+<span class="fc" id="L89">                return;</span>
+            }
+
+<span class="fc bfc" id="L92" title="All 2 branches covered.">            if(pass.length() &lt; 6){</span>
+<span class="fc" id="L93">                Log.e(&quot;Password Length Error&quot;, &quot;Password was not at least 6 characters!&quot;);</span>
+<span class="fc" id="L94">                invalidPassLengthError.setVisibility(TextView.VISIBLE);</span>
+<span class="fc" id="L95">                return;</span>
+            }
+
+<span class="fc" id="L98">            user = new User(-1, email, pass, firstname, lastname, -1, -1, User.Account.USER);</span>
+
+<span class="fc bfc" id="L100" title="All 2 branches covered.">            if(!pass.equals(confirmPass)){</span>
+                //Creates an error dialog when the passwords entered do not match
+<span class="fc" id="L102">                showPasswordMatchError();</span>
+            }
+            else {
+<span class="fc" id="L105">                Log.i(&quot;New Registration&quot;,&quot;Got email: [&quot; + email + &quot;] Password: [&quot; + pass + &quot;], posting to server&quot;);</span>
+<span class="fc" id="L106">                postCredentialsToServer(user);</span>
+            }
+<span class="fc" id="L108">        });</span>
+
+<span class="fc" id="L110">        TextView goBack = findViewById(R.id.goBack);</span>
+<span class="fc" id="L111">        goBack.setOnClickListener(view -&gt; {</span>
+<span class="nc" id="L112">            Log.i(&quot;Go Back&quot;, &quot;User clicked Go Back button, Navigating back to Login and Signup&quot;);</span>
+<span class="nc" id="L113">            Intent intent = new Intent(RegisterActivity.this, LoginSignupActivity.class);</span>
+<span class="nc" id="L114">            startActivity(intent);</span>
+<span class="nc" id="L115">        });</span>
+<span class="fc" id="L116">    }</span>
+
+    private void showPasswordMatchError() {
+<span class="fc" id="L119">        AlertDialog.Builder builder = new AlertDialog.Builder(this);</span>
+
+<span class="fc" id="L121">        builder.setMessage(&quot;Passwords do not match!&quot;)</span>
+<span class="fc" id="L122">                .setCancelable(false)</span>
+<span class="fc" id="L123">                .setPositiveButton(&quot;OK&quot;, (dialog, id) -&gt; dialog.dismiss());</span>
+
+<span class="fc" id="L125">        AlertDialog alert = builder.create();</span>
+<span class="fc" id="L126">        alert.show();</span>
+
+<span class="fc" id="L128">        TextView confirmPassView = alert.findViewById(R.id.registerPasswordConfirm);</span>
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">        if(confirmPassView != null)</span>
+<span class="nc" id="L130">            confirmPassView.setTextColor(Color.RED);</span>
+<span class="fc" id="L131">    }</span>
+
+    private void showSignupError(String message) {
+<span class="fc" id="L134">        AlertDialog.Builder builder = new AlertDialog.Builder(this);</span>
+
+<span class="fc" id="L136">        builder.setMessage(message)</span>
+<span class="fc" id="L137">                .setCancelable(false)</span>
+<span class="pc" id="L138">                .setPositiveButton(&quot;OK&quot;, (dialog, id) -&gt; dialog.dismiss());</span>
+
+<span class="fc" id="L140">        AlertDialog alert = builder.create();</span>
+<span class="fc" id="L141">        alert.show();</span>
+
+<span class="fc" id="L143">        TextView confirmPassView = alert.findViewById(R.id.registerPasswordConfirm);</span>
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">        if(confirmPassView != null)</span>
+<span class="nc" id="L145">            confirmPassView.setTextColor(Color.RED);</span>
+<span class="fc" id="L146">    }</span>
+
+    public void postCredentialsToServer(User user) {
+<span class="fc" id="L149">        String requestUrl = AppConstants.SERVER_URL + &quot;/user/signup&quot;;</span>
+<span class="fc" id="L150">        JSONObject jsonBody = new JSONObject();</span>
+        try{
+<span class="fc" id="L152">            jsonBody.put(&quot;username&quot;, user.getUsername());</span>
+<span class="fc" id="L153">            jsonBody.put(&quot;password&quot;, user.getPassword());</span>
+<span class="fc" id="L154">            jsonBody.put(&quot;profilepicture&quot;, &quot;&quot;);</span>
+<span class="fc" id="L155">            jsonBody.put(&quot;fname&quot;, user.getFname());</span>
+<span class="fc" id="L156">            jsonBody.put(&quot;lname&quot;, user.getLname());</span>
+<span class="fc" id="L157">            jsonBody.put(&quot;height&quot;, user.getHeight());</span>
+<span class="fc" id="L158">            jsonBody.put(&quot;weight&quot;, user.getWeight());</span>
+<span class="fc" id="L159">            jsonBody.put(&quot;accountType&quot;, User.Account.USER);</span>
+<span class="fc" id="L160">            jsonBody.put(&quot;sessionToken&quot;, &quot;**&quot;);</span>
+
+<span class="fc" id="L162">            Log.d(&quot;RequestBody&quot;, &quot;JSON being sent: &quot; + jsonBody.toString());</span>
+        }
+<span class="nc" id="L164">        catch(JSONException ex){</span>
+<span class="nc" id="L165">            Log.e(&quot;JSONException&quot;, Objects.requireNonNull(ex.getMessage()));</span>
+<span class="fc" id="L166">        }</span>
+
+<span class="fc" id="L168">        StringRequest credentialsPostRequest = new StringRequest(</span>
+                Request.Method.POST,
+                requestUrl,
+                response -&gt; {
+<span class="nc" id="L172">                    Log.i(&quot;VolleyResponse&quot;, &quot;Response: &quot; + response);</span>
+
+<span class="nc" id="L174">                    profileDataManager.saveUserData(user);</span>
+
+<span class="nc" id="L176">                    Toast.makeText(this, &quot;Registered Successfully&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L177">                    Intent homeIntent = new Intent(RegisterActivity.this, LoginSignupActivity.class);</span>
+<span class="nc" id="L178">                    startActivity(homeIntent);</span>
+<span class="nc" id="L179">                },</span>
+                error -&gt; {
+<span class="fc" id="L181">                    Log.e(&quot;VolleyError&quot;, &quot;Error: &quot; + error);</span>
+                    String errorMessage;
+<span class="pc bpc" id="L183" title="3 of 4 branches missed.">                    if (error.networkResponse != null &amp;&amp; error.networkResponse.data != null) {</span>
+<span class="nc" id="L184">                        errorMessage = new String(error.networkResponse.data);</span>
+                    } else {
+<span class="fc" id="L186">                        errorMessage = error.getMessage();</span>
+                    }
+<span class="fc" id="L188">                    Log.e(&quot;ServerError&quot;, &quot;Error response: &quot; + errorMessage);</span>
+<span class="fc" id="L189">                    showSignupError(errorMessage);</span>
+<span class="fc" id="L190">                }</span>
+<span class="fc" id="L191">        ) {</span>
+            @Override
+            public Map&lt;String, String&gt; getHeaders() {
+<span class="fc" id="L194">                Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L195">                headers.put(&quot;Content-Type&quot;, &quot;application/json&quot;);</span>
+<span class="fc" id="L196">                return headers;</span>
+            }
+            @Override
+            public byte[] getBody() {
+<span class="fc" id="L200">                return jsonBody.toString().getBytes();</span>
+            }
+        };
+
+<span class="fc" id="L204">        VolleySingleton.getInstance(this).addToRequestQueue(credentialsPostRequest);</span>
+<span class="fc" id="L205">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

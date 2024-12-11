@@ -1,0 +1,1074 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MenuFragment.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.fragments</a> &gt; <span class="el_source">MenuFragment.java</span></div><h1>MenuFragment.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.fragments;
+
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.Toast;
+
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.activities.MenuViewActivity;
+import com.example.a1_jubair_6_frontend.adapters.FoodAdapter;
+import com.example.a1_jubair_6_frontend.adapters.MenuSelectionAdapter;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.example.a1_jubair_6_frontend.models.FoodItem;
+import com.example.a1_jubair_6_frontend.models.Menu;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.button.MaterialButtonToggleGroup;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.slider.RangeSlider;
+import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.gson.Gson;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+<span class="fc" id="L62">public class MenuFragment extends Fragment {</span>
+    private RecyclerView foodList;
+    private FoodAdapter foodAdapter;
+    private List&lt;FoodItem&gt; foodItemList;
+<span class="fc" id="L66">    private Gson gson = new Gson();</span>
+    private View adminToolsContainer;
+<span class="fc" id="L68">    private boolean isAdmin = false;</span>
+<span class="fc" id="L69">    private boolean isContributor = false;</span>
+    private ProfileDataManager profileDataManager;
+
+    private int currentBreakfastMenuIndex, currentLunchMenuIndex, currentDinnerMenuIndex;
+    private List&lt;Menu&gt; allMenus, breakfastMenus, lunchMenus, dinnerMenus;
+    private TabLayout mealTypeTabs;
+    private Button selectMenusButton;
+    private BottomSheetDialog menuSelectionDialog;
+    private MenuSelectionAdapter breakfastAdapter, lunchAdapter, dinnerAdapter;
+    private RecyclerView breakfastMenuList, lunchMenuList, dinnerMenuList;
+
+    private LinearLayout advancedFiltersSection;
+    private ImageButton btnShowFilters;
+<span class="fc" id="L82">    private boolean isFilterSectionVisible = false;</span>
+<span class="fc" id="L83">    private String currentComparisonType = &quot;==&quot;;</span>
+    private View view;
+<span class="fc" id="L85">    private String currentSearchQuery = &quot;&quot;;</span>
+<span class="fc" id="L86">    private boolean useServerFilter = false;</span>
+
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+<span class="fc" id="L91">        super.onCreate(savedInstanceState);</span>
+
+<span class="fc" id="L93">        foodItemList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L94">        profileDataManager = new ProfileDataManager(requireContext());</span>
+<span class="fc" id="L95">        String accountType = profileDataManager.getAccountType();</span>
+<span class="fc" id="L96">        isAdmin = accountType.equals(&quot;ADMINISTRATOR&quot;);</span>
+<span class="fc" id="L97">        isContributor = accountType.equals(&quot;CONTRIBUTOR&quot;);</span>
+<span class="fc" id="L98">        allMenus = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L99">        breakfastMenus = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L100">        lunchMenus = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L101">        dinnerMenus = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L102">    }</span>
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+<span class="fc" id="L108">        view = inflater.inflate(R.layout.fragment_menu, container, false);</span>
+
+<span class="fc" id="L110">        advancedFiltersSection = view.findViewById(R.id.advancedFiltersSection);</span>
+<span class="fc" id="L111">        btnShowFilters = view.findViewById(R.id.btnShowFilters);</span>
+
+<span class="fc" id="L113">        btnShowFilters.setOnClickListener(v -&gt; {</span>
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">            isFilterSectionVisible = !isFilterSectionVisible;</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">            advancedFiltersSection.setVisibility(isFilterSectionVisible ? View.VISIBLE : View.GONE);</span>
+
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">            btnShowFilters.setRotation(isFilterSectionVisible ? 180 : 0);</span>
+<span class="fc" id="L118">        });</span>
+
+<span class="fc" id="L120">        return view;</span>
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+<span class="fc" id="L125">        super.onViewCreated(view, savedInstanceState);</span>
+
+<span class="fc" id="L127">        adminToolsContainer = view.findViewById(R.id.adminToolsContainer);</span>
+<span class="fc" id="L128">        selectMenusButton = view.findViewById(R.id.btnSelectMenus);</span>
+
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">        if (isAdmin) {</span>
+<span class="fc" id="L131">            adminToolsContainer.setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L132">            adminToolsContainer.findViewById(R.id.btnSelectMenus).setVisibility(View.VISIBLE);</span>
+<span class="pc" id="L133">            selectMenusButton.setOnClickListener(v -&gt; showMenuSelectionDialog());</span>
+        }
+
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">        if (isContributor) {</span>
+<span class="nc" id="L137">            adminToolsContainer.setVisibility(View.VISIBLE);</span>
+        }
+
+<span class="fc" id="L140">        foodList = view.findViewById(R.id.foodList);</span>
+<span class="fc" id="L141">        foodList.setLayoutManager(new LinearLayoutManager(requireContext()));</span>
+
+<span class="fc" id="L143">        foodAdapter = new FoodAdapter(foodItemList, isAdmin, isContributor, true);</span>
+<span class="fc" id="L144">        foodList.setAdapter(foodAdapter);</span>
+
+<span class="fc" id="L146">        int bottomNavHeight = getResources().getDimensionPixelSize(R.dimen.bottom_nav_height);</span>
+<span class="fc" id="L147">        foodList.setPadding(0, 0, 0, bottomNavHeight);</span>
+
+<span class="fc" id="L149">        mealTypeTabs = view.findViewById(R.id.mealTypeTabs);</span>
+
+<span class="fc" id="L151">        Button viewMenus = view.findViewById(R.id.btnViewMenus);</span>
+<span class="fc" id="L152">        viewMenus.setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L153">            Intent intent = new Intent(getActivity(), MenuViewActivity.class);</span>
+<span class="fc" id="L154">            startActivity(intent);</span>
+<span class="fc" id="L155">        });</span>
+
+        // Get all menus from server
+<span class="fc" id="L158">        getAllMenus();</span>
+
+<span class="fc" id="L160">        loadSavedSelections();</span>
+<span class="fc" id="L161">        updateTab();</span>
+<span class="fc" id="L162">        setupSearchAndFilters();</span>
+<span class="fc" id="L163">    }</span>
+
+    // &lt;editor-fold desc=&quot;HTTP Requests&quot;&gt;
+
+    private void getAllMenus() {
+<span class="fc" id="L168">        String url = AppConstants.SERVER_URL + &quot;/allMenus&quot;;</span>
+
+<span class="fc" id="L170">        JsonArrayRequest request = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+                response -&gt; {
+<span class="fc" id="L175">                    Log.d(&quot;MenuFragment&quot;, &quot;Server response: &quot; + response.toString());</span>
+                    try {
+<span class="fc" id="L177">                        allMenus.clear();</span>
+<span class="fc" id="L178">                        breakfastMenus.clear();</span>
+<span class="fc" id="L179">                        lunchMenus.clear();</span>
+<span class="fc" id="L180">                        dinnerMenus.clear();</span>
+
+<span class="fc bfc" id="L182" title="All 2 branches covered.">                        for (int i = 0; i &lt; response.length(); i++) {</span>
+<span class="fc" id="L183">                            JSONObject menuJson = response.getJSONObject(i);</span>
+<span class="fc" id="L184">                            Menu menu = gson.fromJson(menuJson.toString(), Menu.class);</span>
+<span class="fc" id="L185">                            Log.d(&quot;MenuFragment&quot;, &quot;Parsed menu: &quot; + menu.toString());</span>
+<span class="fc" id="L186">                            allMenus.add(menu);</span>
+
+<span class="fc" id="L188">                            String mealType = menu.getMeal().toLowerCase().trim();</span>
+<span class="pc bpc" id="L189" title="1 of 4 branches missed.">                            switch(mealType) {</span>
+                                case &quot;breakfast&quot;:
+<span class="fc" id="L191">                                    breakfastMenus.add(menu);</span>
+<span class="fc" id="L192">                                    break;</span>
+                                case &quot;lunch&quot;:
+<span class="fc" id="L194">                                    lunchMenus.add(menu);</span>
+<span class="fc" id="L195">                                    break;</span>
+                                case &quot;dinner&quot;:
+<span class="fc" id="L197">                                    dinnerMenus.add(menu);</span>
+                                    break;
+                            }
+                        }
+<span class="pc bpc" id="L201" title="1 of 2 branches missed.">                        if (getActivity() != null) {</span>
+<span class="fc" id="L202">                            getActivity().runOnUiThread(() -&gt; {</span>
+<span class="fc" id="L203">                                updateCurrentMenuDisplay();</span>
+<span class="pc bpc" id="L204" title="3 of 4 branches missed.">                                if (menuSelectionDialog != null &amp;&amp; menuSelectionDialog.isShowing()) {</span>
+<span class="nc" id="L205">                                    setupMenuLists();</span>
+                                }
+<span class="fc" id="L207">                            });</span>
+                        }
+<span class="nc" id="L209">                    } catch (Exception e) {</span>
+<span class="nc" id="L210">                        Log.e(&quot;MenuFragment&quot;, &quot;Parse error: &quot; + e.getMessage(), e);</span>
+<span class="fc" id="L211">                    }</span>
+<span class="fc" id="L212">                },</span>
+<span class="nc" id="L213">                error -&gt; Log.e(&quot;MenuFragment&quot;, &quot;Network error: &quot; + error.toString())</span>
+<span class="fc" id="L214">        ) {</span>
+            @Override
+            public Map&lt;String, String&gt; getHeaders() {
+<span class="fc" id="L217">                Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L218">                headers.put(&quot;Accept&quot;, &quot;application/json&quot;);</span>
+<span class="fc" id="L219">                return headers;</span>
+            }
+        };
+
+<span class="fc" id="L223">        request.setRetryPolicy(new DefaultRetryPolicy(</span>
+                30000,
+                0,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+        ));
+
+<span class="fc" id="L229">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="fc" id="L230">    }</span>
+
+    private void getMenuFromId(int menuId) {
+<span class="nc" id="L233">        String url = AppConstants.SERVER_URL + &quot;/menu/&quot; + menuId;</span>
+
+<span class="nc" id="L235">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+                response -&gt; {
+<span class="nc" id="L240">                    Menu menu = gson.fromJson(response.toString(), Menu.class);</span>
+
+<span class="nc" id="L242">                    foodItemList.clear();</span>
+<span class="nc" id="L243">                    foodItemList.addAll(menu.getFoodItems());</span>
+
+<span class="nc" id="L245">                    foodAdapter.notifyDataSetChanged();</span>
+
+<span class="nc" id="L247">                    Log.i(&quot;MenuFragment&quot;, &quot;Got menu from id &quot; + menuId + &quot;. Menu: [&quot; + menu + &quot;]&quot;);</span>
+<span class="nc" id="L248">                },</span>
+                error -&gt; {
+<span class="nc" id="L250">                    Log.e(&quot;Request Error&quot;, String.valueOf(error.getMessage()));</span>
+<span class="nc" id="L251">                }</span>
+        );
+
+<span class="nc" id="L254">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="nc" id="L255">    }</span>
+
+    private void getAllFoodItems() {
+<span class="nc" id="L258">        String url = AppConstants.SERVER_URL + &quot;/item&quot;;</span>
+
+<span class="nc" id="L260">        JsonArrayRequest request = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+                response -&gt; {
+<span class="nc" id="L265">                    foodItemList.clear();</span>
+<span class="nc bnc" id="L266" title="All 2 branches missed.">                    for (int i = 0; i &lt; response.length(); i++){</span>
+                        try{
+<span class="nc" id="L268">                            FoodItem item = gson.fromJson(response.getJSONObject(i).toString(), FoodItem.class);</span>
+<span class="nc" id="L269">                            foodItemList.add(item);</span>
+                        }
+<span class="nc" id="L271">                        catch (Exception e){</span>
+<span class="nc" id="L272">                            Log.e(&quot;Response Error&quot;, String.valueOf(e.getMessage()));</span>
+<span class="nc" id="L273">                        }</span>
+                    }
+<span class="nc" id="L275">                    foodAdapter.notifyDataSetChanged();</span>
+<span class="nc" id="L276">                },</span>
+                error -&gt;{
+<span class="nc" id="L278">                    Log.e(&quot;Request Error&quot;, String.valueOf(error.getMessage()));</span>
+<span class="nc" id="L279">                }</span>
+        );
+
+<span class="nc" id="L282">        VolleySingleton.getInstance(getContext()).addToRequestQueue(request);</span>
+<span class="nc" id="L283">    }</span>
+
+    private void getFoodItemById(int id) {
+<span class="nc" id="L286">        String url = AppConstants.SERVER_URL + &quot;/item/&quot; + id;</span>
+
+<span class="nc" id="L288">        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,</span>
+                response -&gt; {
+<span class="nc" id="L290">                    FoodItem item = gson.fromJson(response.toString(), FoodItem.class);</span>
+                    //TODO: Do something with the item, this will probably be used for the search bar
+<span class="nc" id="L292">                },</span>
+                error -&gt; {
+<span class="nc" id="L294">                    Log.e(&quot;Request Error&quot;, String.valueOf(error.getMessage()));</span>
+<span class="nc" id="L295">                }</span>
+        );
+<span class="nc" id="L297">    }</span>
+
+    private void createFoodItem(FoodItem foodItem) throws JSONException {
+<span class="nc" id="L300">        String url = AppConstants.SERVER_URL + &quot;/item&quot;;</span>
+
+<span class="nc" id="L302">        JSONObject jsonBody = new JSONObject(gson.toJson(foodItem));</span>
+
+<span class="nc" id="L304">        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, jsonBody,</span>
+                response -&gt; {
+<span class="nc" id="L306">                    Toast.makeText(requireContext(), &quot;Successfully created food item&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L307">                    FoodItem createdItem = gson.fromJson(response.toString(), FoodItem.class);</span>
+<span class="nc" id="L308">                    foodItemList.add(createdItem);</span>
+<span class="nc" id="L309">                    foodAdapter.notifyDataSetChanged();</span>
+<span class="nc" id="L310">                },</span>
+                error -&gt; {
+<span class="nc" id="L312">                    Toast.makeText(requireContext(), &quot;Error creating food item [&quot; + error.networkResponse.statusCode + &quot;]&quot;, Toast.LENGTH_SHORT);</span>
+<span class="nc" id="L313">                    Log.e(&quot;Request Error&quot;, String.valueOf(error.getMessage()));</span>
+<span class="nc" id="L314">                }</span>
+        );
+<span class="nc" id="L316">        VolleySingleton.getInstance(getContext()).addToRequestQueue(request);</span>
+<span class="nc" id="L317">    }</span>
+
+    private void updateField(int id, String field, Object value) {
+<span class="nc" id="L320">        String url = AppConstants.SERVER_URL + &quot;/item/update/&quot; + field + &quot;/&quot; + id;</span>
+
+<span class="nc" id="L322">        JSONObject jsonBody = new JSONObject();</span>
+        try {
+<span class="nc" id="L324">            jsonBody.put(&quot;val&quot;, value);</span>
+<span class="nc" id="L325">        } catch (Exception e) {</span>
+<span class="nc" id="L326">            Log.e(&quot;JSON Error&quot;, String.valueOf(e.getMessage()));</span>
+<span class="nc" id="L327">            return;</span>
+<span class="nc" id="L328">        }</span>
+
+<span class="nc" id="L330">        JsonObjectRequest request = new JsonObjectRequest(Request.Method.PUT, url, jsonBody,</span>
+                response -&gt; {
+<span class="nc" id="L332">                    FoodItem updatedItem = gson.fromJson(response.toString(), FoodItem.class);</span>
+<span class="nc" id="L333">                    updateItemInList(updatedItem);</span>
+<span class="nc" id="L334">                },</span>
+                error -&gt; {
+<span class="nc" id="L336">                    Log.e(&quot;Request Error&quot;, String.valueOf(error.getMessage()));</span>
+<span class="nc" id="L337">                }</span>
+        );
+<span class="nc" id="L339">        VolleySingleton.getInstance(getContext()).addToRequestQueue(request);</span>
+<span class="nc" id="L340">    }</span>
+
+    private void performSearch(String query) {
+<span class="pc bpc" id="L343" title="1 of 2 branches missed.">        if (query.isEmpty()) {</span>
+<span class="nc" id="L344">            int currentTab = mealTypeTabs.getSelectedTabPosition();</span>
+<span class="nc" id="L345">            foodItemList.clear();</span>
+<span class="nc bnc" id="L346" title="All 4 branches missed.">            switch (currentTab) {</span>
+                case 0:
+<span class="nc" id="L348">                    foodItemList.addAll(breakfastMenus.get(currentBreakfastMenuIndex).getFoodItems());</span>
+<span class="nc" id="L349">                    break;</span>
+                case 1:
+<span class="nc" id="L351">                    foodItemList.addAll(lunchMenus.get(currentLunchMenuIndex).getFoodItems());</span>
+<span class="nc" id="L352">                    break;</span>
+                case 2:
+<span class="nc" id="L354">                    foodItemList.addAll(dinnerMenus.get(currentDinnerMenuIndex).getFoodItems());</span>
+                    break;
+            }
+<span class="nc" id="L357">            foodAdapter.notifyDataSetChanged();</span>
+<span class="nc" id="L358">            return;</span>
+        }
+
+<span class="pc bpc" id="L361" title="1 of 2 branches missed.">        if (useServerFilter) {</span>
+
+<span class="nc" id="L363">            String url = AppConstants.SERVER_URL + &quot;/item/search?query=&quot; + query;</span>
+
+<span class="nc" id="L365">            JsonObjectRequest request = new JsonObjectRequest(</span>
+                    Request.Method.GET,
+                    url,
+                    null,
+                    response -&gt; {
+                        try {
+<span class="nc" id="L371">                            JSONArray foodItemsArray = response.optJSONArray(&quot;items&quot;);</span>
+<span class="nc" id="L372">                            List&lt;FoodItem&gt; searchResults = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L374" title="All 2 branches missed.">                            if (foodItemsArray != null) {</span>
+<span class="nc bnc" id="L375" title="All 2 branches missed.">                                for (int i = 0; i &lt; foodItemsArray.length(); i++) {</span>
+<span class="nc" id="L376">                                    JSONObject itemJson = foodItemsArray.getJSONObject(i);</span>
+<span class="nc" id="L377">                                    FoodItem item = gson.fromJson(itemJson.toString(), FoodItem.class);</span>
+<span class="nc" id="L378">                                    searchResults.add(item);</span>
+                                }
+                            }
+
+<span class="nc" id="L382">                            updateFoodList(searchResults);</span>
+<span class="nc" id="L383">                        } catch (Exception e) {</span>
+<span class="nc" id="L384">                            Log.e(&quot;Search Error&quot;, &quot;Error parsing response: &quot; + e.getMessage());</span>
+<span class="nc" id="L385">                        }</span>
+<span class="nc" id="L386">                    },</span>
+                    error -&gt; {
+<span class="nc" id="L388">                        Log.e(&quot;Search Error&quot;, &quot;Request failed: &quot; + error.toString());</span>
+<span class="nc" id="L389">                    }</span>
+            );
+
+<span class="nc" id="L392">            request.setRetryPolicy(new DefaultRetryPolicy(</span>
+                    30000,
+                    DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                    DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+            ));
+
+<span class="nc" id="L398">            VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="nc" id="L399">        } else {</span>
+
+            Set&lt;FoodItem&gt; currentItems;
+<span class="fc" id="L402">            int currentTab = mealTypeTabs.getSelectedTabPosition();</span>
+<span class="fc bfc" id="L403" title="All 3 branches covered.">            switch (currentTab) {</span>
+                case 1:
+<span class="fc" id="L405">                    currentItems = lunchMenus.get(currentLunchMenuIndex).getFoodItems();</span>
+<span class="fc" id="L406">                    break;</span>
+                case 2:
+<span class="fc" id="L408">                    currentItems = dinnerMenus.get(currentDinnerMenuIndex).getFoodItems();</span>
+<span class="fc" id="L409">                    break;</span>
+                default:
+<span class="fc" id="L411">                    currentItems = breakfastMenus.get(currentBreakfastMenuIndex).getFoodItems();</span>
+                    break;
+            }
+
+<span class="fc" id="L415">            List&lt;FoodItem&gt; searchResults = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L416">            String lowercaseQuery = query.toLowerCase();</span>
+
+<span class="fc bfc" id="L418" title="All 2 branches covered.">            for (FoodItem item : currentItems) {</span>
+<span class="fc bfc" id="L419" title="All 2 branches covered.">                if (item.getName().toLowerCase().contains(lowercaseQuery) ||</span>
+<span class="pc bpc" id="L420" title="2 of 4 branches missed.">                        (item.getDescription() != null &amp;&amp; item.getDescription().toLowerCase().contains(lowercaseQuery))) {</span>
+<span class="fc" id="L421">                    searchResults.add(item);</span>
+                }
+<span class="fc" id="L423">            }</span>
+
+<span class="fc" id="L425">            updateFoodList(searchResults);</span>
+        }
+<span class="fc" id="L427">    }</span>
+
+    // &lt;/editor-fold&gt;
+
+    // &lt;editor-fold desc=&quot;Helper Methods&quot;&gt;
+
+    private void updateItemInList(FoodItem updatedItem) {
+<span class="nc bnc" id="L434" title="All 2 branches missed.">        for (int i = 0; i &lt; foodItemList.size(); i++) {</span>
+<span class="nc bnc" id="L435" title="All 2 branches missed.">            if (foodItemList.get(i).getId() == updatedItem.getId()) {</span>
+<span class="nc" id="L436">                foodItemList.set(i, updatedItem);</span>
+<span class="nc" id="L437">                foodAdapter.notifyItemChanged(i);</span>
+<span class="nc" id="L438">                break;</span>
+            }
+        }
+<span class="nc" id="L441">    }</span>
+
+    private void showAddDialog() {
+<span class="nc" id="L444">        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());</span>
+<span class="nc" id="L445">        View dialogView = getLayoutInflater().inflate(R.layout.food_item_dialog, null);</span>
+
+<span class="nc" id="L447">        TextInputEditText nameInput = dialogView.findViewById(R.id.editTextName);</span>
+<span class="nc" id="L448">        TextInputEditText descriptionInput = dialogView.findViewById(R.id.editTextDescription);</span>
+<span class="nc" id="L449">        TextInputEditText servingSizeInput = dialogView.findViewById(R.id.editTextServingSize);</span>
+<span class="nc" id="L450">        TextInputEditText caloriesInput = dialogView.findViewById(R.id.editTextCalories);</span>
+<span class="nc" id="L451">        TextInputEditText totalFatInput = dialogView.findViewById(R.id.editTextTotalFat);</span>
+<span class="nc" id="L452">        TextInputEditText sodiumInput = dialogView.findViewById(R.id.editTextSodium);</span>
+<span class="nc" id="L453">        TextInputEditText carbohydrateInput = dialogView.findViewById(R.id.editTextCarbohydrate);</span>
+<span class="nc" id="L454">        TextInputEditText proteinInput = dialogView.findViewById(R.id.editTextProtein);</span>
+
+<span class="nc" id="L456">        AlertDialog dialog = builder</span>
+<span class="nc" id="L457">                .setView(dialogView)</span>
+<span class="nc" id="L458">                .setTitle(&quot;Add Food Item&quot;)</span>
+<span class="nc" id="L459">                .setPositiveButton(&quot;Add&quot;, null)</span>
+<span class="nc" id="L460">                .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="nc" id="L461">                .create();</span>
+
+<span class="nc" id="L463">        dialog.setOnShowListener(dialogInterface -&gt; {</span>
+<span class="nc" id="L464">            Button addButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);</span>
+<span class="nc" id="L465">            addButton.setOnClickListener(v -&gt; {</span>
+                try {
+<span class="nc" id="L467">                    FoodItem newItem = new FoodItem(</span>
+<span class="nc" id="L468">                            nameInput.getText().toString(),</span>
+<span class="nc" id="L469">                            Integer.parseInt(caloriesInput.getText().toString()),</span>
+<span class="nc" id="L470">                            Integer.parseInt(totalFatInput.getText().toString()),</span>
+<span class="nc" id="L471">                            Integer.parseInt(sodiumInput.getText().toString()),</span>
+<span class="nc" id="L472">                            Integer.parseInt(carbohydrateInput.getText().toString()),</span>
+<span class="nc" id="L473">                            Integer.parseInt(proteinInput.getText().toString()),</span>
+<span class="nc" id="L474">                            servingSizeInput.getText().toString(),</span>
+<span class="nc" id="L475">                            descriptionInput.getText().toString()</span>
+                    );
+
+<span class="nc" id="L478">                    createFoodItem(newItem);</span>
+<span class="nc" id="L479">                    dialog.dismiss();</span>
+<span class="nc" id="L480">                } catch (NumberFormatException e) {</span>
+<span class="nc" id="L481">                    Toast.makeText(requireContext(), &quot;Please fill all numeric fields correctly&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L482">                } catch (JSONException e) {</span>
+<span class="nc" id="L483">                    Toast.makeText(requireContext(), &quot;Error creating food item&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L484">                }</span>
+<span class="nc" id="L485">            });</span>
+<span class="nc" id="L486">        });</span>
+
+<span class="nc" id="L488">        dialog.show();</span>
+
+<span class="nc" id="L490">        TextWatcher textWatcher = new TextWatcher() {</span>
+            @Override
+<span class="nc" id="L492">            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}</span>
+
+            @Override
+<span class="nc" id="L495">            public void onTextChanged(CharSequence s, int start, int before, int count) {}</span>
+
+            @Override
+            public void afterTextChanged(Editable s) {
+<span class="nc" id="L499">                Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);</span>
+<span class="nc" id="L500">                positiveButton.setEnabled(</span>
+<span class="nc bnc" id="L501" title="All 2 branches missed.">                        !nameInput.getText().toString().trim().isEmpty() &amp;&amp;</span>
+<span class="nc bnc" id="L502" title="All 2 branches missed.">                                !servingSizeInput.getText().toString().trim().isEmpty() &amp;&amp;</span>
+<span class="nc bnc" id="L503" title="All 2 branches missed.">                                !caloriesInput.getText().toString().trim().isEmpty() &amp;&amp;</span>
+<span class="nc bnc" id="L504" title="All 2 branches missed.">                                !totalFatInput.getText().toString().trim().isEmpty() &amp;&amp;</span>
+<span class="nc bnc" id="L505" title="All 2 branches missed.">                                !sodiumInput.getText().toString().trim().isEmpty() &amp;&amp;</span>
+<span class="nc bnc" id="L506" title="All 2 branches missed.">                                !carbohydrateInput.getText().toString().trim().isEmpty() &amp;&amp;</span>
+<span class="nc bnc" id="L507" title="All 2 branches missed.">                                !proteinInput.getText().toString().trim().isEmpty()</span>
+                );
+<span class="nc" id="L509">            }</span>
+        };
+
+<span class="nc" id="L512">        nameInput.addTextChangedListener(textWatcher);</span>
+<span class="nc" id="L513">        servingSizeInput.addTextChangedListener(textWatcher);</span>
+<span class="nc" id="L514">        caloriesInput.addTextChangedListener(textWatcher);</span>
+<span class="nc" id="L515">        totalFatInput.addTextChangedListener(textWatcher);</span>
+<span class="nc" id="L516">        sodiumInput.addTextChangedListener(textWatcher);</span>
+<span class="nc" id="L517">        carbohydrateInput.addTextChangedListener(textWatcher);</span>
+<span class="nc" id="L518">        proteinInput.addTextChangedListener(textWatcher);</span>
+<span class="nc" id="L519">    }</span>
+
+    private void updateTab(){
+<span class="fc" id="L522">        mealTypeTabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {</span>
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+<span class="fc" id="L525">                EditText searchBar = view.findViewById(R.id.searchBar);</span>
+<span class="fc" id="L526">                String currentSearch = searchBar.getText().toString();</span>
+
+<span class="fc" id="L528">                int position = tab.getPosition();</span>
+<span class="pc bpc" id="L529" title="2 of 4 branches missed.">                switch (position) {</span>
+                    case 0:
+<span class="nc" id="L531">                        foodItemList.clear();</span>
+<span class="nc" id="L532">                        foodItemList.addAll(breakfastMenus.get(currentBreakfastMenuIndex).getFoodItems());</span>
+<span class="nc" id="L533">                        break;</span>
+                    case 1:
+<span class="fc" id="L535">                        foodItemList.clear();</span>
+<span class="fc" id="L536">                        foodItemList.addAll(lunchMenus.get(currentLunchMenuIndex).getFoodItems());</span>
+<span class="fc" id="L537">                        break;</span>
+                    case 2:
+<span class="fc" id="L539">                        foodItemList.clear();</span>
+<span class="fc" id="L540">                        foodItemList.addAll(dinnerMenus.get(currentDinnerMenuIndex).getFoodItems());</span>
+                        break;
+                }
+
+<span class="fc bfc" id="L544" title="All 2 branches covered.">                if (!currentSearch.isEmpty()) {</span>
+<span class="fc" id="L545">                    performSearch(currentSearch);</span>
+                } else {
+<span class="fc" id="L547">                    foodAdapter.notifyDataSetChanged();</span>
+                }
+<span class="fc" id="L549">            }</span>
+
+            @Override
+<span class="fc" id="L552">            public void onTabUnselected(TabLayout.Tab tab) {}</span>
+
+            @Override
+<span class="fc" id="L555">            public void onTabReselected(TabLayout.Tab tab) {}</span>
+        });
+<span class="fc" id="L557">    }</span>
+
+    private void setupSearchAndFilters() {
+<span class="fc" id="L560">        EditText searchBar = view.findViewById(R.id.searchBar);</span>
+<span class="fc" id="L561">        MaterialButtonToggleGroup sortToggleGroup = view.findViewById(R.id.sortToggleGroup);</span>
+<span class="fc" id="L562">        RangeSlider caloriesRangeSlider = view.findViewById(R.id.caloriesRangeSlider);</span>
+<span class="fc" id="L563">        RangeSlider proteinRangeSlider = view.findViewById(R.id.proteinRangeSlider);</span>
+
+<span class="fc" id="L565">        View clientFilterSection = view.findViewById(R.id.clientFilterSection);</span>
+<span class="fc" id="L566">        View serverFilterSection = view.findViewById(R.id.serverFilterSection);</span>
+<span class="fc" id="L567">        SwitchMaterial filterSwitch = view.findViewById(R.id.switchServerFilter);</span>
+
+<span class="fc" id="L569">        filterSwitch.setOnCheckedChangeListener((buttonView, isChecked) -&gt; {</span>
+<span class="nc" id="L570">            useServerFilter = isChecked;</span>
+<span class="nc bnc" id="L571" title="All 2 branches missed.">            clientFilterSection.setVisibility(isChecked ? View.GONE : View.VISIBLE);</span>
+<span class="nc bnc" id="L572" title="All 2 branches missed.">            serverFilterSection.setVisibility(isChecked ? View.VISIBLE : View.GONE);</span>
+<span class="nc" id="L573">            resetAllFilters();</span>
+<span class="nc" id="L574">        });</span>
+
+<span class="fc" id="L576">        caloriesRangeSlider.setValueFrom(0f);</span>
+<span class="fc" id="L577">        caloriesRangeSlider.setValueTo(1000f);</span>
+<span class="fc" id="L578">        caloriesRangeSlider.setStepSize(50f);</span>
+<span class="fc" id="L579">        caloriesRangeSlider.setValues(Collections.singletonList(0f));</span>
+
+<span class="fc" id="L581">        proteinRangeSlider.setValueFrom(0f);</span>
+<span class="fc" id="L582">        proteinRangeSlider.setValueTo(50f);</span>
+<span class="fc" id="L583">        proteinRangeSlider.setStepSize(5f);</span>
+<span class="fc" id="L584">        proteinRangeSlider.setValues(Collections.singletonList(0f));</span>
+
+<span class="fc" id="L586">        searchBar.addTextChangedListener(new TextWatcher() {</span>
+            @Override
+<span class="fc" id="L588">            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}</span>
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+<span class="fc" id="L593">                searchBar.setCompoundDrawablesWithIntrinsicBounds(</span>
+                        R.drawable.ic_search,
+                        0,
+<span class="pc bpc" id="L596" title="1 of 2 branches missed.">                        s.length() &gt; 0 ? R.drawable.ic_clear : 0,</span>
+                        0
+                );
+<span class="fc" id="L599">            }</span>
+
+            @Override
+            public void afterTextChanged(Editable s) {
+<span class="fc" id="L603">                performSearch(s.toString());</span>
+<span class="fc" id="L604">            }</span>
+        });
+
+<span class="fc" id="L607">        searchBar.setOnTouchListener((v, event) -&gt; {</span>
+<span class="fc bfc" id="L608" title="All 2 branches covered.">            if (event.getAction() == MotionEvent.ACTION_UP) {</span>
+<span class="fc" id="L609">                EditText editText = (EditText) v;</span>
+<span class="pc bpc" id="L610" title="1 of 2 branches missed.">                if (editText.getCompoundDrawables()[2] != null) {</span>
+<span class="pc bpc" id="L611" title="1 of 2 branches missed.">                    if (event.getRawX() &gt;= (editText.getRight() - editText.getCompoundDrawables()[2].getBounds().width() - editText.getPaddingEnd())) {</span>
+<span class="nc" id="L612">                        editText.setText(&quot;&quot;);</span>
+<span class="nc" id="L613">                        return true;</span>
+                    }
+                }
+            }
+<span class="fc" id="L617">            return false;</span>
+        });
+
+<span class="fc" id="L620">        setupClientFilters();</span>
+<span class="fc" id="L621">        setupServerFilters();</span>
+<span class="fc" id="L622">    }</span>
+
+    private void setupClientFilters() {
+<span class="fc" id="L625">        RangeSlider caloriesSlider = view.findViewById(R.id.caloriesRangeSlider);</span>
+<span class="fc" id="L626">        RangeSlider proteinSlider = view.findViewById(R.id.proteinRangeSlider);</span>
+<span class="fc" id="L627">        MaterialButtonToggleGroup sortToggleGroup = view.findViewById(R.id.sortToggleGroup);</span>
+
+<span class="fc" id="L629">        caloriesSlider.addOnChangeListener((slider, value, fromUser) -&gt; {</span>
+<span class="nc bnc" id="L630" title="All 4 branches missed.">            if (fromUser &amp;&amp; !useServerFilter) {</span>
+<span class="nc" id="L631">                filterByNutritionClient();</span>
+            }
+<span class="nc" id="L633">        });</span>
+
+<span class="fc" id="L635">        proteinSlider.addOnChangeListener((slider, value, fromUser) -&gt; {</span>
+<span class="nc bnc" id="L636" title="All 4 branches missed.">            if (fromUser &amp;&amp; !useServerFilter) {</span>
+<span class="nc" id="L637">                filterByNutritionClient();</span>
+            }
+<span class="nc" id="L639">        });</span>
+
+<span class="fc" id="L641">        sortToggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -&gt; {</span>
+<span class="pc bpc" id="L642" title="1 of 4 branches missed.">            if (isChecked &amp;&amp; !useServerFilter) {</span>
+<span class="fc bfc" id="L643" title="All 2 branches covered.">                if (checkedId == R.id.btnSortName) {</span>
+<span class="fc" id="L644">                    sortFoodItems(&quot;name&quot;);</span>
+<span class="fc bfc" id="L645" title="All 2 branches covered.">                } else if (checkedId == R.id.btnSortCalories) {</span>
+<span class="fc" id="L646">                    sortFoodItems(&quot;calories&quot;);</span>
+<span class="pc bpc" id="L647" title="1 of 2 branches missed.">                } else if (checkedId == R.id.btnSortProtein) {</span>
+<span class="fc" id="L648">                    sortFoodItems(&quot;protein&quot;);</span>
+                }
+            }
+<span class="fc" id="L651">        });</span>
+
+<span class="fc" id="L653">        Chip lowFatChip = view.findViewById(R.id.chipLowFat);</span>
+<span class="fc" id="L654">        Chip lowCarbChip = view.findViewById(R.id.chipLowCarb);</span>
+<span class="fc" id="L655">        Chip lowSodiumChip = view.findViewById(R.id.chipLowSodium);</span>
+<span class="fc" id="L656">        Chip highProteinChip = view.findViewById(R.id.chipHighProtein);</span>
+
+<span class="fc" id="L658">        View.OnClickListener chipListener = v -&gt; {</span>
+<span class="pc bpc" id="L659" title="1 of 2 branches missed.">            if (!useServerFilter) {</span>
+<span class="fc" id="L660">                filterByNutritionClient();</span>
+            }
+<span class="fc" id="L662">        };</span>
+
+<span class="fc" id="L664">        lowFatChip.setOnClickListener(chipListener);</span>
+<span class="fc" id="L665">        lowCarbChip.setOnClickListener(chipListener);</span>
+<span class="fc" id="L666">        lowSodiumChip.setOnClickListener(chipListener);</span>
+<span class="fc" id="L667">        highProteinChip.setOnClickListener(chipListener);</span>
+<span class="fc" id="L668">    }</span>
+
+    private void setupServerFilters() {
+<span class="fc" id="L671">        MaterialButtonToggleGroup endpointFilterGroup = view.findViewById(R.id.endpointFilterGroup);</span>
+
+<span class="fc" id="L673">        endpointFilterGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -&gt; {</span>
+<span class="nc bnc" id="L674" title="All 4 branches missed.">            if (isChecked &amp;&amp; useServerFilter) {</span>
+<span class="nc bnc" id="L675" title="All 2 branches missed.">                if (checkedId == R.id.btnFilterEqual) {</span>
+<span class="nc" id="L676">                    currentComparisonType = &quot;==&quot;;</span>
+<span class="nc bnc" id="L677" title="All 2 branches missed.">                } else if (checkedId == R.id.btnFilterGreater) {</span>
+<span class="nc" id="L678">                    currentComparisonType = &quot;&gt;=&quot;;</span>
+<span class="nc bnc" id="L679" title="All 2 branches missed.">                } else if (checkedId == R.id.btnFilterLess) {</span>
+<span class="nc" id="L680">                    currentComparisonType = &quot;&lt;=&quot;;</span>
+                }
+<span class="nc" id="L682">                filterByNutritionServer();</span>
+            }
+<span class="nc" id="L684">        });</span>
+<span class="fc" id="L685">    }</span>
+
+    private void filterByNutritionClient() {
+<span class="pc bpc" id="L688" title="1 of 2 branches missed.">        if (!useServerFilter) {</span>
+<span class="fc" id="L689">            RangeSlider caloriesSlider = view.findViewById(R.id.caloriesRangeSlider);</span>
+<span class="fc" id="L690">            RangeSlider proteinSlider = view.findViewById(R.id.proteinRangeSlider);</span>
+<span class="fc" id="L691">            Chip lowFatChip = view.findViewById(R.id.chipLowFat);</span>
+<span class="fc" id="L692">            Chip lowCarbChip = view.findViewById(R.id.chipLowCarb);</span>
+<span class="fc" id="L693">            Chip lowSodiumChip = view.findViewById(R.id.chipLowSodium);</span>
+<span class="fc" id="L694">            Chip highProteinChip = view.findViewById(R.id.chipHighProtein);</span>
+
+            // Get current menu items
+            Set&lt;FoodItem&gt; currentItems;
+<span class="fc" id="L698">            int currentTab = mealTypeTabs.getSelectedTabPosition();</span>
+<span class="pc bpc" id="L699" title="2 of 3 branches missed.">            switch (currentTab) {</span>
+                case 1:
+<span class="nc" id="L701">                    currentItems = lunchMenus.get(currentLunchMenuIndex).getFoodItems();</span>
+<span class="nc" id="L702">                    break;</span>
+                case 2:
+<span class="fc" id="L704">                    currentItems = dinnerMenus.get(currentDinnerMenuIndex).getFoodItems();</span>
+<span class="fc" id="L705">                    break;</span>
+                default:
+<span class="nc" id="L707">                    currentItems = breakfastMenus.get(currentBreakfastMenuIndex).getFoodItems();</span>
+                    break;
+            }
+
+<span class="fc" id="L711">            List&lt;FoodItem&gt; filteredList = new ArrayList&lt;&gt;(currentItems);</span>
+
+            // Apply slider filters
+<span class="fc" id="L714">            float calorieThreshold = caloriesSlider.getValues().get(0);</span>
+<span class="fc" id="L715">            float proteinThreshold = proteinSlider.getValues().get(0);</span>
+
+<span class="fc" id="L717">            filteredList.removeIf(item -&gt;</span>
+<span class="pc bpc" id="L718" title="1 of 2 branches missed.">                    item.getCalories() &lt; calorieThreshold ||</span>
+<span class="pc bpc" id="L719" title="1 of 2 branches missed.">                            item.getProtein() &lt; proteinThreshold</span>
+            );
+
+<span class="pc bpc" id="L722" title="1 of 2 branches missed.">            if (!filteredList.isEmpty()) {</span>
+<span class="fc bfc" id="L723" title="All 2 branches covered.">                if (highProteinChip.isChecked()) {</span>
+<span class="fc" id="L724">                    Collections.sort(filteredList, (a, b) -&gt; Integer.compare(b.getProtein(), a.getProtein()));</span>
+                }
+<span class="pc bpc" id="L726" title="1 of 2 branches missed.">                if (lowFatChip.isChecked()) {</span>
+<span class="fc" id="L727">                    Collections.sort(filteredList, (a, b) -&gt; Integer.compare(a.getTotalFat(), b.getTotalFat()));</span>
+                }
+<span class="fc bfc" id="L729" title="All 2 branches covered.">                if (lowCarbChip.isChecked()) {</span>
+<span class="fc" id="L730">                    Collections.sort(filteredList, (a, b) -&gt; Integer.compare(a.getCarbohydrate(), b.getCarbohydrate()));</span>
+                }
+<span class="fc bfc" id="L732" title="All 2 branches covered.">                if (lowSodiumChip.isChecked()) {</span>
+<span class="fc" id="L733">                    Collections.sort(filteredList, (a, b) -&gt; Integer.compare(a.getSodium(), b.getSodium()));</span>
+                }
+            }
+
+<span class="fc" id="L737">            updateFoodList(filteredList);</span>
+        }
+<span class="fc" id="L739">    }</span>
+
+    private void filterByNutritionServer() {
+<span class="nc bnc" id="L742" title="All 2 branches missed.">        if (useServerFilter) {</span>
+<span class="nc" id="L743">            Map&lt;String, Object&gt; searchTerms = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L744">            searchTerms.put(&quot;comparisonType&quot;, currentComparisonType);</span>
+
+<span class="nc" id="L746">            String url = AppConstants.SERVER_URL + &quot;/item/filter&quot;;</span>
+
+<span class="nc" id="L748">            JsonObjectRequest request = new JsonObjectRequest(</span>
+                    Request.Method.GET,
+                    url,
+                    new JSONObject(searchTerms),
+                    response -&gt; {
+                        try {
+<span class="nc" id="L754">                            JSONArray foodItemsArray = response.optJSONArray(&quot;items&quot;);</span>
+<span class="nc" id="L755">                            List&lt;FoodItem&gt; filteredResults = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L757" title="All 2 branches missed.">                            if (foodItemsArray != null) {</span>
+<span class="nc bnc" id="L758" title="All 2 branches missed.">                                for (int i = 0; i &lt; foodItemsArray.length(); i++) {</span>
+<span class="nc" id="L759">                                    JSONObject itemJson = foodItemsArray.getJSONObject(i);</span>
+<span class="nc" id="L760">                                    FoodItem item = gson.fromJson(itemJson.toString(), FoodItem.class);</span>
+<span class="nc" id="L761">                                    filteredResults.add(item);</span>
+                                }
+                            }
+
+<span class="nc" id="L765">                            updateFoodList(filteredResults);</span>
+<span class="nc" id="L766">                        } catch (Exception e) {</span>
+<span class="nc" id="L767">                            Log.e(&quot;Filter Error&quot;, &quot;Error parsing response: &quot; + e.getMessage());</span>
+<span class="nc" id="L768">                        }</span>
+<span class="nc" id="L769">                    },</span>
+                    error -&gt; {
+<span class="nc" id="L771">                        Log.e(&quot;Filter Error&quot;, &quot;Request failed: &quot; + error.toString());</span>
+<span class="nc" id="L772">                    }</span>
+            );
+
+<span class="nc" id="L775">            request.setRetryPolicy(new DefaultRetryPolicy(</span>
+                    30000,
+                    DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                    DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+            ));
+
+<span class="nc" id="L781">            VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+        }
+<span class="nc" id="L783">    }</span>
+
+    private void filterByNutrition() {
+<span class="nc" id="L786">        RangeSlider caloriesSlider = view.findViewById(R.id.caloriesRangeSlider);</span>
+<span class="nc" id="L787">        RangeSlider proteinSlider = view.findViewById(R.id.proteinRangeSlider);</span>
+<span class="nc" id="L788">        Chip lowFatChip = view.findViewById(R.id.chipLowFat);</span>
+<span class="nc" id="L789">        Chip lowCarbChip = view.findViewById(R.id.chipLowCarb);</span>
+<span class="nc" id="L790">        Chip lowSodiumChip = view.findViewById(R.id.chipLowSodium);</span>
+<span class="nc" id="L791">        Chip highProteinChip = view.findViewById(R.id.chipHighProtein);</span>
+
+<span class="nc" id="L793">        Map&lt;String, Object&gt; searchTerms = new HashMap&lt;&gt;();</span>
+
+<span class="nc" id="L795">        float calorieValue = caloriesSlider.getValues().get(0);</span>
+<span class="nc bnc" id="L796" title="All 2 branches missed.">        if (calorieValue &gt; 0) {</span>
+<span class="nc" id="L797">            searchTerms.put(&quot;calories&quot;, (int)calorieValue);</span>
+<span class="nc" id="L798">            searchTerms.put(&quot;caloriescomp&quot;, currentComparisonType);</span>
+        }
+
+<span class="nc" id="L801">        float proteinValue = proteinSlider.getValues().get(0);</span>
+<span class="nc bnc" id="L802" title="All 2 branches missed.">        if (proteinValue &gt; 0) {</span>
+<span class="nc" id="L803">            searchTerms.put(&quot;protein&quot;, (int)proteinValue);</span>
+<span class="nc" id="L804">            searchTerms.put(&quot;proteincomp&quot;, currentComparisonType);</span>
+        }
+
+<span class="nc bnc" id="L807" title="All 2 branches missed.">        if (lowFatChip.isChecked()) {</span>
+<span class="nc" id="L808">            searchTerms.put(&quot;totalfat&quot;, 3);</span>
+<span class="nc" id="L809">            searchTerms.put(&quot;totalfatcomp&quot;, &quot;&lt;=&quot;);</span>
+        }
+<span class="nc bnc" id="L811" title="All 2 branches missed.">        if (lowCarbChip.isChecked()) {</span>
+<span class="nc" id="L812">            searchTerms.put(&quot;carbohydrate&quot;, 15);</span>
+<span class="nc" id="L813">            searchTerms.put(&quot;carbohydratecomp&quot;, &quot;&lt;=&quot;);</span>
+        }
+<span class="nc bnc" id="L815" title="All 2 branches missed.">        if (lowSodiumChip.isChecked()) {</span>
+<span class="nc" id="L816">            searchTerms.put(&quot;sodium&quot;, 140);</span>
+<span class="nc" id="L817">            searchTerms.put(&quot;sodiumcomp&quot;, &quot;&lt;=&quot;);</span>
+        }
+<span class="nc bnc" id="L819" title="All 2 branches missed.">        if (highProteinChip.isChecked()) {</span>
+<span class="nc" id="L820">            searchTerms.put(&quot;protein&quot;, 20);</span>
+<span class="nc" id="L821">            searchTerms.put(&quot;proteincomp&quot;, &quot;&gt;=&quot;);</span>
+        }
+
+<span class="nc" id="L824">        String url = AppConstants.SERVER_URL + &quot;/item&quot;;</span>
+<span class="nc" id="L825">        JSONObject jsonBody = new JSONObject(searchTerms);</span>
+
+<span class="nc" id="L827">        JsonArrayRequest request = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                url,
+<span class="nc" id="L830">                jsonBody.names(),</span>
+                response -&gt; {
+<span class="nc" id="L832">                    List&lt;FoodItem&gt; filteredResults = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L833" title="All 2 branches missed.">                    for (int i = 0; i &lt; response.length(); i++) {</span>
+                        try {
+<span class="nc" id="L835">                            FoodItem item = gson.fromJson(response.getJSONObject(i).toString(), FoodItem.class);</span>
+<span class="nc" id="L836">                            Log.i(&quot;MenuFragment&quot;, &quot;Updated search with search terms [&quot; + searchTerms.toString() + &quot;] from server&quot;);</span>
+<span class="nc" id="L837">                            filteredResults.add(item);</span>
+<span class="nc" id="L838">                        } catch (Exception e) {</span>
+<span class="nc" id="L839">                            Log.e(&quot;Filter Error&quot;, e.getMessage());</span>
+<span class="nc" id="L840">                        }</span>
+                    }
+<span class="nc" id="L842">                    updateFoodList(filteredResults);</span>
+<span class="nc" id="L843">                },</span>
+<span class="nc" id="L844">                error -&gt; Log.e(&quot;Filter Error&quot;, error.toString())</span>
+        );
+
+<span class="nc" id="L847">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="nc" id="L848">    }</span>
+
+    private void applyFilters(Map&lt;String, Object&gt; filters) {
+<span class="nc" id="L851">        String url = AppConstants.SERVER_URL + &quot;/item&quot;;</span>
+
+<span class="nc" id="L853">        JsonArrayRequest request = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                url,
+<span class="nc" id="L856">                new JSONObject(filters).names(),</span>
+                response -&gt; {
+<span class="nc" id="L858">                    List&lt;FoodItem&gt; filteredResults = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L859" title="All 2 branches missed.">                    for (int i = 0; i &lt; response.length(); i++) {</span>
+                        try {
+<span class="nc" id="L861">                            FoodItem item = gson.fromJson(response.getJSONObject(i).toString(), FoodItem.class);</span>
+<span class="nc" id="L862">                            filteredResults.add(item);</span>
+<span class="nc" id="L863">                        } catch (Exception e) {</span>
+<span class="nc" id="L864">                            Log.e(&quot;Filter Error&quot;, e.getMessage());</span>
+<span class="nc" id="L865">                        }</span>
+                    }
+<span class="nc" id="L867">                    updateFoodList(filteredResults);</span>
+<span class="nc" id="L868">                },</span>
+<span class="nc" id="L869">                error -&gt; Log.e(&quot;Filter Error&quot;, error.toString())</span>
+        );
+
+<span class="nc" id="L872">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="nc" id="L873">    }</span>
+
+    private void sortFoodItems(String sortBy) {
+<span class="fc" id="L876">        List&lt;FoodItem&gt; sortedList = new ArrayList&lt;&gt;(foodItemList);</span>
+<span class="pc bpc" id="L877" title="1 of 4 branches missed.">        switch (sortBy) {</span>
+            case &quot;name&quot;:
+<span class="fc" id="L879">                Collections.sort(sortedList, (a, b) -&gt; a.getName().compareTo(b.getName()));</span>
+<span class="fc" id="L880">                break;</span>
+            case &quot;calories&quot;:
+<span class="fc" id="L882">                Collections.sort(sortedList, (a, b) -&gt; Integer.compare(b.getCalories(), a.getCalories()));</span>
+<span class="fc" id="L883">                break;</span>
+            case &quot;protein&quot;:
+<span class="fc" id="L885">                Collections.sort(sortedList, (a, b) -&gt; Integer.compare(b.getProtein(), a.getProtein()));</span>
+                break;
+        }
+<span class="fc" id="L888">        updateFoodList(sortedList);</span>
+<span class="fc" id="L889">    }</span>
+
+    private void updateFoodList(List&lt;FoodItem&gt; newList) {
+<span class="fc" id="L892">        foodItemList.clear();</span>
+<span class="fc" id="L893">        foodItemList.addAll(newList);</span>
+<span class="fc" id="L894">        foodAdapter.notifyDataSetChanged();</span>
+<span class="fc" id="L895">    }</span>
+
+    private void setupNutritionalFilterChips() {
+<span class="nc" id="L898">        Chip lowFatChip = view.findViewById(R.id.chipLowFat);</span>
+<span class="nc" id="L899">        Chip lowCarbChip = view.findViewById(R.id.chipLowCarb);</span>
+<span class="nc" id="L900">        Chip lowSodiumChip = view.findViewById(R.id.chipLowSodium);</span>
+<span class="nc" id="L901">        Chip highProteinChip = view.findViewById(R.id.chipHighProtein);</span>
+
+<span class="nc" id="L903">        View.OnClickListener chipListener = v -&gt; filterByNutrition();</span>
+
+<span class="nc" id="L905">        lowFatChip.setOnClickListener(chipListener);</span>
+<span class="nc" id="L906">        lowCarbChip.setOnClickListener(chipListener);</span>
+<span class="nc" id="L907">        lowSodiumChip.setOnClickListener(chipListener);</span>
+<span class="nc" id="L908">        highProteinChip.setOnClickListener(chipListener);</span>
+<span class="nc" id="L909">    }</span>
+
+    private void resetAllFilters() {
+<span class="nc" id="L912">        RangeSlider caloriesRangeSlider = view.findViewById(R.id.caloriesRangeSlider);</span>
+<span class="nc" id="L913">        RangeSlider proteinRangeSlider = view.findViewById(R.id.proteinRangeSlider);</span>
+
+<span class="nc" id="L915">        caloriesRangeSlider.setValues(Collections.singletonList(0f));</span>
+<span class="nc" id="L916">        proteinRangeSlider.setValues(Collections.singletonList(0f));</span>
+
+<span class="nc" id="L918">        Chip lowFatChip = view.findViewById(R.id.chipLowFat);</span>
+<span class="nc" id="L919">        Chip lowCarbChip = view.findViewById(R.id.chipLowCarb);</span>
+<span class="nc" id="L920">        Chip lowSodiumChip = view.findViewById(R.id.chipLowSodium);</span>
+<span class="nc" id="L921">        Chip highProteinChip = view.findViewById(R.id.chipHighProtein);</span>
+
+<span class="nc" id="L923">        MaterialButtonToggleGroup endpointFilterGroup = view.findViewById(R.id.endpointFilterGroup);</span>
+<span class="nc" id="L924">        endpointFilterGroup.clearChecked();</span>
+<span class="nc" id="L925">        currentComparisonType = &quot;==&quot;;</span>
+
+<span class="nc" id="L927">        lowFatChip.setChecked(false);</span>
+<span class="nc" id="L928">        lowCarbChip.setChecked(false);</span>
+<span class="nc" id="L929">        lowSodiumChip.setChecked(false);</span>
+<span class="nc" id="L930">        highProteinChip.setChecked(false);</span>
+
+<span class="nc" id="L932">        MaterialButtonToggleGroup sortToggleGroup = view.findViewById(R.id.sortToggleGroup);</span>
+<span class="nc" id="L933">        sortToggleGroup.clearChecked();</span>
+
+<span class="nc" id="L935">        int currentTab = mealTypeTabs.getSelectedTabPosition();</span>
+<span class="nc" id="L936">        foodItemList.clear();</span>
+<span class="nc bnc" id="L937" title="All 4 branches missed.">        switch (currentTab) {</span>
+            case 0:
+<span class="nc" id="L939">                foodItemList.addAll(breakfastMenus.get(currentBreakfastMenuIndex).getFoodItems());</span>
+<span class="nc" id="L940">                break;</span>
+            case 1:
+<span class="nc" id="L942">                foodItemList.addAll(lunchMenus.get(currentLunchMenuIndex).getFoodItems());</span>
+<span class="nc" id="L943">                break;</span>
+            case 2:
+<span class="nc" id="L945">                foodItemList.addAll(dinnerMenus.get(currentDinnerMenuIndex).getFoodItems());</span>
+                break;
+        }
+<span class="nc" id="L948">        foodAdapter.notifyDataSetChanged();</span>
+<span class="nc" id="L949">    }</span>
+
+    private void showMenuSelectionDialog() {
+<span class="nc" id="L952">        menuSelectionDialog = new BottomSheetDialog(requireContext(), R.style.BottomSheetDialogTheme);</span>
+<span class="nc" id="L953">        View dialogView = getLayoutInflater().inflate(R.layout.menu_selection_dialog, null);</span>
+<span class="nc" id="L954">        menuSelectionDialog.setContentView(dialogView);</span>
+
+<span class="nc" id="L956">        BottomSheetBehavior&lt;View&gt; behavior = BottomSheetBehavior.from((View) dialogView.getParent());</span>
+<span class="nc" id="L957">        behavior.setPeekHeight(getResources().getDisplayMetrics().heightPixels / 2);</span>
+<span class="nc" id="L958">        behavior.setState(BottomSheetBehavior.STATE_EXPANDED);</span>
+
+        // Initialize RecyclerViews after dialog view is inflated
+<span class="nc" id="L961">        breakfastMenuList = dialogView.findViewById(R.id.breakfastMenuList);</span>
+<span class="nc" id="L962">        lunchMenuList = dialogView.findViewById(R.id.lunchMenuList);</span>
+<span class="nc" id="L963">        dinnerMenuList = dialogView.findViewById(R.id.dinnerMenuList);</span>
+
+<span class="nc" id="L965">        setupMenuLists();</span>
+<span class="nc" id="L966">        menuSelectionDialog.show();</span>
+<span class="nc" id="L967">    }</span>
+
+    private void setupMenuLists() {
+<span class="nc bnc" id="L970" title="All 6 branches missed.">        if (breakfastMenuList == null || lunchMenuList == null || dinnerMenuList == null) {</span>
+<span class="nc" id="L971">            Log.e(&quot;MenuFragment&quot;, &quot;RecyclerViews not properly initialized&quot;);</span>
+<span class="nc" id="L972">            return;</span>
+        }
+
+        // Setup Breakfast Menu List
+<span class="nc" id="L976">        breakfastMenuList.setLayoutManager(new LinearLayoutManager(requireContext()));</span>
+<span class="nc" id="L977">        breakfastAdapter = new MenuSelectionAdapter(breakfastMenus, (position, menu) -&gt; {</span>
+<span class="nc" id="L978">            currentBreakfastMenuIndex = position;</span>
+<span class="nc bnc" id="L979" title="All 2 branches missed.">            if (mealTypeTabs.getSelectedTabPosition() == 0) {</span>
+<span class="nc" id="L980">                updateCurrentMenuDisplay();</span>
+            }
+<span class="nc" id="L982">            saveMenuSelections();</span>
+<span class="nc" id="L983">        });</span>
+<span class="nc" id="L984">        breakfastMenuList.setAdapter(breakfastAdapter);</span>
+<span class="nc bnc" id="L985" title="All 4 branches missed.">        if (currentBreakfastMenuIndex &gt;= 0 &amp;&amp; currentBreakfastMenuIndex &lt; breakfastMenus.size()) {</span>
+<span class="nc" id="L986">            breakfastAdapter.setSelectedPosition(currentBreakfastMenuIndex);</span>
+        }
+
+<span class="nc" id="L989">        lunchMenuList.setLayoutManager(new LinearLayoutManager(requireContext()));</span>
+<span class="nc" id="L990">        lunchAdapter = new MenuSelectionAdapter(lunchMenus, (position, menu) -&gt; {</span>
+<span class="nc" id="L991">            currentLunchMenuIndex = position;</span>
+<span class="nc bnc" id="L992" title="All 2 branches missed.">            if (mealTypeTabs.getSelectedTabPosition() == 1) {</span>
+<span class="nc" id="L993">                updateCurrentMenuDisplay();</span>
+            }
+<span class="nc" id="L995">            saveMenuSelections();</span>
+<span class="nc" id="L996">        });</span>
+<span class="nc" id="L997">        lunchMenuList.setAdapter(lunchAdapter);</span>
+<span class="nc bnc" id="L998" title="All 4 branches missed.">        if (currentLunchMenuIndex &gt;= 0 &amp;&amp; currentLunchMenuIndex &lt; lunchMenus.size()) {</span>
+<span class="nc" id="L999">            lunchAdapter.setSelectedPosition(currentLunchMenuIndex);</span>
+        }
+
+<span class="nc" id="L1002">        dinnerMenuList.setLayoutManager(new LinearLayoutManager(requireContext()));</span>
+<span class="nc" id="L1003">        dinnerAdapter = new MenuSelectionAdapter(dinnerMenus, (position, menu) -&gt; {</span>
+<span class="nc" id="L1004">            currentDinnerMenuIndex = position;</span>
+<span class="nc bnc" id="L1005" title="All 2 branches missed.">            if (mealTypeTabs.getSelectedTabPosition() == 2) {</span>
+<span class="nc" id="L1006">                updateCurrentMenuDisplay();</span>
+            }
+<span class="nc" id="L1008">            saveMenuSelections();</span>
+<span class="nc" id="L1009">        });</span>
+<span class="nc" id="L1010">        dinnerMenuList.setAdapter(dinnerAdapter);</span>
+<span class="nc bnc" id="L1011" title="All 4 branches missed.">        if (currentDinnerMenuIndex &gt;= 0 &amp;&amp; currentDinnerMenuIndex &lt; dinnerMenus.size()) {</span>
+<span class="nc" id="L1012">            dinnerAdapter.setSelectedPosition(currentDinnerMenuIndex);</span>
+        }
+<span class="nc" id="L1014">    }</span>
+
+    private void saveMenuSelections() {
+<span class="nc" id="L1017">        SharedPreferences prefs = requireContext().getSharedPreferences(</span>
+                &quot;MenuPreferences&quot;, Context.MODE_PRIVATE);
+<span class="nc" id="L1019">        SharedPreferences.Editor editor = prefs.edit();</span>
+<span class="nc" id="L1020">        editor.putInt(&quot;current_breakfast_index&quot;, currentBreakfastMenuIndex);</span>
+<span class="nc" id="L1021">        editor.putInt(&quot;current_lunch_index&quot;, currentLunchMenuIndex);</span>
+<span class="nc" id="L1022">        editor.putInt(&quot;current_dinner_index&quot;, currentDinnerMenuIndex);</span>
+<span class="nc" id="L1023">        editor.apply();</span>
+
+<span class="nc" id="L1025">        Toast.makeText(requireContext(), &quot;Menu selection updated&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L1026">    }</span>
+
+    private void loadSavedSelections() {
+<span class="fc" id="L1029">        SharedPreferences prefs = requireContext().getSharedPreferences(</span>
+                &quot;MenuPreferences&quot;, Context.MODE_PRIVATE);
+<span class="fc" id="L1031">        currentBreakfastMenuIndex = prefs.getInt(&quot;current_breakfast_index&quot;, 0);</span>
+<span class="fc" id="L1032">        currentLunchMenuIndex = prefs.getInt(&quot;current_lunch_index&quot;, 0);</span>
+<span class="fc" id="L1033">        currentDinnerMenuIndex = prefs.getInt(&quot;current_dinner_index&quot;, 0);</span>
+<span class="fc" id="L1034">    }</span>
+
+    @Override
+    public void onResume() {
+<span class="fc" id="L1038">        super.onResume();</span>
+<span class="fc" id="L1039">        loadSavedSelections();</span>
+<span class="fc" id="L1040">        updateCurrentMenuDisplay();</span>
+<span class="fc" id="L1041">    }</span>
+
+    private void updateCurrentMenuDisplay() {
+<span class="fc" id="L1044">        int currentTab = mealTypeTabs.getSelectedTabPosition();</span>
+<span class="fc" id="L1045">        foodItemList.clear();</span>
+
+        try {
+<span class="pc bpc" id="L1048" title="3 of 4 branches missed.">            switch (currentTab) {</span>
+                case 0: // Breakfast
+<span class="pc bpc" id="L1050" title="1 of 4 branches missed.">                    if (!breakfastMenus.isEmpty() &amp;&amp; currentBreakfastMenuIndex &lt; breakfastMenus.size()) {</span>
+<span class="fc" id="L1051">                        foodItemList.addAll(breakfastMenus.get(currentBreakfastMenuIndex).getFoodItems());</span>
+                    }
+                    break;
+                case 1: // Lunch
+<span class="nc bnc" id="L1055" title="All 4 branches missed.">                    if (!lunchMenus.isEmpty() &amp;&amp; currentLunchMenuIndex &lt; lunchMenus.size()) {</span>
+<span class="nc" id="L1056">                        foodItemList.addAll(lunchMenus.get(currentLunchMenuIndex).getFoodItems());</span>
+                    }
+                    break;
+                case 2: // Dinner
+<span class="nc bnc" id="L1060" title="All 4 branches missed.">                    if (!dinnerMenus.isEmpty() &amp;&amp; currentDinnerMenuIndex &lt; dinnerMenus.size()) {</span>
+<span class="nc" id="L1061">                        foodItemList.addAll(dinnerMenus.get(currentDinnerMenuIndex).getFoodItems());</span>
+                    }
+                    break;
+            }
+<span class="nc" id="L1065">        } catch (Exception e) {</span>
+<span class="nc" id="L1066">            Log.e(&quot;MenuFragment&quot;, &quot;Error updating menu display: &quot; + e.getMessage());</span>
+<span class="nc" id="L1067">            Toast.makeText(requireContext(), &quot;Error loading menu items&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="fc" id="L1068">        }</span>
+
+<span class="fc" id="L1070">        foodAdapter.notifyDataSetChanged();</span>
+<span class="fc" id="L1071">    }</span>
+    //&lt;/editor-fold&gt;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

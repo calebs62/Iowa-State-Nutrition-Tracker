@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProfileInitializeActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.activities</a> &gt; <span class="el_source">ProfileInitializeActivity.java</span></div><h1>ProfileInitializeActivity.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.activities;
+
+import static android.text.TextUtils.isEmpty;
+
+import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
+import android.util.Log;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.example.a1_jubair_6_frontend.R;
+import com.example.a1_jubair_6_frontend.constants.AppConstants;
+import com.example.a1_jubair_6_frontend.fragments.HomePageFragment;
+import com.example.a1_jubair_6_frontend.managers.ProfileDataManager;
+import com.example.a1_jubair_6_frontend.models.User;
+import com.example.a1_jubair_6_frontend.network.VolleySingleton;
+import com.example.a1_jubair_6_frontend.network.WebSocketClient;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Activity class to initialize and manage the user's profile data, including weight, height,
+ * and BMI calculations. It also manages adding the user to a specific group based on the selected
+ * goal (e.g., lose weight, gain weight, gain muscle).
+ *
+ * @author Caleb Sanchez, Alexander Svobodny
+ */
+<span class="nc" id="L47">public class ProfileInitializeActivity extends AppCompatActivity {</span>
+
+    private ProfileDataManager profileDataManager;
+    private EditText userWeight, userHeight;
+    private TextView userGreeting, recommendation1, recommendation2, recommendation3;
+    private Button loseWeight, gainWeight, gainMuscle;
+    private Button confirm;
+    private WebSocketClient webSocketClient;
+    private int id;
+    private String sessionToken;
+<span class="nc" id="L57">    private int recommendedPlan = -1;</span>
+
+    /**
+     * Called when the activity is created. Initializes the layout, retrieves the session token,
+     * and sets up the buttons for user interaction.
+     *
+     * @param savedInstanceState the saved state of the activity (if any).
+     */
+    @SuppressLint({&quot;MissingInflatedId&quot;, &quot;ResourceAsColor&quot;})
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState){
+<span class="nc" id="L68">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L69">        profileDataManager = new ProfileDataManager(this);</span>
+<span class="nc" id="L70">        id = getIntent().getIntExtra(&quot;id&quot;, -1);</span>
+<span class="nc" id="L71">        getSessionToken(id);</span>
+
+<span class="nc" id="L73">        setContentView(R.layout.activity_profile_initialize);</span>
+
+<span class="nc" id="L75">        userGreeting = findViewById(R.id.tvGreeting);</span>
+<span class="nc" id="L76">        userGreeting.setText(String.format(&quot;Hello, &quot; + profileDataManager.getFirstname() + &quot;!&quot;));</span>
+
+<span class="nc" id="L78">        userWeight = findViewById(R.id.etWeight);</span>
+<span class="nc" id="L79">        userHeight = findViewById(R.id.etHeight);</span>
+<span class="nc" id="L80">        confirm = findViewById(R.id.btnConfirm);</span>
+
+
+<span class="nc" id="L83">        loseWeight = findViewById(R.id.btnLoseWeight);</span>
+<span class="nc" id="L84">        gainWeight = findViewById(R.id.btnGainWeight);</span>
+<span class="nc" id="L85">        gainMuscle = findViewById(R.id.btnGainMuscle);</span>
+
+<span class="nc" id="L87">        recommendation1 = findViewById(R.id.tvRecommendation1);</span>
+<span class="nc" id="L88">        recommendation2 = findViewById(R.id.tvRecommendation2);</span>
+<span class="nc" id="L89">        recommendation3 = findViewById(R.id.tvRecommendation3);</span>
+
+<span class="nc" id="L91">        confirm.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L92">            calculateBMI();</span>
+<span class="nc" id="L93">            int color = ContextCompat.getColor(this, R.color.Iowa_State_Gold);</span>
+<span class="nc" id="L94">            int def = ContextCompat.getColor(this, R.color.Iowa_State_Red);</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">            if(recommendedPlan == 0) {</span>
+<span class="nc" id="L96">                gainWeight.setBackgroundColor(def);</span>
+<span class="nc" id="L97">                gainMuscle.setBackgroundColor(def);</span>
+<span class="nc" id="L98">                loseWeight.setBackgroundColor(color);</span>
+
+<span class="nc" id="L100">                recommendation1.setVisibility(v.VISIBLE);</span>
+<span class="nc" id="L101">                recommendation2.setVisibility(v.GONE);</span>
+<span class="nc" id="L102">                recommendation3.setVisibility(v.GONE);</span>
+            }
+<span class="nc bnc" id="L104" title="All 2 branches missed.">            else if(recommendedPlan == 1) {</span>
+<span class="nc" id="L105">                gainWeight.setBackgroundColor(color);</span>
+<span class="nc" id="L106">                gainMuscle.setBackgroundColor(def);</span>
+<span class="nc" id="L107">                loseWeight.setBackgroundColor(def);</span>
+
+<span class="nc" id="L109">                recommendation1.setVisibility(v.GONE);</span>
+<span class="nc" id="L110">                recommendation2.setVisibility(v.VISIBLE);</span>
+<span class="nc" id="L111">                recommendation3.setVisibility(v.GONE);</span>
+            }
+<span class="nc bnc" id="L113" title="All 2 branches missed.">            else if(recommendedPlan == 2) {</span>
+<span class="nc" id="L114">                gainWeight.setBackgroundColor(def);</span>
+<span class="nc" id="L115">                gainMuscle.setBackgroundColor(color);</span>
+<span class="nc" id="L116">                loseWeight.setBackgroundColor(def);</span>
+
+<span class="nc" id="L118">                recommendation1.setVisibility(v.GONE);</span>
+<span class="nc" id="L119">                recommendation2.setVisibility(v.GONE);</span>
+<span class="nc" id="L120">                recommendation3.setVisibility(v.VISIBLE);</span>
+            }
+            else {
+<span class="nc" id="L123">                Toast.makeText(this, &quot;Error recommending food plan&quot;, Toast.LENGTH_SHORT).show();</span>
+            }
+<span class="nc" id="L125">        });</span>
+
+<span class="nc" id="L127">        loseWeight.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L128">            addUserToGroup(id, 1);</span>
+<span class="nc" id="L129">            Intent exploreIntent = new Intent(ProfileInitializeActivity.this, BaseActivity.class);</span>
+<span class="nc" id="L130">            exploreIntent.putExtra(BaseActivity.EXTRA_INITIAL_FRAGMENT, HomePageFragment.class.getName());</span>
+<span class="nc" id="L131">            startActivity(exploreIntent);</span>
+<span class="nc" id="L132">            finish();</span>
+<span class="nc" id="L133">        });</span>
+
+<span class="nc" id="L135">        gainWeight.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L136">            addUserToGroup(id, 2);</span>
+<span class="nc" id="L137">            Intent exploreIntent = new Intent(ProfileInitializeActivity.this, BaseActivity.class);</span>
+<span class="nc" id="L138">            exploreIntent.putExtra(BaseActivity.EXTRA_INITIAL_FRAGMENT, HomePageFragment.class.getName());</span>
+<span class="nc" id="L139">            startActivity(exploreIntent);</span>
+<span class="nc" id="L140">            finish();</span>
+<span class="nc" id="L141">        });</span>
+
+<span class="nc" id="L143">        gainMuscle.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L144">            addUserToGroup(id, 3);</span>
+<span class="nc" id="L145">            Intent exploreIntent = new Intent(ProfileInitializeActivity.this, BaseActivity.class);</span>
+<span class="nc" id="L146">            exploreIntent.putExtra(BaseActivity.EXTRA_INITIAL_FRAGMENT, HomePageFragment.class.getName());</span>
+<span class="nc" id="L147">            startActivity(exploreIntent);</span>
+<span class="nc" id="L148">            finish();</span>
+<span class="nc" id="L149">        });</span>
+<span class="nc" id="L150">    }</span>
+
+    /**
+     * Saves the user's weight and height to local storage and sends the data to the server.
+     *
+     * @param weight the user's weight.
+     * @param height the user's height.
+     */
+    private void saveNewValue(String weight, String height) {
+<span class="nc" id="L159">        int usrWeight = Integer.parseInt(weight);</span>
+<span class="nc" id="L160">        int usrHeight = Integer.parseInt(height);</span>
+<span class="nc" id="L161">        profileDataManager.setWeight(usrWeight);</span>
+<span class="nc" id="L162">        profileDataManager.setHeight(usrHeight);</span>
+<span class="nc" id="L163">        updateWeightToServer(usrWeight, id);</span>
+<span class="nc" id="L164">        updateHeightToServer(usrHeight, id);</span>
+<span class="nc" id="L165">    }</span>
+
+    /**
+     * Sends a request to the server to update the user's weight.
+     *
+     * @param weight the new weight of the user.
+     * @param id the ID of the user.
+     */
+    public void updateWeightToServer(int weight, int id){
+        try {
+<span class="nc" id="L175">            JSONObject requestBody = new JSONObject();</span>
+<span class="nc" id="L176">            requestBody.put(&quot;weight&quot;, weight);</span>
+
+<span class="nc" id="L178">            String url = AppConstants.SERVER_URL + &quot;/user/update/&quot; + id;</span>
+
+<span class="nc" id="L180">            JsonObjectRequest request = new JsonObjectRequest(</span>
+                    Request.Method.PUT,
+                    url,
+                    requestBody,
+                    response -&gt; {
+<span class="nc" id="L185">                        Toast.makeText(this, &quot;Weight updated successfully&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L186">                    },</span>
+                    error -&gt; {
+<span class="nc" id="L188">                        Toast.makeText(this, &quot;Failed to update weight&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L189">                    }</span>
+<span class="nc" id="L190">            ){</span>
+                @Override
+                public Map&lt;String, String&gt; getHeaders(){
+<span class="nc" id="L193">                    Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L194">                    headers.put(&quot;Content-Type&quot;, &quot;application/json&quot;);</span>
+<span class="nc" id="L195">                    return headers;</span>
+                }
+            };
+
+<span class="nc" id="L199">            VolleySingleton.getInstance(this).addToRequestQueue(request);</span>
+<span class="nc" id="L200">        } catch (Exception e) {</span>
+<span class="nc" id="L201">            Toast.makeText(this, &quot;Error preparing weight upload&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L202">        }</span>
+<span class="nc" id="L203">    }</span>
+
+    /**
+     * Sends a request to the server to update the user's height.
+     *
+     * @param height the new height of the user.
+     * @param id the ID of the user.
+     */
+    public void updateHeightToServer(int height, int id){
+        try {
+<span class="nc" id="L213">            JSONObject requestBody = new JSONObject();</span>
+<span class="nc" id="L214">            requestBody.put(&quot;height&quot;, height);</span>
+
+<span class="nc" id="L216">            String url = AppConstants.SERVER_URL + &quot;/user/update/&quot; + id;</span>
+
+<span class="nc" id="L218">            JsonObjectRequest request = new JsonObjectRequest(</span>
+                    Request.Method.PUT,
+                    url,
+                    requestBody,
+                    response -&gt; {
+<span class="nc" id="L223">                        Toast.makeText(this, &quot;Height updated successfully&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L224">                    },</span>
+                    error -&gt; {
+<span class="nc" id="L226">                        Toast.makeText(this, &quot;Failed to update height&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L227">                    }</span>
+<span class="nc" id="L228">            ){</span>
+                @Override
+                public Map&lt;String, String&gt; getHeaders(){
+<span class="nc" id="L231">                    Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L232">                    headers.put(&quot;Content-Type&quot;, &quot;application/json&quot;);</span>
+<span class="nc" id="L233">                    return headers;</span>
+                }
+            };
+
+<span class="nc" id="L237">            VolleySingleton.getInstance(this).addToRequestQueue(request);</span>
+<span class="nc" id="L238">        } catch (Exception e) {</span>
+<span class="nc" id="L239">            Toast.makeText(this, &quot;Error preparing height upload&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L240">        }</span>
+<span class="nc" id="L241">    }</span>
+
+    /**
+     * Calculates the user's BMI based on the input weight and height.
+     * The result is displayed on the screen.
+     */
+    public void calculateBMI() {
+<span class="nc bnc" id="L248" title="All 4 branches missed.">        if (!isEmpty(userWeight.getText().toString()) &amp;&amp; !isEmpty(userHeight.getText().toString())) {</span>
+<span class="nc" id="L249">            saveNewValue(userWeight.getText().toString(), userHeight.getText().toString());</span>
+
+<span class="nc" id="L251">            Double BMI = (703 * (Integer.parseInt(userWeight.getText().toString())) /</span>
+<span class="nc" id="L252">                    (Math.pow(Integer.parseInt(userHeight.getText().toString()), 2)));</span>
+<span class="nc" id="L253">            TextView BMIValue = findViewById(R.id.tvBMIValue);</span>
+
+<span class="nc" id="L255">            String formatted = String.format(&quot;%.2f&quot;, BMI);</span>
+<span class="nc" id="L256">            BMI = Double.parseDouble(formatted);</span>
+<span class="nc" id="L257">            Log.i(&quot;BMI calc&quot;, BMI.toString());</span>
+
+            int color;
+            String message;
+<span class="nc bnc" id="L261" title="All 2 branches missed.">            if (BMI &lt; 18.5) {</span>
+<span class="nc" id="L262">                color = getResources().getColor(R.color.blue);</span>
+<span class="nc" id="L263">                message = &quot;You are underweight.&quot;;</span>
+<span class="nc" id="L264">                recommendedPlan = 1;</span>
+<span class="nc bnc" id="L265" title="All 4 branches missed.">            } else if (18.5 &lt;= BMI &amp;&amp; BMI &lt;= 24.9) {</span>
+<span class="nc" id="L266">                color = getResources().getColor(R.color.green);</span>
+<span class="nc" id="L267">                message = &quot;You are at a healthy weight.&quot;;</span>
+<span class="nc" id="L268">                recommendedPlan = 2;</span>
+<span class="nc bnc" id="L269" title="All 4 branches missed.">            } else if (25 &lt;= BMI &amp;&amp; BMI &lt;= 29.9) {</span>
+<span class="nc" id="L270">                color = getResources().getColor(R.color.yellow);</span>
+<span class="nc" id="L271">                message = &quot;You are overweight.&quot;;</span>
+<span class="nc" id="L272">                recommendedPlan = 0;</span>
+<span class="nc bnc" id="L273" title="All 4 branches missed.">            } else if (30 &lt;= BMI &amp;&amp; BMI &lt;= 34.9) {</span>
+<span class="nc" id="L274">                color = getResources().getColor(R.color.orange);</span>
+<span class="nc" id="L275">                message = &quot;You are obese.&quot;;</span>
+<span class="nc" id="L276">                recommendedPlan = 0;</span>
+<span class="nc bnc" id="L277" title="All 4 branches missed.">            } else if (35 &lt;= BMI &amp;&amp; BMI &lt;= 39.9) {</span>
+<span class="nc" id="L278">                color = getResources().getColor(R.color.red);</span>
+<span class="nc" id="L279">                message = &quot;You are severely obese.&quot;;</span>
+<span class="nc" id="L280">                recommendedPlan = 0;</span>
+<span class="nc bnc" id="L281" title="All 2 branches missed.">            } else if (BMI &gt;= 40) {</span>
+<span class="nc" id="L282">                color = getResources().getColor(R.color.dark_red);</span>
+<span class="nc" id="L283">                message = &quot;You are morbidly obese.&quot;;</span>
+<span class="nc" id="L284">                recommendedPlan = 0;</span>
+            } else {
+<span class="nc" id="L286">                BMIValue.setText(&quot;Was not able to accurately calculate your BMI&quot;);</span>
+<span class="nc" id="L287">                return;</span>
+            }
+
+<span class="nc" id="L290">            String bmiText = String.format(&quot;%.2f&quot;, BMI);</span>
+<span class="nc" id="L291">            String fullMessage = bmiText + &quot; &quot; + message;</span>
+
+<span class="nc" id="L293">            SpannableString spannable = new SpannableString(fullMessage);</span>
+<span class="nc" id="L294">            spannable.setSpan(new ForegroundColorSpan(color), 0, bmiText.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);</span>
+
+<span class="nc" id="L296">            BMIValue.setText(spannable);</span>
+        }
+<span class="nc" id="L298">    }</span>
+
+    /**
+     * Retrieves the session token for the current user from the server.
+     *
+     * @param id the ID of the user.
+     */
+    public void getSessionToken(int id) {
+<span class="nc" id="L306">        String requestUrl = AppConstants.SERVER_URL + &quot;/&quot; + id + &quot;/sessionToken&quot;;</span>
+
+<span class="nc" id="L308">        StringRequest joinRequest = new StringRequest(</span>
+                Request.Method.GET,
+                requestUrl,
+<span class="nc" id="L311">                new Response.Listener&lt;String&gt;() {</span>
+                    @Override
+                    public void onResponse(String response) {
+<span class="nc" id="L314">                        sessionToken = response.toString();</span>
+<span class="nc" id="L315">                    }</span>
+                },
+<span class="nc" id="L317">                new Response.ErrorListener() {</span>
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+<span class="nc" id="L320">                        Log.e(&quot;Volley Error&quot;, &quot;Session token retrieval failed: &quot; + error.getMessage());</span>
+<span class="nc" id="L321">                        Toast.makeText(ProfileInitializeActivity.this, &quot;Session token retrieval failed.&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L322">                    }</span>
+                }
+<span class="nc" id="L324">        ) {</span>
+            @Override
+            public byte[] getBody() {
+<span class="nc" id="L327">                return sessionToken.getBytes();</span>
+            }
+
+            @Override
+            public String getBodyContentType() {
+<span class="nc" id="L332">                return &quot;text/plain; charset=utf-8&quot;;</span>
+            }
+        };
+<span class="nc" id="L335">        VolleySingleton.getInstance(this).addToRequestQueue(joinRequest);</span>
+<span class="nc" id="L336">    }</span>
+
+    /**
+     * Adds the user to a specific group based on what the user chose as their goal.
+     *
+     * @param uid the user ID.
+     * @param gid the group ID.
+     */
+    public void addUserToGroup(int uid, int gid){
+<span class="nc" id="L345">        String requestUrl = AppConstants.SERVER_URL + &quot;/group/&quot; + gid + &quot;/join&quot;;</span>
+
+<span class="nc" id="L347">        StringRequest stringRequest = new StringRequest(</span>
+                Request.Method.PUT,
+                requestUrl,
+<span class="nc" id="L350">                new Response.Listener&lt;String&gt;() {</span>
+                    @Override
+                    public void onResponse(String response) {
+<span class="nc" id="L353">                        Log.i(&quot;Added Successfully&quot;, response);</span>
+<span class="nc bnc" id="L354" title="All 2 branches missed.">                        if(response.equals(&quot;true&quot;)){</span>
+<span class="nc" id="L355">                            Toast.makeText(ProfileInitializeActivity.this, &quot;User successfully added to group: &quot; + gid, Toast.LENGTH_SHORT).show();</span>
+                        }
+<span class="nc" id="L357">                    }</span>
+                },
+<span class="nc" id="L359">                new Response.ErrorListener() {</span>
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+<span class="nc" id="L362">                        error.getMessage();</span>
+<span class="nc" id="L363">                    }</span>
+                }
+<span class="nc" id="L365">        ) {</span>
+            @Override
+<span class="nc" id="L367">            public byte[] getBody() { return sessionToken.getBytes(); }</span>
+
+            @Override
+<span class="nc" id="L370">            public String getBodyContentType() { return &quot;text/plain; charset=utf-8&quot;; }</span>
+        };
+<span class="nc" id="L372">        VolleySingleton.getInstance(ProfileInitializeActivity.this).addToRequestQueue(stringRequest);</span>
+<span class="nc" id="L373">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupListAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.a1_jubair_6_frontend.adapters</a> &gt; <span class="el_source">GroupListAdapter.java</span></div><h1>GroupListAdapter.java</h1><pre class="source lang-java linenums">package com.example.a1_jubair_6_frontend.adapters;
+
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.a1_jubair_6_frontend.R;
+import com.google.android.material.button.MaterialButton;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class GroupListAdapter extends RecyclerView.Adapter&lt;GroupListAdapter.GroupViewHolder&gt; {
+
+<span class="fc" id="L23">    private final List&lt;JSONObject&gt; groups = new ArrayList&lt;&gt;();</span>
+    private final OnGroupJoinClickListener listener;
+
+    public interface OnGroupJoinClickListener {
+        void onGroupJoinClicked(int groupId);
+        void showPlanDetails(JSONObject plan);
+    }
+
+<span class="fc" id="L31">    public GroupListAdapter(OnGroupJoinClickListener listener) {</span>
+<span class="fc" id="L32">        this.listener = listener;</span>
+<span class="fc" id="L33">    }</span>
+
+    @NonNull
+    @Override
+    public GroupViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+<span class="fc" id="L38">        View view = LayoutInflater.from(parent.getContext())</span>
+<span class="fc" id="L39">                .inflate(R.layout.item_group, parent, false);</span>
+<span class="fc" id="L40">        return new GroupViewHolder(view);</span>
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull GroupViewHolder holder, int position) {
+        try {
+<span class="fc" id="L46">            JSONObject group = groups.get(position);</span>
+<span class="fc" id="L47">            String groupName = group.optString(&quot;groupName&quot;, &quot;Unnamed Group&quot;);</span>
+<span class="fc" id="L48">            holder.groupName.setText(groupName);</span>
+
+            // Get member count
+<span class="fc" id="L51">            JSONArray members = group.getJSONArray(&quot;members&quot;);</span>
+<span class="fc" id="L52">            holder.memberCount.setText(holder.itemView.getContext()</span>
+<span class="fc" id="L53">                    .getString(R.string.member_count, members.length()));</span>
+
+            // Set plan name if available
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">            if (!group.isNull(&quot;plan&quot;)) {</span>
+<span class="fc" id="L57">                JSONObject plan = group.getJSONObject(&quot;plan&quot;);</span>
+<span class="fc" id="L58">                holder.planName.setText(plan.getString(&quot;name&quot;));</span>
+<span class="fc" id="L59">                holder.planName.setVisibility(View.VISIBLE);</span>
+
+<span class="fc" id="L61">                holder.infoButton.setVisibility(View.VISIBLE);</span>
+<span class="pc" id="L62">                holder.infoButton.setOnClickListener(v -&gt; listener.showPlanDetails(plan));</span>
+<span class="fc" id="L63">            } else {</span>
+<span class="nc" id="L64">                holder.planName.setVisibility(View.GONE);</span>
+<span class="nc" id="L65">                holder.infoButton.setVisibility(View.GONE);</span>
+            }
+
+            // Set plan name if available
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">            if (!group.isNull(&quot;plan&quot;)) {</span>
+<span class="fc" id="L70">                JSONObject plan = group.getJSONObject(&quot;plan&quot;);</span>
+<span class="fc" id="L71">                holder.planName.setText(plan.getString(&quot;name&quot;));</span>
+<span class="fc" id="L72">                holder.planName.setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L73">            } else {</span>
+<span class="nc" id="L74">                holder.planName.setVisibility(View.GONE);</span>
+            }
+
+<span class="pc bpc" id="L77" title="2 of 4 branches missed.">            holder.itemView.setVisibility(groupName != null &amp;&amp; !groupName.isEmpty() ?</span>
+<span class="pc" id="L78">                    View.VISIBLE : View.GONE);</span>
+<span class="fc" id="L79">            holder.itemView.setLayoutParams(new RecyclerView.LayoutParams(</span>
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+<span class="pc bpc" id="L81" title="2 of 4 branches missed.">                    groupName != null &amp;&amp; !groupName.isEmpty() ?</span>
+<span class="pc" id="L82">                            ViewGroup.LayoutParams.WRAP_CONTENT : 0));</span>
+
+<span class="fc" id="L84">            holder.joinButton.setOnClickListener(v -&gt; {</span>
+                try {
+<span class="fc" id="L86">                    listener.onGroupJoinClicked(group.getInt(&quot;id&quot;));</span>
+<span class="nc" id="L87">                } catch (JSONException e) {</span>
+<span class="nc" id="L88">                    e.printStackTrace();</span>
+<span class="fc" id="L89">                }</span>
+<span class="fc" id="L90">            });</span>
+<span class="nc" id="L91">        } catch (JSONException e) {</span>
+<span class="nc" id="L92">            e.printStackTrace();</span>
+<span class="fc" id="L93">        }</span>
+<span class="fc" id="L94">    }</span>
+
+    @Override
+    public int getItemCount() {
+<span class="fc" id="L98">        return groups.size();</span>
+    }
+
+    public void updateGroups(JSONArray newGroups) {
+<span class="fc" id="L102">        groups.clear();</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        for (int i = 0; i &lt; newGroups.length(); i++) {</span>
+            try {
+<span class="fc" id="L105">                groups.add(newGroups.getJSONObject(i));</span>
+<span class="nc" id="L106">            } catch (JSONException e) {</span>
+<span class="nc" id="L107">                e.printStackTrace();</span>
+<span class="fc" id="L108">            }</span>
+        }
+<span class="fc" id="L110">        notifyDataSetChanged();</span>
+<span class="fc" id="L111">    }</span>
+
+    static class GroupViewHolder extends RecyclerView.ViewHolder {
+        TextView groupName;
+        TextView memberCount;
+        TextView planName;
+        MaterialButton joinButton;
+        MaterialButton infoButton;
+
+        GroupViewHolder(View itemView) {
+<span class="fc" id="L121">            super(itemView);</span>
+<span class="fc" id="L122">            groupName = itemView.findViewById(R.id.groupName);</span>
+<span class="fc" id="L123">            memberCount = itemView.findViewById(R.id.memberCount);</span>
+<span class="fc" id="L124">            planName = itemView.findViewById(R.id.planName);</span>
+<span class="fc" id="L125">            joinButton = itemView.findViewById(R.id.joinButton);</span>
+<span class="fc" id="L126">            infoButton = itemView.findViewById(R.id.infoButton);</span>
+<span class="fc" id="L127">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span>Generated by the Android Gradle plugin 8.7.0</div></body></html>
