@@ -103,6 +103,7 @@ public class UserController {
         if (userRepo.findByusername(username) != null) {
             User check = userRepo.findByusername(username);
             if (check.getPassword().equals(password)) {
+                AchievementController.consecutiveLogins(check, check.getLastLogin() != null ? check.getLastLogin() : new Timestamp(System.currentTimeMillis()));
                 check.loginSession();
                 userRepo.save(check);
                 return check;

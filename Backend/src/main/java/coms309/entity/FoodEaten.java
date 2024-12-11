@@ -19,7 +19,7 @@ public class FoodEaten {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "dateConsumed")
     @JsonView(value = {Views.Public.class})
-    private LocalDateTime date =LocalDateTime.now();
+    private LocalDateTime date = LocalDateTime.now();
 
     @ManyToOne
     @JoinColumn(name = "user_id")

@@ -400,4 +400,11 @@ public class GroupController {
         }
         return null;
     }
+
+    @GetMapping("/group/member/{uid}/{gid}")
+    @JsonView(value = {Views.GroupMember.class})
+    public GroupMember getMemberByUserId(@PathVariable(name = "uid") int uid, @PathVariable(name = "gid") int gid){
+        GroupMemberKey memId = new GroupMemberKey(gid, uid);
+        return memberRepo.findById(memId).orElse(null);
+    }
 }

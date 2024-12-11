@@ -1,10 +1,7 @@
 package coms309.controller;
 
 import com.fasterxml.jackson.annotation.JsonView;
-import coms309.entity.Achievement;
-import coms309.entity.Earned;
-import coms309.entity.User;
-import coms309.entity.Views;
+import coms309.entity.*;
 import coms309.repository.AchievementRepository;
 import coms309.repository.EarnedRepository;
 import coms309.repository.UserRepository;
@@ -14,6 +11,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,11 +22,16 @@ import java.util.Set;
 @RestController
 public class AchievementController {
     @Autowired
-    EarnedRepository earnedRepo;
-    @Autowired
     UserRepository userRepo;
+
+    private static EarnedRepository earnedRepo;
+    private static AchievementRepository achievementRepo;
+
     @Autowired
-    AchievementRepository achievementRepo;
+    public void setStaticRepo(AchievementRepository aRepo, EarnedRepository eRepo){
+        achievementRepo = aRepo;
+        earnedRepo = eRepo;
+    }
 
     @Operation(
             summary = "Create achievement",
@@ -34,7 +39,13 @@ public class AchievementController {
     )
     @PostMapping("/achievement")
     @JsonView(value = {Views.Achievement.class})
-    public Achievement createAchievement(@Parameter(description = "Achievement object")@RequestBody Achievement achievement){
+    public Achievement createAchievement(@Parameter(description = "Achievement object")@RequestBody Map<String, Object> map){
+        String name = (String) map.get("name");
+        String description = (String) map.get("description");
+        String icon = (String) map.get("icon");
+        Integer goal = (Integer) map.get("goal");
+
+        Achievement achievement = new Achievement(name, description, icon, goal);
         return achievementRepo.save(achievement);
     }
 
@@ -78,17 +89,20 @@ public class AchievementController {
     )
     @PutMapping("/achievement/update/{id}")
     @JsonView(value = {Views.Achievement.class})
-    public Achievement updateAchievement(@Parameter(description = "Achievement id")@PathVariable int id, @Parameter(description = "Map containing key value pairs corresponding to fields to be changed.")@RequestBody Map<String, String> map){
+    public Achievement updateAchievement(@Parameter(description = "Achievement id")@PathVariable int id, @Parameter(description = "Map containing key value pairs corresponding to fields to be changed.")@RequestBody Map<String, Object> map){
         Achievement achievement = achievementRepo.findById(id).orElse(null);
         if (achievement != null) {
             if (map.containsKey("name")){
-                achievement.setName(map.get("name"));
+                achievement.setName((String) map.get("name"));
             }
             if (map.containsKey("description")){
-                achievement.setDescription(map.get("description"));
+                achievement.setDescription((String) map.get("description"));
             }
             if (map.containsKey("icon")){
-                achievement.setIcon(map.get("icon"));
+                achievement.setIcon((String) map.get("icon"));
+            }
+            if (map.containsKey("goal")){
+                achievement.setGoal((Integer) map.get("goal"));
             }
             achievementRepo.save(achievement);
         }
@@ -130,6 +144,105 @@ public class AchievementController {
             earnedRepo.delete(earned);
         }
         return achievement;
+    }
+
+    @PutMapping("/check/achievements/{uid}")
+    @JsonView(value = {Views.Achievement.class})
+    public Set<Earned> checkUserAchs(@PathVariable int uid){
+        User user = userRepo.findById(uid).orElse(null);
+        if (user == null) {
+            return null;
+        }
+        consecutiveProtein(user);
+        socialButterfly(user);
+        return user.getEarned();
+    }
+
+    //Auto on login
+    public static Earned consecutiveLogins(User user, Timestamp lastLogin){
+        Timestamp today = new Timestamp(System.currentTimeMillis());
+        Timestamp safeTime = new Timestamp(lastLogin.getTime() + (1000 * 60 * 60 * 24));
+
+        if (today.before(safeTime)){
+            Achievement achievement = achievementRepo.findById(2).orElse(null);
+            if (achievement == null) {
+                return null;
+            }
+            EarnedKey id = new EarnedKey(user.getUid(), 2);
+            Earned earned = earnedRepo.findById(id).orElse(null);
+            if (earned == null) {
+                Earned newEarned = new Earned(user, achievement);
+                newEarned.setProgress(1);
+                return earnedRepo.save(newEarned);
+            }
+            earned.addProgress();
+            earned.setEarnDate(new Date()); //Sets time to now
+            if (earned.getProgress() >= achievement.getGoal()){
+                earned.setHasEarned(true);
+            }
+            return earnedRepo.save(earned);
+        }
+        return null;
+    }
+
+    // Manually check with endpoint
+    public Earned consecutiveProtein(User user){
+        Achievement achievement = achievementRepo.findById(3).orElse(null);
+        if (achievement == null || user == null) {
+            return null;
+        }
+        EarnedKey eid = new EarnedKey(user.getUid(), 3);
+        Earned earn = earnedRepo.findById(eid).orElse(null);
+
+        if (earn == null) {
+            earn = new Earned(user, achievement);
+        }
+
+        List<FoodEaten> userEatenList = FoodEatenController.getEatenByUserTime(user.getUid(), LocalDateTime.now().minusWeeks(1).toString(), LocalDateTime.now().toString());
+        int totalProtein = 0;
+        for (FoodEaten eaten : userEatenList) {
+            totalProtein += eaten.getFood().getProtein();
+        }
+
+        Set<GroupMember> membered = user.getMembered();
+        int planProtein = 0;
+        for (GroupMember mem: membered){
+            Group group = mem.getGroup();
+            FoodPlan plan = group.getPlan();
+            planProtein = plan.getProtein();
+        }
+
+        if (planProtein <= totalProtein && totalProtein > 0){
+            earn.addProgress();
+        }
+
+        if (!earn.getHasEarned() && earn.getProgress() >= achievement.getGoal()){
+            earn.setHasEarned(true);
+        }
+
+        return earnedRepo.save(earn);
+    }
+
+    public Earned socialButterfly(User user){
+        Achievement achievement = achievementRepo.findById(4).orElse(null);
+        if (achievement == null || user == null) {
+            return null;
+        }
+        EarnedKey eid = new EarnedKey(user.getUid(), achievement.getId());
+        Earned earn = earnedRepo.findById(eid).orElse(null);
+        if (earn == null) {
+            earn = new Earned(user, achievement);
+        }
+
+        Set<GroupMember> memberSet = user.getMembered();
+        for (GroupMember member : memberSet){
+            int numMess = member.getMessages().size();
+            earn.setProgress(numMess);
+            if(!earn.getHasEarned() && numMess >= achievement.getGoal()){
+                earn.setHasEarned(true);
+            }
+        }
+        return earnedRepo.save(earn);
     }
 
 
